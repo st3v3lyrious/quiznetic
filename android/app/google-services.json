@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "989742825315",
+    "project_id": "quiznetic-30734",
+    "storage_bucket": "quiznetic-30734.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:989742825315:android:f8141c45d184257217dd56",
+        "android_client_info": {
+          "package_name": "com.example.quiznetic_flutter"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAf0dulhlgoNZRXV-iLIEHhM9a6NNL8Sjc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

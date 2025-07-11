@@ -1,0 +1,23 @@
+// .vscode/tasks.json
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Launch Android Emulator",
+      "type": "shell",
+      "command": "flutter emulators --launch Medium_Phone_API_36.0",
+      "problemMatcher": []
+    },
+    {
+      "label": "Boot & Launch iOS Simulator",
+      "type": "shell",
+      "command": [
+        // Boot the device if it isn’t already running
+        // Open the Simulator app (brings it to foreground if already open)
+        "open -a Simulator",
+        // "xcrun simctl boot \"7A7AF8C4-6891-4C32-BFB9-06A8A17F5E7E\" || true && open -a Simulator",
+        ], 
+      "problemMatcher": []
+    }
+  ]
+}
