@@ -27,3 +27,28 @@ doc/api/
 
 .flutter-plugins
 .flutter-plugins-dependencies
+
+## iOS
+ios/Flutter/Flutter.framework
+ios/Flutter/Generated.xcconfig
+ios/Pods/
+ios/Runner.xcworkspace
+DerivedData/
+
+## Android
+android/.gradle/
+android/app/build/
+android/build/
+
+## Xcode
+*.xcworkspace
+xcuserdata/
+*.mode1v3
+*.pbxuser
+
+## IDEs
+.vscode/
+.idea/
+
+## Misc
+*.log
