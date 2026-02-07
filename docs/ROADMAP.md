@@ -8,9 +8,11 @@ Use this as a short, editable delivery plan.
 - [ ] M2: Clarify leaderboard semantics (best score vs latest score per user).
 - [ ] M2: Harden profile display (difficulty labels, ordering, empty/error states).
 - [x] M2: Apply `AuthGuard` strategy consistently to protected routes.
+- [x] M2: Replace deprecated result-screen back handling (`WillPopScope`) with `PopScope` and cover it with widget tests.
 - [ ] M3: Implement a second quiz category (Logo or Capitals) using current category-key pattern.
 - [ ] M3: Enable quiz-type switching in navigation/results flow.
 - [ ] M4: Replace template widget test with app-specific flow tests in `test/unit` and `test/widget`.
 - [ ] M4: Add non-scaffold integration assertions in `integration_test`.
 - [ ] M4: Add Playwright e2e assertions in `playwright/tests`.
+- [x] M4: Auto-generate Playwright smoke + per-screen e2e scaffolds as screens are added.
 - [x] M4: Regenerate README from docs (`FEATURES`, `ROADMAP`, `ARCHITECTURE`).

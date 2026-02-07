@@ -294,6 +294,9 @@ def extract_function_entries(file_text: str, rel_path: Path) -> list[FunctionDoc
         if any(lower_prefix.startswith(x) for x in DECL_EXCLUDED_STARTS):
             i += 1
             continue
+        if re.search(r"\bFunction(?:<[^>]+>)?$", prefix):
+            i += 1
+            continue
         if lower_prefix.startswith("const ") or lower_prefix.startswith("factory "):
             i += 1
             continue

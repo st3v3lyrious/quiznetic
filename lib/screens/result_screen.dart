@@ -10,105 +10,6 @@ import 'quiz_screen.dart';
 import 'difficulty_screen.dart';
 import 'user_profile_screen.dart';
 
-// CompatPopScope: a small compatibility wrapper that keeps older
-// route-scoped will-pop callbacks (used on some SDKs) while also
-// wrapping the child with a `WillPopScope` so newer SDKs that prefer
-// the PopScope/WillPopScope mechanism still work. We avoid the name
-// `PopScope` to prevent collisions if the framework later exports a
-// widget with that name.
-typedef PopCallback = Future<bool> Function();
-
-class CompatPopScope extends StatefulWidget {
-  final PopCallback? onPop;
-  final Widget child;
-
-  const CompatPopScope({this.onPop, required this.child, super.key});
-
-  /// Creates compatibility state for pop-interception handling.
-  @override
-  State<CompatPopScope> createState() => _CompatPopScopeState();
-}
-
-class _CompatPopScopeState extends State<CompatPopScope> {
-  ModalRoute<dynamic>? _route;
-  // Token returned by newer registerPopEntry API (unknown type, so kept
-  // as dynamic). We try to use the newer API first and fall back to the
-  // older scoped callbacks when unavailable.
-  dynamic _popEntryToken;
-
-  /// Delegates pop handling to the callback when provided.
-  Future<bool> _handleWillPop() async {
-    if (widget.onPop != null) return await widget.onPop!();
-    return true;
-  }
-
-  /// Registers or re-registers pop callbacks when route dependencies change.
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final route = ModalRoute.of(context);
-    if (_route != route) {
-      if (_route != null) {
-        // Try to unregister using the newer API first.
-        try {
-          (_route as dynamic).unregisterPopEntry(_popEntryToken);
-        } catch (_) {
-          // Fallback to older API if present.
-          try {
-            _route!.removeScopedWillPopCallback(_handleWillPop);
-          } catch (_) {
-            // ignore: avoid_print
-          }
-        }
-        _popEntryToken = null;
-      }
-
-      _route = route;
-      if (_route != null) {
-        // Try to register using the newer API first. The registerPopEntry
-        // call's signature varies across SDKs; using `dynamic` lets us
-        // attempt the call at runtime without static errors.
-        try {
-          _popEntryToken = (_route as dynamic).registerPopEntry(_handleWillPop);
-        } catch (_) {
-          // Fallback to older API if available.
-          try {
-            _route!.addScopedWillPopCallback(_handleWillPop);
-          } catch (_) {
-            // ignore: avoid_print
-          }
-        }
-      }
-    }
-  }
-
-  /// Unregisters pop callbacks before disposing this state object.
-  @override
-  void dispose() {
-    if (_route != null) {
-      // Prefer the newer unregister API when present.
-      try {
-        (_route as dynamic).unregisterPopEntry(_popEntryToken);
-      } catch (_) {
-        try {
-          _route!.removeScopedWillPopCallback(_handleWillPop);
-        } catch (_) {
-          // ignore: avoid_print
-        }
-      }
-    }
-    super.dispose();
-  }
-
-  /// Wraps the child with a will-pop interceptor.
-  @override
-  Widget build(BuildContext context) {
-    // Also wrap with WillPopScope so newer SDKs (or when route-scoped
-    // callbacks aren't available) will still call our handler.
-    return WillPopScope(onWillPop: _handleWillPop, child: widget.child);
-  }
-}
-
 class ResultScreenArgs {
   final String categoryKey;
   final int score;
@@ -234,8 +135,8 @@ class _ResultScreenState extends State<ResultScreen> {
     // Guard against division by zero when computing percentage.
     final pct = args.total > 0 ? (args.score / args.total * 100).round() : 0;
 
-    return CompatPopScope(
-      onPop: () async => false,
+    return PopScope(
+      canPop: false,
       child: Scaffold(
         appBar: AppBar(
           automaticallyImplyLeading: false,

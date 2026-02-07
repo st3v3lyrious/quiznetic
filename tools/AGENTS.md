@@ -45,13 +45,15 @@ Purpose:
 - Scaffolds unit tests for service/data/model/util files.
 - Scaffolds widget tests for screen/widget files.
 - Scaffolds Flutter integration tests under `integration_test/`.
-- Scaffolds Playwright end-to-end tests under `playwright/`.
+- Scaffolds Playwright end-to-end tests under `playwright/` (shared smoke + per-screen specs).
 
 Output layout:
 - `test/unit/` -> unit tests
 - `test/widget/` -> widget tests
 - `integration_test/` -> integration tests
-- `playwright/` -> Playwright e2e tests + config
+- `playwright/tests/app-smoke.spec.ts` -> global smoke test
+- `playwright/tests/screens/*.spec.ts` -> per-screen e2e scaffolds
+- `playwright/` -> Playwright config + package metadata
 
 Usage:
 ```bash

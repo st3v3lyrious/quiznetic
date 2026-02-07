@@ -9,6 +9,7 @@ Use this as an editable feature checklist.
 - [x] Difficulty modes: easy (15), intermediate (30), expert (50)
 - [x] Randomized quiz generation from `assets/flags/`
 - [x] Per-session score tracking and progress indicator
+- [x] Results flow prevents back navigation and requires explicit follow-up action buttons
 
 ## Accounts And Auth
 
@@ -44,4 +45,4 @@ Use this as an editable feature checklist.
 
 - [x] Manual testing agent that generates unit/widget test scaffolds under `test/`
 - [x] Manual testing agent that generates integration scaffolds under `integration_test/`
-- [x] Manual testing agent that generates Playwright e2e scaffolds under `playwright/`
+- [x] Manual testing agent that generates Playwright smoke + per-screen e2e scaffolds under `playwright/`

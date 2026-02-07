@@ -15,6 +15,7 @@ WIDGET_TEST_DIR = TEST_DIR / "widget"
 INTEGRATION_TEST_DIR = ROOT / "integration_test"
 PLAYWRIGHT_ROOT = ROOT / "playwright"
 PLAYWRIGHT_TEST_DIR = PLAYWRIGHT_ROOT / "tests"
+PLAYWRIGHT_SCREEN_TEST_DIR = PLAYWRIGHT_TEST_DIR / "screens"
 PUBSPEC = ROOT / "pubspec.yaml"
 
 UNIT_SOURCE_FOLDERS = {"services", "data", "models", "utils"}
@@ -113,6 +114,11 @@ def playwright_config_destination() -> Path:
 
 def playwright_test_destination() -> Path:
     return PLAYWRIGHT_TEST_DIR / "app-smoke.spec.ts"
+
+
+def playwright_screen_test_destination(source_rel: Path) -> Path:
+    sub = source_rel.relative_to("lib/screens")
+    return PLAYWRIGHT_SCREEN_TEST_DIR / sub.parent / f"{source_rel.stem}.spec.ts"
 
 
 def make_unit_scaffold(pkg: str, source_rel: Path) -> Scaffold:
@@ -233,6 +239,27 @@ test('loads either entry choice or home screen', async ({ page }) => {
     return Scaffold(source=None, destination=destination, kind="e2e-playwright", content=content)
 
 
+def make_playwright_screen_test_scaffold(source_rel: Path) -> Scaffold:
+    destination = playwright_screen_test_destination(source_rel)
+    title = title_from_stem(source_rel.stem)
+    content = f"""import {{ test, expect }} from '@playwright/test';
+
+test.skip('{title} critical flow', async ({{ page }}) => {{
+  await page.goto('/');
+  await page.waitForLoadState('networkidle');
+
+  // TODO: Navigate to {title} and assert user-visible behavior.
+  await expect(page).toHaveTitle(/.+/);
+}});
+"""
+    return Scaffold(
+        source=source_rel,
+        destination=destination,
+        kind="e2e-playwright",
+        content=content,
+    )
+
+
 def collect_source_files(filters: list[str]) -> list[Path]:
     out: list[Path] = []
     for path in sorted(LIB_DIR.rglob("*.dart")):
@@ -252,6 +279,7 @@ def build_scaffolds(
 ) -> list[Scaffold]:
     pkg = package_name()
     sources = collect_source_files(filters)
+    screen_sources = [s for s in sources if len(s.parts) > 1 and s.parts[1] == "screens"]
     scaffolds: list[Scaffold] = []
 
     for source_rel in sources:
@@ -268,6 +296,8 @@ def build_scaffolds(
         scaffolds.append(make_playwright_package_scaffold())
         scaffolds.append(make_playwright_config_scaffold())
         scaffolds.append(make_playwright_test_scaffold())
+        for source_rel in screen_sources:
+            scaffolds.append(make_playwright_screen_test_scaffold(source_rel))
 
     return scaffolds
 

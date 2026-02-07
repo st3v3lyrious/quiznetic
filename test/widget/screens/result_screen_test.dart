@@ -133,6 +133,52 @@ void main() {
 
     expect(find.text('difficulty:flag'), findsOneWidget);
   });
+
+  testWidgets('blocks back navigation while on the result screen', (
+    tester,
+  ) async {
+    final navigatorKey = GlobalKey<NavigatorState>();
+    await tester.pumpWidget(
+      MaterialApp(
+        navigatorKey: navigatorKey,
+        home: const Scaffold(body: Text('base-screen')),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    navigatorKey.currentState!.push(
+      MaterialPageRoute(
+        settings: RouteSettings(
+          name: ResultScreen.routeName,
+          arguments: ResultScreenArgs(
+            categoryKey: 'flag',
+            score: 4,
+            total: 15,
+            difficulty: 'easy',
+          ),
+        ),
+        builder: (_) => ResultScreen(
+          saveScore:
+              ({
+                required categoryKey,
+                required difficulty,
+                required score,
+              }) async {},
+          getHighScore: (categoryKey) async => 10,
+          setHighScore: (categoryKey, score) async {},
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('You scored 4 out of 15'), findsOneWidget);
+
+    await navigatorKey.currentState!.maybePop();
+    await tester.pumpAndSettle();
+
+    expect(find.text('You scored 4 out of 15'), findsOneWidget);
+    expect(find.text('base-screen'), findsNothing);
+  });
 }
 
 class _QuizArgsProbe extends StatelessWidget {
