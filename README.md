@@ -1,54 +1,120 @@
-<!-- DOC_AGENT_START -->
-## Project Snapshot (auto)
+# QuizNetic
 
-- **Package:** `quiznetic_flutter`
+Quiznetic project built with Flutter.
+
 - **Version:** `1.0.0+1`
+
 - **Environment:** Dart SDK: `^3.8.1`
 
-### Dependencies (auto)
-- **deps:** flutter, sdk, firebase_core, firebase_auth, cloud_firestore, shared_preferences, firebase_ui_auth, git, url, path, ref, firebase_ui_oauth_google…
-- **dev_deps:** flutter_test, sdk, flutter_lints
+## Features
 
-### Test Status (auto)
-- **Unit/Widget tests:** `1` files in `test/`
-- **Integration tests:** `0` files in `integration_test/`
+# FEATURES
 
-### Key Files (auto)
+Use this as an editable feature checklist.
 
-**lib/**
-- `lib/.DS_Store`
-- `lib/data/flag_list.dart`
-- `lib/data/flag_loader.dart`
-- `lib/firebase_options.dart`
-- `lib/main.dart`
-- `lib/models/flag_question.dart`
-- `lib/screens/difficulty_screen.dart`
-- `lib/screens/home_screen.dart`
-- `lib/screens/login_screen.dart`
-- `lib/screens/quiz_screen.dart`
-- `lib/screens/result_screen.dart`
-- `lib/screens/splash_screen.dart`
-- `lib/screens/upgrade_account_screen.dart`
-- `lib/screens/user_profile_screen.dart`
-- `lib/services/auth_service.dart`
-- `lib/services/score_service.dart`
-- `lib/services/user_checker.dart`
-- `lib/services/user_profile.dart`
-- `lib/utils/helpers.dart`
-- `lib/widgets/auth_guard.dart`
+## Core Quiz Loop
 
-**test/**
-- `test/widget_test.dart`
+- [x] Splash -> Home -> Difficulty -> Quiz -> Results flow
+- [x] Flag quiz category (`categoryKey: flag`)
+- [x] Difficulty modes: easy (15), intermediate (30), expert (50)
+- [x] Randomized quiz generation from `assets/flags/`
+- [x] Per-session score tracking and progress indicator
 
-**integration_test/**
-_(missing)_
+## Accounts And Auth
 
-### How to run (auto)
+- [x] Firebase initialization at app startup
+- [x] Anonymous sign-in path with user doc creation (`users/{uid}`)
+- [x] Login screen scaffold with Email, Google, Apple providers
+- [x] "Continue as Guest" path from login screen
+- [x] Upgrade account screen scaffold for anonymous users
+
+## Scores And Profile
+
+- [x] Save user best score per category+difficulty in Firestore
+- [x] Save global leaderboard entry in Firestore
+- [x] Profile screen listing stored high scores
+
+## Known Gaps / Partial
+
+- [ ] Unify high-score source of truth (Firestore + SharedPreferences are both used)
+- [ ] Configure real Google OAuth client ID
+- [ ] Fix login header image reference (`assets/images/logo.png`)
+- [ ] Apply `AuthGuard` consistently on protected routes
+
+## Planned Features
+
+- [ ] Add Logo quiz category
+- [ ] Add Capitals quiz category
+- [ ] Enable "Change Quiz Type" flow when multiple categories are live
+- [ ] Expose anonymous-to-account upgrade in primary UX flow
+
+## Screens
+
+- **Difficulty** (`lib/screens/difficulty_screen.dart`) — _Add `/// Purpose:` in the file header._
+- **Home** (`lib/screens/home_screen.dart`) — _Add `/// Purpose:` in the file header._
+- **Login** (`lib/screens/login_screen.dart`) — _Add `/// Purpose:` in the file header._
+- **Quiz** — Presents questions, records answers, and handles scoring. (`lib/screens/quiz_screen.dart`)
+- **Result** (`lib/screens/result_screen.dart`) — _Add `/// Purpose:` in the file header._
+- **Splash** (`lib/screens/splash_screen.dart`) — _Add `/// Purpose:` in the file header._
+- **Upgrade Account** (`lib/screens/upgrade_account_screen.dart`) — _Add `/// Purpose:` in the file header._
+- **User Profile** (`lib/screens/user_profile_screen.dart`) — _Add `/// Purpose:` in the file header._
+
+## Tech stack
+
+- Flutter, Firebase Core, Firebase Auth, Cloud Firestore, Shared Preferences
+
+## Project structure
+
+- `lib/screens/` — UI screens
+- `lib/models/` — domain models
+- `lib/data/` — data sources/loaders
+- `test/` — unit + widget tests
+- `integration_test/` — integration tests (E2E-style) if present
+
+## Key models
+
+- `FlagQuestion` (`lib/models/flag_question.dart`)
+
+## Run locally
 
 ```bash
 flutter pub get
-flutter test
-# Integration tests (if present):
-flutter test integration_test
+flutter run
 ```
-<!-- DOC_AGENT_END -->
+
+## Testing
+
+- **Unit/Widget tests:** `1` files
+- **Integration tests:** `0` files
+
+```bash
+flutter test
+flutter test integration_test   # if present
+```
+
+## Dependencies (summary)
+
+- **deps:** flutter, sdk, firebase_core, firebase_auth, cloud_firestore, shared_preferences, firebase_ui_auth, git, url, path, ref, firebase_ui_oauth_google…
+- **dev_deps:** flutter_test, sdk, flutter_lints
+
+## Roadmap
+
+# ROADMAP
+
+Use this as a short, editable delivery plan.
+
+- [ ] M1: Stabilize entry auth flow (decide and enforce auto-guest vs explicit login/guest choice).
+- [ ] M1: Make Firestore the single high-score source and remove local score divergence.
+- [ ] M1: Fix login setup issues (logo asset path and Google OAuth client ID).
+- [ ] M2: Clarify leaderboard semantics (best score vs latest score per user).
+- [ ] M2: Harden profile display (difficulty labels, ordering, empty/error states).
+- [ ] M2: Apply `AuthGuard` strategy consistently to protected routes.
+- [ ] M3: Implement a second quiz category (Logo or Capitals) using current category-key pattern.
+- [ ] M3: Enable quiz-type switching in navigation/results flow.
+- [ ] M4: Replace template widget test with app-specific flow tests.
+- [ ] M4: Regenerate README from docs (`FEATURES`, `ROADMAP`, `ARCHITECTURE`).
+
+
+---
+
+_This README is generated by `tools/readme_agent.py`. Edit `docs/FEATURES.md` and `docs/ROADMAP.md` for human-written content._

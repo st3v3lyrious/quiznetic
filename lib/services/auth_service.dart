@@ -1,3 +1,8 @@
+/*
+ DOC: Service
+ Title: Auth Service
+ Purpose: Wraps authentication operations and auth-state helpers.
+*/
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'user_checker.dart';
@@ -48,6 +53,7 @@ class AuthService {
   }
 
   // Sign out (works for both anonymous and authenticated users)
+  /// TODO: Describe the behavior of `signOut`.
   Future<void> signOut() async {
     try {
       await _auth.signOut();
@@ -58,6 +64,7 @@ class AuthService {
   }
 
   // Convert anonymous account to permanent account
+  /// TODO: Describe the behavior of `linkAnonymousWithCredential`.
   Future<UserCredential> linkAnonymousWithCredential(
     AuthCredential credential,
   ) async {

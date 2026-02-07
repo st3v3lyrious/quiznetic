@@ -1,3 +1,8 @@
+/*
+ DOC: Widget
+ Title: Auth Guard
+ Purpose: Guards widget trees based on authentication state.
+*/
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:quiznetic_flutter/screens/login_screen.dart';
@@ -19,6 +24,7 @@ class AuthGuard extends StatelessWidget {
     this.builder,
   });
 
+  /// TODO: Describe the behavior of `build`.
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(

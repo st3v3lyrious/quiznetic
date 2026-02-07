@@ -1,3 +1,8 @@
+/*
+ DOC: Screen
+ Title: User Profile Screen
+ Purpose: Displays user profile and saved high-score records.
+*/
 // lib/screens/user_profile_screen.dart
 import 'package:flutter/material.dart';
 import '../services/score_service.dart';
@@ -15,6 +20,7 @@ class UserProfileScreen extends StatelessWidget {
     // add more as you introduce them...
   };
 
+  /// TODO: Describe the behavior of `build`.
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;

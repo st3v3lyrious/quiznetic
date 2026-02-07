@@ -1,3 +1,8 @@
+/*
+ DOC: Screen
+ Title: Login Screen
+ Purpose: Handles sign-in providers and guest sign-in entry.
+*/
 import 'package:flutter/material.dart';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:firebase_ui_oauth_apple/firebase_ui_oauth_apple.dart';
@@ -9,6 +14,7 @@ class LoginScreen extends StatelessWidget {
   static const routeName = '/login';
   const LoginScreen({super.key});
 
+  /// TODO: Describe the behavior of `build`.
   @override
   Widget build(BuildContext context) {
     return Scaffold(

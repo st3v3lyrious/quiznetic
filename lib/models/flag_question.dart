@@ -1,3 +1,8 @@
+/*
+ DOC: Model
+ Title: Flag Question
+ Purpose: Defines the data model for a single flag question.
+*/
 class FlagQuestion {
   final String imagePath;
   final String correctAnswer;

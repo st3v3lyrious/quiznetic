@@ -1,3 +1,8 @@
+/*
+ DOC: DataSource
+ Title: Flag List
+ Purpose: Contains static sample flag question data.
+*/
 import '../models/flag_question.dart';
 
 final List<FlagQuestion> flagQuestions = [

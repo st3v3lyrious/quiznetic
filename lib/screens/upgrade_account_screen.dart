@@ -1,3 +1,8 @@
+/*
+ DOC: Screen
+ Title: Upgrade Account Screen
+ Purpose: Lets anonymous users upgrade to a linked account.
+*/
 import 'package:flutter/material.dart';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 
@@ -6,6 +11,7 @@ class UpgradeAccountScreen extends StatelessWidget {
   static const routeName = '/upgrade';
   const UpgradeAccountScreen({super.key});
 
+  /// TODO: Describe the behavior of `build`.
   @override
   Widget build(BuildContext context) {
     // Offer the firebase_ui_auth sign-in screen to upgrade anonymous users.

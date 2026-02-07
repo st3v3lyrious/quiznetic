@@ -1,3 +1,8 @@
+/*
+ DOC: DataSource
+ Title: Flag Loader
+ Purpose: Loads flag assets and builds randomized quiz question sets.
+*/
 import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/services.dart' show rootBundle;

@@ -1,3 +1,8 @@
+/*
+ DOC: Screen
+ Title: Result Screen
+ Purpose: Shows result summary and next actions after a quiz.
+*/
 import 'package:flutter/material.dart';
 import 'package:quiznetic_flutter/services/score_service.dart';
 import '../services/user_profile.dart';
@@ -19,6 +24,7 @@ class CompatPopScope extends StatefulWidget {
 
   const CompatPopScope({this.onPop, required this.child, super.key});
 
+  /// TODO: Describe the behavior of `createState`.
   @override
   State<CompatPopScope> createState() => _CompatPopScopeState();
 }
@@ -30,11 +36,13 @@ class _CompatPopScopeState extends State<CompatPopScope> {
   // older scoped callbacks when unavailable.
   dynamic _popEntryToken;
 
+  /// TODO: Describe the behavior of `_handleWillPop`.
   Future<bool> _handleWillPop() async {
     if (widget.onPop != null) return await widget.onPop!();
     return true;
   }
 
+  /// TODO: Describe the behavior of `didChangeDependencies`.
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -74,6 +82,7 @@ class _CompatPopScopeState extends State<CompatPopScope> {
     }
   }
 
+  /// TODO: Describe the behavior of `dispose`.
   @override
   void dispose() {
     if (_route != null) {
@@ -91,6 +100,7 @@ class _CompatPopScopeState extends State<CompatPopScope> {
     super.dispose();
   }
 
+  /// TODO: Describe the behavior of `build`.
   @override
   Widget build(BuildContext context) {
     // Also wrap with WillPopScope so newer SDKs (or when route-scoped
@@ -118,6 +128,7 @@ class ResultScreen extends StatefulWidget {
 
   const ResultScreen({super.key});
 
+  /// TODO: Describe the behavior of `createState`.
   @override
   State<ResultScreen> createState() => _ResultScreenState();
 }
@@ -126,6 +137,7 @@ class _ResultScreenState extends State<ResultScreen> {
   late Future<int> _highScoreFuture;
   bool _didInit = false;
 
+  /// TODO: Describe the behavior of `didChangeDependencies`.
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -160,11 +172,13 @@ class _ResultScreenState extends State<ResultScreen> {
     }
   }
 
+  /// TODO: Describe the behavior of `initState`.
   @override
   void initState() {
     super.initState();
   }
 
+  /// TODO: Describe the behavior of `build`.
   @override
   Widget build(BuildContext context) {
     // Safely read route arguments. If missing, show an error placeholder.

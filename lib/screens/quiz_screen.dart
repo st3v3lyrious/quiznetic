@@ -1,3 +1,9 @@
+/*
+ DOC: Screen
+ Title: Quiz
+ Purpose: Presents questions, records answers, and handles scoring.
+*/
+
 import 'package:flutter/material.dart';
 import '../data/flag_loader.dart';
 import '../models/flag_question.dart';
@@ -18,6 +24,7 @@ class QuizScreen extends StatefulWidget {
   static const routeName = '/quiz';
   const QuizScreen({super.key});
 
+  /// TODO: Describe the behavior of `createState`.
   @override
   State<QuizScreen> createState() => _QuizScreenState();
 }
@@ -32,11 +39,13 @@ class _QuizScreenState extends State<QuizScreen> {
   late final QuizScreenArgs args;
   bool _argsLoaded = false;
 
+  /// TODO: Describe the behavior of `initState`.
   @override
   void initState() {
     super.initState();
   }
 
+  /// TODO: Describe the behavior of `didChangeDependencies`.
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -60,6 +69,7 @@ class _QuizScreenState extends State<QuizScreen> {
     }
   }
 
+  /// TODO: Describe the behavior of `_handleAnswer`.
   void _handleAnswer(String answer) {
     if (!_answered) {
       setState(() {
@@ -72,6 +82,7 @@ class _QuizScreenState extends State<QuizScreen> {
     }
   }
 
+  /// TODO: Describe the behavior of `_nextQuestion`.
   void _nextQuestion() {
     if (_currentIndex < _questions.length - 1) {
       setState(() {
@@ -95,6 +106,7 @@ class _QuizScreenState extends State<QuizScreen> {
     }
   }
 
+  /// TODO: Describe the behavior of `build`.
   @override
   Widget build(BuildContext context) {
     // 1) Show a loader while flags load

@@ -1,3 +1,8 @@
+/*
+ DOC: Screen
+ Title: Difficulty Screen
+ Purpose: Lets users choose difficulty and question count.
+*/
 import 'package:flutter/material.dart';
 import 'quiz_screen.dart';
 import 'user_profile_screen.dart';
@@ -11,6 +16,7 @@ class DifficultyScreen extends StatelessWidget {
   static const routeName = '/difficulty';
   const DifficultyScreen({super.key});
 
+  /// TODO: Describe the behavior of `build`.
   @override
   Widget build(BuildContext context) {
     final args =

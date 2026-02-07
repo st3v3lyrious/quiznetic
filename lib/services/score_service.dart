@@ -1,3 +1,8 @@
+/*
+ DOC: Service
+ Title: Score Service
+ Purpose: Persists and reads quiz scores and leaderboard data.
+*/
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';

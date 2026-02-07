@@ -1,3 +1,8 @@
+/*
+ DOC: Screen
+ Title: Home Screen
+ Purpose: Shows quiz categories and routes to difficulty selection.
+*/
 import 'package:flutter/material.dart';
 import 'difficulty_screen.dart';
 import 'user_profile_screen.dart';
@@ -16,6 +21,7 @@ class HomeScreen extends StatelessWidget {
     // Category(key: 'capital', name: 'Capital Quiz', icon: Icons.location_city),
   ];
 
+  /// TODO: Describe the behavior of `build`.
   @override
   Widget build(BuildContext context) {
     return Scaffold(
