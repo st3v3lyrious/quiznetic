@@ -1,4 +1,12 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:quiznetic_flutter/services/auth_service.dart';
+import 'package:quiznetic_flutter/screens/difficulty_screen.dart';
+import 'package:quiznetic_flutter/screens/home_screen.dart';
+import 'package:quiznetic_flutter/screens/quiz_screen.dart';
+import 'package:quiznetic_flutter/screens/result_screen.dart';
+import 'package:quiznetic_flutter/screens/user_profile_screen.dart';
+import 'package:quiznetic_flutter/screens/login_screen.dart';
 import 'screens/splash_screen.dart';
 import 'firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -6,6 +14,24 @@ import 'package:firebase_core/firebase_core.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  // Attempt anonymous sign-in using AuthService (which handles Firestore doc creation)
+  try {
+    final auth = FirebaseAuth.instance;
+    if (auth.currentUser == null) {
+      // Let AuthService handle both auth and Firestore doc creation
+      final authService = AuthService();
+      final cred = await authService.signInAnonymously();
+      debugPrint('✅ Signed in and created user ${cred.user!.uid}');
+    } else {
+      debugPrint('✅ Using existing auth: ${auth.currentUser!.uid}');
+    }
+  } on FirebaseAuthException catch (e) {
+    // Handle known Firebase auth errors
+    debugPrint('🔐 Auth error [${e.code}]: ${e.message}');
+  } catch (e) {
+    // Catch anything else
+    debugPrint('❌ Unexpected auth error: $e');
+  }
   runApp(const QuizNetic());
 }
 
@@ -21,7 +47,7 @@ class QuizNetic extends StatelessWidget {
       brightness: Brightness.light,
     );
 
-    // 2️⃣ Override just the roles we want:
+    // Override just the roles we want:
     final scheme = base.copyWith(
       secondary: Colors.green, // correct-answer green
       onSecondary: Colors.white, // text on the green
@@ -33,6 +59,16 @@ class QuizNetic extends StatelessWidget {
 
     return MaterialApp(
       title: 'QuizNetic',
+      initialRoute: SplashScreen.routeName,
+      routes: {
+        SplashScreen.routeName: (_) => const SplashScreen(),
+        HomeScreen.routeName: (_) => const HomeScreen(),
+        QuizScreen.routeName: (_) => const QuizScreen(),
+        ResultScreen.routeName: (_) => const ResultScreen(),
+        DifficultyScreen.routeName: (_) => const DifficultyScreen(),
+        UserProfileScreen.routeName: (_) => const UserProfileScreen(),
+        LoginScreen.routeName: (_) => const LoginScreen(),
+      },
       theme: ThemeData(
         // Opt in to Material 3 so background/onBackground are honored:
         useMaterial3: true,

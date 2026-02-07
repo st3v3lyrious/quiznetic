@@ -1,8 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'home_screen.dart';
+import 'package:quiznetic_flutter/screens/home_screen.dart';
+import 'package:quiznetic_flutter/screens/login_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class SplashScreen extends StatefulWidget {
+  static const routeName = '/splash';
   const SplashScreen({super.key});
 
   @override
@@ -13,13 +16,24 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    // After 2 seconds, navigate to HomeScreen
-    Timer(const Duration(seconds: 2), () {
-      Navigator.pushReplacement(
+    _checkUserAndNavigate();
+  }
+
+  Future<void> _checkUserAndNavigate() async {
+    await Future.delayed(const Duration(seconds: 2));
+    // Only check Firebase Authentication. Do NOT create or read Firestore
+    // documents here — creation is handled in the login/signup flows.
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (!mounted) return;
+    if (currentUser != null) {
+      Navigator.pushReplacementNamed(
         context,
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
+        HomeScreen.routeName,
+        arguments: (),
       );
-    });
+    } else {
+      Navigator.pushReplacementNamed(context, LoginScreen.routeName);
+    }
   }
 
   @override

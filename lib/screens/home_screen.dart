@@ -4,6 +4,7 @@ import 'user_profile_screen.dart';
 // Later, you’ll have other screens like 'logo_quiz_screen.dart'
 
 class HomeScreen extends StatelessWidget {
+  static const routeName = '/home';
   const HomeScreen({super.key});
 
   // List your categories here; for now, just "Flag Quiz"
@@ -19,15 +20,13 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false, // Disable back button
         title: const Text('Quiznetic'),
         actions: [
           IconButton(
             icon: const Icon(Icons.person),
             onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const UserProfileScreen()),
-              );
+              Navigator.pushNamed(context, UserProfileScreen.routeName);
             },
           ),
         ],
@@ -79,11 +78,11 @@ class HomeScreen extends StatelessWidget {
                             onPressed: () {
                               // For now, only Flag Quiz is implemented:
                               if (cat.key == 'flag') {
-                                Navigator.push(
+                                Navigator.pushNamed(
                                   context,
-                                  MaterialPageRoute(
-                                    builder: (_) =>
-                                        DifficultyScreen(categoryKey: cat.key),
+                                  DifficultyScreen.routeName,
+                                  arguments: DifficultyScreenArgs(
+                                    categoryKey: cat.key,
                                   ),
                                 );
                               } else {

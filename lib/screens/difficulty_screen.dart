@@ -1,14 +1,34 @@
 import 'package:flutter/material.dart';
 import 'quiz_screen.dart';
+import 'user_profile_screen.dart';
+
+class DifficultyScreenArgs {
+  final String categoryKey;
+  DifficultyScreenArgs({required this.categoryKey});
+}
 
 class DifficultyScreen extends StatelessWidget {
-  final String categoryKey;
-  const DifficultyScreen({super.key, required this.categoryKey});
+  static const routeName = '/difficulty';
+  const DifficultyScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final args =
+        ModalRoute.of(context)!.settings.arguments as DifficultyScreenArgs;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Select Difficulty')),
+      appBar: AppBar(
+        title: const Text('Select Difficulty'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.person),
+            tooltip: 'Profile',
+            onPressed: () {
+              Navigator.pushNamed(context, UserProfileScreen.routeName);
+            },
+          ),
+        ],
+      ),
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
@@ -20,13 +40,13 @@ class DifficultyScreen extends StatelessWidget {
                 children: [
                   ElevatedButton(
                     onPressed: () {
-                      Navigator.pushReplacement(
+                      Navigator.pushNamed(
                         context,
-                        MaterialPageRoute(
-                          builder: (_) => QuizScreen(
-                            categoryKey: categoryKey,
-                            flagsPerSession: 15, // Easy
-                          ),
+                        QuizScreen.routeName,
+                        arguments: QuizScreenArgs(
+                          categoryKey: args.categoryKey,
+                          flagsPerSession: 15, // Easy
+                          difficulty: 'easy',
                         ),
                       );
                     },
@@ -38,13 +58,13 @@ class DifficultyScreen extends StatelessWidget {
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () {
-                      Navigator.pushReplacement(
+                      Navigator.pushNamed(
                         context,
-                        MaterialPageRoute(
-                          builder: (_) => QuizScreen(
-                            categoryKey: categoryKey,
-                            flagsPerSession: 30, // Intermediate
-                          ),
+                        QuizScreen.routeName,
+                        arguments: QuizScreenArgs(
+                          categoryKey: args.categoryKey,
+                          flagsPerSession: 30, // Intermediate
+                          difficulty: 'intermediate',
                         ),
                       );
                     },
@@ -56,13 +76,13 @@ class DifficultyScreen extends StatelessWidget {
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () {
-                      Navigator.pushReplacement(
+                      Navigator.pushNamed(
                         context,
-                        MaterialPageRoute(
-                          builder: (_) => QuizScreen(
-                            categoryKey: categoryKey,
-                            flagsPerSession: 50, // Expert
-                          ),
+                        QuizScreen.routeName,
+                        arguments: QuizScreenArgs(
+                          categoryKey: args.categoryKey,
+                          flagsPerSession: 50, // Expert
+                          difficulty: 'expert',
                         ),
                       );
                     },

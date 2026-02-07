@@ -3,14 +3,20 @@ import '../data/flag_loader.dart';
 import '../models/flag_question.dart';
 import 'result_screen.dart';
 
-class QuizScreen extends StatefulWidget {
+class QuizScreenArgs {
   final String categoryKey;
   final int flagsPerSession;
-  const QuizScreen({
-    super.key,
+  final String difficulty;
+  QuizScreenArgs({
     required this.categoryKey,
     required this.flagsPerSession,
+    required this.difficulty,
   });
+}
+
+class QuizScreen extends StatefulWidget {
+  static const routeName = '/quiz';
+  const QuizScreen({super.key});
 
   @override
   State<QuizScreen> createState() => _QuizScreenState();
@@ -23,24 +29,35 @@ class _QuizScreenState extends State<QuizScreen> {
   bool _answered = false;
   String? _selectedOption;
   int _score = 0;
+  late final QuizScreenArgs args;
+  bool _argsLoaded = false;
 
   @override
   void initState() {
     super.initState();
-    // -> HERE: load + randomize once at startup
-    loadAllFlags().then((allFlags) {
-      // Shuffle & pick only widget.flagsPerSession
-      allFlags.shuffle();
-      final count = widget.flagsPerSession < allFlags.length
-          ? widget.flagsPerSession
-          : allFlags.length;
-      final subset = allFlags.sublist(0, count);
-      final quiz = prepareQuiz(subset);
-      setState(() {
-        _questions = quiz;
-        _isLoading = false;
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_argsLoaded) {
+      args = ModalRoute.of(context)!.settings.arguments as QuizScreenArgs;
+      _argsLoaded = true;
+      // -> HERE: load + randomize once at startup
+      loadAllFlags().then((allFlags) {
+        // Shuffle & pick only widget.flagsPerSession
+        allFlags.shuffle();
+        final count = args.flagsPerSession < allFlags.length
+            ? args.flagsPerSession
+            : allFlags.length;
+        final subset = allFlags.sublist(0, count);
+        final quiz = prepareQuiz(subset);
+        setState(() {
+          _questions = quiz;
+          _isLoading = false;
+        });
       });
-    });
+    }
   }
 
   void _handleAnswer(String answer) {
@@ -65,14 +82,14 @@ class _QuizScreenState extends State<QuizScreen> {
     } else {
       // Instead of pushing ResultScreen(score: _score, total: _questions.length),
       // do:
-      Navigator.pushReplacement(
+      Navigator.pushNamed(
         context,
-        MaterialPageRoute(
-          builder: (_) => ResultScreen(
-            categoryKey: 'flag',
-            score: _score,
-            total: _questions.length,
-          ),
+        ResultScreen.routeName,
+        arguments: ResultScreenArgs(
+          categoryKey: args.categoryKey,
+          difficulty: args.difficulty,
+          score: _score,
+          total: _questions.length,
         ),
       );
     }

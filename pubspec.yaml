@@ -30,18 +30,32 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  firebase_core: ^3.0.0
-  firebase_auth: ^5.0.0       # if you need auth
-  cloud_firestore: ^5.0.0     # if you need Firestore
+  # Latest Firebase SDKs
+  firebase_core: ^4.2.0
+  firebase_auth: ^6.0.0       # if you need auth
+  cloud_firestore: ^6.0.3     # if you need Firestore
   shared_preferences: ^2.5.3
-  # Firebase core + Firestore + Auth (for anonymous sign‐in)
-  # firebase_core: ^2.10.0
-  # cloud_firestore: ^4.7.0
-  # firebase_auth: ^4.4.0
+  # Firebase UI packages (use your fork with the fixed imports)
+  firebase_ui_auth:
+    git:
+      url: https://github.com/st3v3lyrious/FirebaseUI-Flutter.git
+      path: packages/firebase_ui_auth
+      ref: 51615d0
+  firebase_ui_oauth_google:
+    git:
+      url: https://github.com/st3v3lyrious/FirebaseUI-Flutter.git
+      path: packages/firebase_ui_oauth_google
+      ref: 51615d0
+  firebase_ui_oauth_apple:
+    git:
+      url: https://github.com/st3v3lyrious/FirebaseUI-Flutter.git
+      path: packages/firebase_ui_oauth_apple
+      ref: 51615d0
+  sign_in_with_apple: ^5.0.0  # Required for Apple sign-in
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^1.0.8
+  cupertino_icons: ^1.0.5
 
 dev_dependencies:
   flutter_test:
@@ -95,3 +109,28 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+# Dependency overrides to fix Brightness type issues in firebase_ui packages
+dependency_overrides:
+  # Core UI packages with fixed imports
+  firebase_ui_shared:
+    git:
+      url: https://github.com/st3v3lyrious/FirebaseUI-Flutter.git
+      path: packages/firebase_ui_shared
+      ref: 51615d0
+  firebase_ui_oauth:
+    git:
+      url: https://github.com/st3v3lyrious/FirebaseUI-Flutter.git
+      path: packages/firebase_ui_oauth
+      ref: 51615d0
+  # Auth UI packages
+  firebase_ui_auth:
+    git:
+      url: https://github.com/st3v3lyrious/FirebaseUI-Flutter.git
+      path: packages/firebase_ui_auth
+      ref: 51615d0
+  firebase_ui_localizations:
+    git:
+      url: https://github.com/st3v3lyrious/FirebaseUI-Flutter.git
+      path: packages/firebase_ui_localizations
+      ref: 51615d0

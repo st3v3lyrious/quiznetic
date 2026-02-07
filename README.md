@@ -1,30 +1,54 @@
-# quiznetic_flutter
+<!-- DOC_AGENT_START -->
+## Project Snapshot (auto)
 
-A new Flutter project.
+- **Package:** `quiznetic_flutter`
+- **Version:** `1.0.0+1`
+- **Environment:** Dart SDK: `^3.8.1`
 
-## Project docs
+### Dependencies (auto)
+- **deps:** flutter, sdk, firebase_core, firebase_auth, cloud_firestore, shared_preferences, firebase_ui_auth, git, url, path, ref, firebase_ui_oauth_google…
+- **dev_deps:** flutter_test, sdk, flutter_lints
 
-- [Current architecture and milestones](docs/current-architecture-and-milestones.md)
+### Test Status (auto)
+- **Unit/Widget tests:** `1` files in `test/`
+- **Integration tests:** `0` files in `integration_test/`
 
-## Getting Started
+### Key Files (auto)
 
-This project is a starting point for a Flutter application.
+**lib/**
+- `lib/.DS_Store`
+- `lib/data/flag_list.dart`
+- `lib/data/flag_loader.dart`
+- `lib/firebase_options.dart`
+- `lib/main.dart`
+- `lib/models/flag_question.dart`
+- `lib/screens/difficulty_screen.dart`
+- `lib/screens/home_screen.dart`
+- `lib/screens/login_screen.dart`
+- `lib/screens/quiz_screen.dart`
+- `lib/screens/result_screen.dart`
+- `lib/screens/splash_screen.dart`
+- `lib/screens/upgrade_account_screen.dart`
+- `lib/screens/user_profile_screen.dart`
+- `lib/services/auth_service.dart`
+- `lib/services/score_service.dart`
+- `lib/services/user_checker.dart`
+- `lib/services/user_profile.dart`
+- `lib/utils/helpers.dart`
+- `lib/widgets/auth_guard.dart`
 
-A few resources to get you started if this is your first Flutter project:
+**test/**
+- `test/widget_test.dart`
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+**integration_test/**
+_(missing)_
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### How to run (auto)
 
-## Firestore schema
-users
- └─ {uid}
-     └─ scores
-         └─ {categoryKey} → { bestScore, updatedAt }
-leaderboard
- └─ {categoryKey}
-     └─ entries
-         └─ {uid} → { score, updatedAt }
+```bash
+flutter pub get
+flutter test
+# Integration tests (if present):
+flutter test integration_test
+```
+<!-- DOC_AGENT_END -->
