@@ -20,7 +20,7 @@ class UserProfileScreen extends StatelessWidget {
     // add more as you introduce them...
   };
 
-  /// TODO: Describe the behavior of `build`.
+  /// Builds profile content with the user's saved high scores.
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;

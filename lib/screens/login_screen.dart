@@ -14,7 +14,7 @@ class LoginScreen extends StatelessWidget {
   static const routeName = '/login';
   const LoginScreen({super.key});
 
-  /// TODO: Describe the behavior of `build`.
+  /// Builds provider sign-in and guest-entry actions.
   @override
   Widget build(BuildContext context) {
     return Scaffold(

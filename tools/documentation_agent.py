@@ -147,8 +147,53 @@ def build_header(entry: DocEntry) -> str:
     )
 
 
+def _words_from_identifier(name: str) -> str:
+    name = re.sub(r"^_+", "", name)
+    name = name.replace("_", " ")
+    name = re.sub(r"([a-z0-9])([A-Z])", r"\1 \2", name)
+    return re.sub(r"\s+", " ", name).strip().lower()
+
+
+def function_doc_summary(name: str) -> str:
+    special = {
+        "main": "Initializes app services and starts the application.",
+        "build": "Builds the widget tree for this component.",
+        "createState": "Creates mutable state for this stateful widget.",
+        "initState": "Initializes state for this component.",
+        "didChangeDependencies": (
+            "Responds to dependency changes and runs dependency-bound setup."
+        ),
+        "dispose": "Cleans up resources before this object is disposed.",
+        "signOut": "Signs out the current user session.",
+        "linkAnonymousWithCredential": (
+            "Links the anonymous user to a permanent auth credential."
+        ),
+    }
+    if name in special:
+        return special[name]
+
+    if name.startswith("_handle"):
+        words = _words_from_identifier(name.replace("_handle", ""))
+        return f"Handles {words} behavior."
+    if name.startswith("_check"):
+        words = _words_from_identifier(name.replace("_check", ""))
+        return f"Checks {words} and updates control flow accordingly."
+    if name.startswith("_next"):
+        words = _words_from_identifier(name.replace("_next", ""))
+        return f"Advances to the next {words} step."
+    if name.startswith("get"):
+        words = _words_from_identifier(name[3:])
+        return f"Returns {words} data."
+    if name.startswith("set"):
+        words = _words_from_identifier(name[3:])
+        return f"Updates {words} data."
+
+    words = _words_from_identifier(name)
+    return f"Implements {words} behavior."
+
+
 def build_function_doc_comment(indent: str, name: str) -> str:
-    return f"{indent}/// TODO: Describe the behavior of `{name}`."
+    return f"{indent}/// {function_doc_summary(name)}"
 
 
 def should_include(rel_path: Path, filters: list[str]) -> bool:

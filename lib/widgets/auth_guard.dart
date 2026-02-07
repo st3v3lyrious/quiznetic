@@ -24,7 +24,7 @@ class AuthGuard extends StatelessWidget {
     this.builder,
   });
 
-  /// TODO: Describe the behavior of `build`.
+  /// Builds output based on current auth state and guard rules.
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(

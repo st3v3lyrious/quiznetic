@@ -24,7 +24,7 @@ class CompatPopScope extends StatefulWidget {
 
   const CompatPopScope({this.onPop, required this.child, super.key});
 
-  /// TODO: Describe the behavior of `createState`.
+  /// Creates compatibility state for pop-interception handling.
   @override
   State<CompatPopScope> createState() => _CompatPopScopeState();
 }
@@ -36,13 +36,13 @@ class _CompatPopScopeState extends State<CompatPopScope> {
   // older scoped callbacks when unavailable.
   dynamic _popEntryToken;
 
-  /// TODO: Describe the behavior of `_handleWillPop`.
+  /// Delegates pop handling to the callback when provided.
   Future<bool> _handleWillPop() async {
     if (widget.onPop != null) return await widget.onPop!();
     return true;
   }
 
-  /// TODO: Describe the behavior of `didChangeDependencies`.
+  /// Registers or re-registers pop callbacks when route dependencies change.
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -82,7 +82,7 @@ class _CompatPopScopeState extends State<CompatPopScope> {
     }
   }
 
-  /// TODO: Describe the behavior of `dispose`.
+  /// Unregisters pop callbacks before disposing this state object.
   @override
   void dispose() {
     if (_route != null) {
@@ -100,7 +100,7 @@ class _CompatPopScopeState extends State<CompatPopScope> {
     super.dispose();
   }
 
-  /// TODO: Describe the behavior of `build`.
+  /// Wraps the child with a will-pop interceptor.
   @override
   Widget build(BuildContext context) {
     // Also wrap with WillPopScope so newer SDKs (or when route-scoped
@@ -128,7 +128,7 @@ class ResultScreen extends StatefulWidget {
 
   const ResultScreen({super.key});
 
-  /// TODO: Describe the behavior of `createState`.
+  /// Creates state for the quiz results screen.
   @override
   State<ResultScreen> createState() => _ResultScreenState();
 }
@@ -137,7 +137,7 @@ class _ResultScreenState extends State<ResultScreen> {
   late Future<int> _highScoreFuture;
   bool _didInit = false;
 
-  /// TODO: Describe the behavior of `didChangeDependencies`.
+  /// Loads args once, saves score, and resolves the displayed high score.
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -172,13 +172,13 @@ class _ResultScreenState extends State<ResultScreen> {
     }
   }
 
-  /// TODO: Describe the behavior of `initState`.
+  /// Initializes result screen state.
   @override
   void initState() {
     super.initState();
   }
 
-  /// TODO: Describe the behavior of `build`.
+  /// Builds the score summary, high-score status, and follow-up actions.
   @override
   Widget build(BuildContext context) {
     // Safely read route arguments. If missing, show an error placeholder.

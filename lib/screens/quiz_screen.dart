@@ -24,7 +24,7 @@ class QuizScreen extends StatefulWidget {
   static const routeName = '/quiz';
   const QuizScreen({super.key});
 
-  /// TODO: Describe the behavior of `createState`.
+  /// Creates state for the quiz session screen.
   @override
   State<QuizScreen> createState() => _QuizScreenState();
 }
@@ -39,13 +39,13 @@ class _QuizScreenState extends State<QuizScreen> {
   late final QuizScreenArgs args;
   bool _argsLoaded = false;
 
-  /// TODO: Describe the behavior of `initState`.
+  /// Initializes state before route-bound data is loaded.
   @override
   void initState() {
     super.initState();
   }
 
-  /// TODO: Describe the behavior of `didChangeDependencies`.
+  /// Reads route args once, loads flags, and prepares randomized questions.
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -69,7 +69,7 @@ class _QuizScreenState extends State<QuizScreen> {
     }
   }
 
-  /// TODO: Describe the behavior of `_handleAnswer`.
+  /// Records an answer and increments score when correct.
   void _handleAnswer(String answer) {
     if (!_answered) {
       setState(() {
@@ -82,7 +82,7 @@ class _QuizScreenState extends State<QuizScreen> {
     }
   }
 
-  /// TODO: Describe the behavior of `_nextQuestion`.
+  /// Advances to the next question or navigates to results when finished.
   void _nextQuestion() {
     if (_currentIndex < _questions.length - 1) {
       setState(() {
@@ -106,7 +106,7 @@ class _QuizScreenState extends State<QuizScreen> {
     }
   }
 
-  /// TODO: Describe the behavior of `build`.
+  /// Builds loading, empty, and active-quiz UI states.
   @override
   Widget build(BuildContext context) {
     // 1) Show a loader while flags load

@@ -9,7 +9,7 @@ Script:
 
 Purpose:
 - Adds structured header docs to Dart files that are missing them.
-- Adds function/method doc comments where missing.
+- Adds concise function/method doc comments where missing.
 - Regenerates `docs/CODEMAP.md` with file purposes and doc coverage.
 
 Usage:

@@ -21,7 +21,7 @@ class HomeScreen extends StatelessWidget {
     // Category(key: 'capital', name: 'Capital Quiz', icon: Icons.location_city),
   ];
 
-  /// TODO: Describe the behavior of `build`.
+  /// Builds the category selection UI and handles category navigation.
   @override
   Widget build(BuildContext context) {
     return Scaffold(

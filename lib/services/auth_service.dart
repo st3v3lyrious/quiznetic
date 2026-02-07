@@ -53,7 +53,7 @@ class AuthService {
   }
 
   // Sign out (works for both anonymous and authenticated users)
-  /// TODO: Describe the behavior of `signOut`.
+  /// Signs out the current user session.
   Future<void> signOut() async {
     try {
       await _auth.signOut();
@@ -64,7 +64,7 @@ class AuthService {
   }
 
   // Convert anonymous account to permanent account
-  /// TODO: Describe the behavior of `linkAnonymousWithCredential`.
+  /// Links the anonymous user to a permanent auth credential.
   Future<UserCredential> linkAnonymousWithCredential(
     AuthCredential credential,
   ) async {

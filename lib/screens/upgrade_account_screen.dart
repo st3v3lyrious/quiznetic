@@ -11,7 +11,7 @@ class UpgradeAccountScreen extends StatelessWidget {
   static const routeName = '/upgrade';
   const UpgradeAccountScreen({super.key});
 
-  /// TODO: Describe the behavior of `build`.
+  /// Builds the sign-in UI used to upgrade an anonymous account.
   @override
   Widget build(BuildContext context) {
     // Offer the firebase_ui_auth sign-in screen to upgrade anonymous users.

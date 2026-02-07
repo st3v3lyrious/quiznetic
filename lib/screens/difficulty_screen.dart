@@ -16,7 +16,7 @@ class DifficultyScreen extends StatelessWidget {
   static const routeName = '/difficulty';
   const DifficultyScreen({super.key});
 
-  /// TODO: Describe the behavior of `build`.
+  /// Builds difficulty options and starts a quiz for the selected category.
   @override
   Widget build(BuildContext context) {
     final args =

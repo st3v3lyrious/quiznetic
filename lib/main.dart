@@ -16,7 +16,7 @@ import 'screens/splash_screen.dart';
 import 'firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 
-/// TODO: Describe the behavior of `main`.
+/// Initializes Firebase, ensures a user session, and launches the app.
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
@@ -45,7 +45,7 @@ class QuizNetic extends StatelessWidget {
   const QuizNetic({super.key});
 
   // This widget is the root of your application.
-  /// TODO: Describe the behavior of `build`.
+  /// Builds the root MaterialApp with global routes and theme settings.
   @override
   Widget build(BuildContext context) {
     // Build the ColorScheme once:
@@ -121,7 +121,7 @@ class MyHomePage extends StatefulWidget {
 
   final String title;
 
-  /// TODO: Describe the behavior of `createState`.
+  /// Creates mutable state for the counter demo widget.
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
@@ -129,7 +129,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
 
-  /// TODO: Describe the behavior of `_incrementCounter`.
+  /// Increments the demo counter and triggers a rebuild.
   void _incrementCounter() {
     setState(() {
       // This call to setState tells the Flutter framework that something has
@@ -141,7 +141,7 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  /// TODO: Describe the behavior of `build`.
+  /// Builds the Flutter template counter UI.
   @override
   Widget build(BuildContext context) {
     // This method is rerun every time setState is called, for instance as done
