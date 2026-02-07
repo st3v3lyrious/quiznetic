@@ -11,7 +11,6 @@ import 'package:quiznetic_flutter/services/auth_service.dart';
 import 'package:quiznetic_flutter/services/leaderboard_band_service.dart';
 import 'package:quiznetic_flutter/services/score_repository.dart';
 import '../services/score_service.dart';
-import 'package:quiznetic_flutter/utils/helpers.dart';
 
 class UserProfileScreen extends StatefulWidget {
   static const routeName = '/profile';
@@ -44,6 +43,12 @@ class UserProfileScreen extends StatefulWidget {
 class _UserProfileScreenState extends State<UserProfileScreen> {
   late Future<_ProfileData> _profileDataFuture;
   bool _dismissGuestCta = false;
+  static const _difficultyOrder = {'easy': 0, 'intermediate': 1, 'expert': 2};
+  static const _difficultyLabels = {
+    'easy': 'Easy',
+    'intermediate': 'Intermediate',
+    'expert': 'Expert',
+  };
 
   /// Loads profile data once for this widget lifecycle.
   @override
@@ -141,6 +146,39 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     };
   }
 
+  /// Returns normalized human-readable difficulty label.
+  String _difficultyLabel(String difficulty) {
+    final normalized = difficulty.trim().toLowerCase();
+    final known = _difficultyLabels[normalized];
+    if (known != null) return known;
+    if (normalized.isEmpty) return 'Unknown';
+    return normalized[0].toUpperCase() + normalized.substring(1);
+  }
+
+  /// Sorts scores to keep profile ordering stable across fetch sources.
+  List<CategoryScore> _sortedScores(List<CategoryScore> scores) {
+    final sorted = List<CategoryScore>.from(scores);
+    sorted.sort((a, b) {
+      final categoryA =
+          UserProfileScreen._labels[a.categoryKey] ?? a.categoryKey;
+      final categoryB =
+          UserProfileScreen._labels[b.categoryKey] ?? b.categoryKey;
+      final categoryCompare = categoryA.compareTo(categoryB);
+      if (categoryCompare != 0) return categoryCompare;
+
+      final orderA = _difficultyOrder[a.difficulty.toLowerCase()] ?? 999;
+      final orderB = _difficultyOrder[b.difficulty.toLowerCase()] ?? 999;
+      final difficultyCompare = orderA.compareTo(orderB);
+      if (difficultyCompare != 0) return difficultyCompare;
+
+      final difficultyLabelCompare = a.difficulty.compareTo(b.difficulty);
+      if (difficultyLabelCompare != 0) return difficultyLabelCompare;
+
+      return b.highScore.compareTo(a.highScore);
+    });
+    return sorted;
+  }
+
   /// Opens account-upgrade flow and hides CTA when guest converts successfully.
   Future<void> _openUpgradeFlow() async {
     await Navigator.pushNamed(context, UpgradeAccountScreen.routeName);
@@ -152,6 +190,48 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         _dismissGuestCta = true;
       });
     }
+  }
+
+  /// Reloads profile data after a retry action.
+  void _reloadProfileData() {
+    setState(() {
+      _profileDataFuture = _loadProfileData();
+    });
+  }
+
+  /// Builds a centered status panel for empty/error profile states.
+  Widget _buildStatusState({
+    required IconData icon,
+    required String title,
+    required String message,
+    required String actionLabel,
+    required Key actionKey,
+  }) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 48),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 8),
+            Text(message, textAlign: TextAlign.center),
+            const SizedBox(height: 16),
+            OutlinedButton(
+              key: actionKey,
+              onPressed: _reloadProfileData,
+              child: Text(actionLabel),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   /// Builds profile content with the user's saved high scores.
@@ -168,17 +248,29 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             return const Center(child: CircularProgressIndicator());
           }
           if (snap.hasError) {
-            return Center(child: Text('Error: ${snap.error}'));
+            return _buildStatusState(
+              icon: Icons.cloud_off,
+              title: 'Could not load your profile',
+              message: 'Check your connection and try again.',
+              actionLabel: 'Retry',
+              actionKey: const Key('profile-error-retry-button'),
+            );
           }
 
           final profileData = snap.data!;
-          final scores = profileData.scores;
+          final scores = _sortedScores(profileData.scores);
 
           // If you want to show categories even with zero score,
           // unify `scores` with _labels.keys here.
 
           if (scores.isEmpty) {
-            return const Center(child: Text('No scores yet.'));
+            return _buildStatusState(
+              icon: Icons.emoji_events_outlined,
+              title: 'No high scores yet',
+              message: 'Play a quiz to save your first best score.',
+              actionLabel: 'Refresh',
+              actionKey: const Key('profile-empty-refresh-button'),
+            );
           }
 
           return ListView(
@@ -235,7 +327,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                     title: Text(
                       // e.g. "Flag Quiz (Easy)"
                       '${UserProfileScreen._labels[sc.categoryKey] ?? sc.categoryKey} '
-                      '(${toUpperCase(sc.difficulty[0])})',
+                      '(${_difficultyLabel(sc.difficulty)})',
                     ),
                     trailing: Text(
                       '${sc.highScore}',

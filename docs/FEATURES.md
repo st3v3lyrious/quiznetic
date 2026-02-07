@@ -22,6 +22,7 @@ Use this as an editable feature checklist.
 - [x] Provider login screen scaffold with Email, Google, Apple providers
 - [x] Login screen uses valid logo asset and config-driven Google OAuth client ID
 - [x] Upgrade account screen scaffold for anonymous users
+- [x] Upgrade flow links anonymous guest to Email/Google/Apple while preserving UID continuity
 
 ## Scores And Profile
 
@@ -37,6 +38,8 @@ Use this as an editable feature checklist.
 - [x] Anonymous guest conversion CTA on profile screen using best-band leaderboard messaging
 - [x] Guest conversion CTA actions route to account-upgrade flow (`/upgrade`)
 - [x] Profile screen listing stored high scores
+- [x] Profile screen uses full difficulty labels + deterministic score ordering
+- [x] Profile screen empty/error states include in-place refresh/retry actions
 
 ## Planned Features
 
@@ -50,3 +53,4 @@ Use this as an editable feature checklist.
 - [x] Manual testing agent that generates unit/widget test scaffolds under `test/`
 - [x] Manual testing agent that generates integration scaffolds under `integration_test/`
 - [x] Manual testing agent that generates Playwright smoke + per-screen e2e scaffolds under `playwright/`
+- [x] Unit test coverage command/script (`flutter test test/unit --coverage`, `tools/run_unit_coverage.sh`)

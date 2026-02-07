@@ -330,6 +330,8 @@ def generate_readme() -> str:
       "",
       "```bash",
       "flutter test",
+      "flutter test test/unit --coverage",
+      "./tools/run_unit_coverage.sh   # optional helper",
       "flutter test integration_test   # if present",
       "cd playwright && npx playwright test   # if present",
       "```"

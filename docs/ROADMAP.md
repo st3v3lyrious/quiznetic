@@ -14,7 +14,8 @@ Use this as a short, editable delivery plan.
 - [x] M2: Add guest conversion messaging from leaderboard bands (e.g., top 10/20/100) on results.
 - [x] M2: Extend "Create account to compete globally" CTA to guest profile surface.
 - [x] M2: Add guest CTA action flow to `/upgrade` from results/profile and preserve post-upgrade continuity.
-- [ ] M2: Harden profile display (difficulty labels, ordering, empty/error states).
+- [x] M2: Upgrade screen performs anonymous-account linking (Email/Google/Apple) with guest UID continuity checks.
+- [x] M2: Harden profile display (difficulty labels, ordering, empty/error states).
 - [x] M2: Apply `AuthGuard` strategy consistently to protected routes.
 - [x] M2: Replace deprecated result-screen back handling (`WillPopScope`) with `PopScope` and cover it with widget tests.
 - [ ] M3: Implement a second quiz category (Logo or Capitals) using current category-key pattern.

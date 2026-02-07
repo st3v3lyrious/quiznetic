@@ -26,7 +26,15 @@ void main() {
     );
 
     await tester.pumpAndSettle();
-    expect(find.text('No scores yet.'), findsOneWidget);
+    expect(find.text('No high scores yet'), findsOneWidget);
+    expect(
+      find.text('Play a quiz to save your first best score.'),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const Key('profile-empty-refresh-button')),
+      findsOneWidget,
+    );
   });
 
   testWidgets('renders high score cards when data exists', (tester) async {
@@ -47,8 +55,50 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('High Scores'), findsOneWidget);
-    expect(find.text('Flag Quiz (E)'), findsOneWidget);
+    expect(find.text('Flag Quiz (Easy)'), findsOneWidget);
     expect(find.text('12'), findsOneWidget);
+  });
+
+  testWidgets('orders profile scores deterministically by difficulty labels', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: UserProfileScreen(
+          scoreLoader: () async => [
+            CategoryScore(
+              categoryKey: 'flag',
+              difficulty: 'expert',
+              highScore: 40,
+            ),
+            CategoryScore(
+              categoryKey: 'flag',
+              difficulty: 'easy',
+              highScore: 20,
+            ),
+            CategoryScore(
+              categoryKey: 'flag',
+              difficulty: 'intermediate',
+              highScore: 30,
+            ),
+          ],
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    final tiles = tester.widgetList<ListTile>(find.byType(ListTile)).toList();
+    final titles = tiles.map((tile) => (tile.title as Text).data).toList();
+
+    expect(
+      titles,
+      equals([
+        'Flag Quiz (Easy)',
+        'Flag Quiz (Intermediate)',
+        'Flag Quiz (Expert)',
+      ]),
+    );
   });
 
   testWidgets('shows error state when loading fails', (tester) async {
@@ -61,7 +111,67 @@ void main() {
     );
 
     await tester.pumpAndSettle();
-    expect(find.textContaining('Error:'), findsOneWidget);
+    expect(find.text('Could not load your profile'), findsOneWidget);
+    expect(find.text('Check your connection and try again.'), findsOneWidget);
+    expect(find.byKey(const Key('profile-error-retry-button')), findsOneWidget);
+  });
+
+  testWidgets('empty-state refresh reloads profile data', (tester) async {
+    var callCount = 0;
+    final loaderResults = [
+      <CategoryScore>[],
+      [CategoryScore(categoryKey: 'flag', difficulty: 'easy', highScore: 18)],
+    ];
+
+    Future<List<CategoryScore>> loader() async {
+      final index = callCount < loaderResults.length
+          ? callCount
+          : loaderResults.length - 1;
+      callCount++;
+      return loaderResults[index];
+    }
+
+    await tester.pumpWidget(
+      MaterialApp(home: UserProfileScreen(scoreLoader: loader)),
+    );
+
+    await tester.pumpAndSettle();
+    expect(find.text('No high scores yet'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('profile-empty-refresh-button')));
+    await tester.pumpAndSettle();
+
+    expect(callCount, greaterThanOrEqualTo(2));
+    expect(find.text('High Scores'), findsOneWidget);
+    expect(find.text('Flag Quiz (Easy)'), findsOneWidget);
+  });
+
+  testWidgets('error-state retry reloads profile data', (tester) async {
+    var callCount = 0;
+
+    Future<List<CategoryScore>> loader() async {
+      callCount++;
+      if (callCount == 1) {
+        throw Exception('boom');
+      }
+      return [
+        CategoryScore(categoryKey: 'flag', difficulty: 'easy', highScore: 22),
+      ];
+    }
+
+    await tester.pumpWidget(
+      MaterialApp(home: UserProfileScreen(scoreLoader: loader)),
+    );
+
+    await tester.pumpAndSettle();
+    expect(find.text('Could not load your profile'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('profile-error-retry-button')));
+    await tester.pumpAndSettle();
+
+    expect(callCount, greaterThanOrEqualTo(2));
+    expect(find.text('High Scores'), findsOneWidget);
+    expect(find.text('Flag Quiz (Easy)'), findsOneWidget);
   });
 
   testWidgets('shows guest conversion CTA text for top-20 profile band', (

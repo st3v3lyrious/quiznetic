@@ -32,6 +32,7 @@ Use this as an editable feature checklist.
 - [x] Provider login screen scaffold with Email, Google, Apple providers
 - [x] Login screen uses valid logo asset and config-driven Google OAuth client ID
 - [x] Upgrade account screen scaffold for anonymous users
+- [x] Upgrade flow links anonymous guest to Email/Google/Apple while preserving UID continuity
 
 ## Scores And Profile
 
@@ -47,6 +48,8 @@ Use this as an editable feature checklist.
 - [x] Anonymous guest conversion CTA on profile screen using best-band leaderboard messaging
 - [x] Guest conversion CTA actions route to account-upgrade flow (`/upgrade`)
 - [x] Profile screen listing stored high scores
+- [x] Profile screen uses full difficulty labels + deterministic score ordering
+- [x] Profile screen empty/error states include in-place refresh/retry actions
 
 ## Planned Features
 
@@ -60,6 +63,7 @@ Use this as an editable feature checklist.
 - [x] Manual testing agent that generates unit/widget test scaffolds under `test/`
 - [x] Manual testing agent that generates integration scaffolds under `integration_test/`
 - [x] Manual testing agent that generates Playwright smoke + per-screen e2e scaffolds under `playwright/`
+- [x] Unit test coverage command/script (`flutter test test/unit --coverage`, `tools/run_unit_coverage.sh`)
 
 ## Screens
 
@@ -70,7 +74,7 @@ Use this as an editable feature checklist.
 - **Quiz** — Presents questions, records answers, and handles scoring. (`lib/screens/quiz_screen.dart`)
 - **Result Screen** — Shows result summary and next actions after a quiz. (`lib/screens/result_screen.dart`)
 - **Splash Screen** — Shows startup branding and routes users based on auth state. (`lib/screens/splash_screen.dart`)
-- **Upgrade Account Screen** — Lets anonymous users upgrade to a linked account. (`lib/screens/upgrade_account_screen.dart`)
+- **Upgrade Account Screen** — Lets anonymous users link a permanent provider account while preserving guest identity. (`lib/screens/upgrade_account_screen.dart`)
 - **User Profile Screen** — Displays user profile, saved high-score records, and guest conversion CTA. (`lib/screens/user_profile_screen.dart`)
 
 ## Tech stack
@@ -100,10 +104,12 @@ flutter run
 ## Testing
 
 - **Unit/Widget tests:** `22` files
-- **Integration tests:** `3` files
+- **Integration tests:** `4` files
 
 ```bash
 flutter test
+flutter test test/unit --coverage
+./tools/run_unit_coverage.sh   # optional helper
 flutter test integration_test   # if present
 cd playwright && npx playwright test   # if present
 ```
@@ -131,7 +137,8 @@ Use this as a short, editable delivery plan.
 - [x] M2: Add guest conversion messaging from leaderboard bands (e.g., top 10/20/100) on results.
 - [x] M2: Extend "Create account to compete globally" CTA to guest profile surface.
 - [x] M2: Add guest CTA action flow to `/upgrade` from results/profile and preserve post-upgrade continuity.
-- [ ] M2: Harden profile display (difficulty labels, ordering, empty/error states).
+- [x] M2: Upgrade screen performs anonymous-account linking (Email/Google/Apple) with guest UID continuity checks.
+- [x] M2: Harden profile display (difficulty labels, ordering, empty/error states).
 - [x] M2: Apply `AuthGuard` strategy consistently to protected routes.
 - [x] M2: Replace deprecated result-screen back handling (`WillPopScope`) with `PopScope` and cover it with widget tests.
 - [ ] M3: Implement a second quiz category (Logo or Capitals) using current category-key pattern.
