@@ -56,6 +56,7 @@ DECL_EXCLUDED_PREFIXES = (
     "do ",
     "on ",
     "case ",
+    "throw ",
 )
 DECL_EXCLUDED_STARTS = (
     "class ",

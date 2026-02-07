@@ -16,19 +16,22 @@ class AuthGuard extends StatelessWidget {
   final Widget child;
   final bool allowAnonymous;
   final Widget Function(BuildContext, User?)? builder;
+  final Stream<User?>? authStateChanges;
 
   const AuthGuard({
     super.key,
     required this.child,
     this.allowAnonymous = true,
     this.builder,
+    this.authStateChanges,
   });
 
   /// Builds output based on current auth state and guard rules.
   @override
   Widget build(BuildContext context) {
+    final stream = authStateChanges ?? FirebaseAuth.instance.authStateChanges();
     return StreamBuilder<User?>(
-      stream: FirebaseAuth.instance.authStateChanges(),
+      stream: stream,
       builder: (context, snapshot) {
         // Show custom UI if builder is provided
         final localBuilder = builder;

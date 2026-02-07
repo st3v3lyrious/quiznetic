@@ -44,7 +44,14 @@ Script:
 Purpose:
 - Scaffolds unit tests for service/data/model/util files.
 - Scaffolds widget tests for screen/widget files.
-- Scaffolds e2e smoke test under `integration_test/`.
+- Scaffolds Flutter integration tests under `integration_test/`.
+- Scaffolds Playwright end-to-end tests under `playwright/`.
+
+Output layout:
+- `test/unit/` -> unit tests
+- `test/widget/` -> widget tests
+- `integration_test/` -> integration tests
+- `playwright/` -> Playwright e2e tests + config
 
 Usage:
 ```bash
@@ -60,8 +67,16 @@ python3 tools/testing_agent.py --apply --overwrite
 # Limit generation to changed/new source files
 python3 tools/testing_agent.py --apply --targets lib/screens/quiz_screen.dart lib/services/score_service.dart
 
-# Skip e2e scaffold
+# Skip Playwright e2e scaffolds
 python3 tools/testing_agent.py --apply --skip-e2e
+
+# Skip Flutter integration scaffold
+python3 tools/testing_agent.py --apply --skip-integration
+
+# Run Playwright e2e after scaffolds are created
+cd playwright
+npm install
+npx playwright test
 ```
 
 ## Suggested Workflow

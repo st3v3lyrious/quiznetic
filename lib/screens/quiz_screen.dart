@@ -22,7 +22,10 @@ class QuizScreenArgs {
 
 class QuizScreen extends StatefulWidget {
   static const routeName = '/quiz';
-  const QuizScreen({super.key});
+  final Future<List<FlagQuestion>> Function()? flagsLoader;
+  final List<FlagQuestion> Function(List<FlagQuestion>)? quizPreparer;
+
+  const QuizScreen({super.key, this.flagsLoader, this.quizPreparer});
 
   /// Creates state for the quiz session screen.
   @override
@@ -52,15 +55,17 @@ class _QuizScreenState extends State<QuizScreen> {
     if (!_argsLoaded) {
       args = ModalRoute.of(context)!.settings.arguments as QuizScreenArgs;
       _argsLoaded = true;
+      final loadFlags = widget.flagsLoader ?? loadAllFlags;
+      final prepare = widget.quizPreparer ?? prepareQuiz;
       // -> HERE: load + randomize once at startup
-      loadAllFlags().then((allFlags) {
+      loadFlags().then((allFlags) {
         // Shuffle & pick only widget.flagsPerSession
         allFlags.shuffle();
         final count = args.flagsPerSession < allFlags.length
             ? args.flagsPerSession
             : allFlags.length;
         final subset = allFlags.sublist(0, count);
-        final quiz = prepareQuiz(subset);
+        final quiz = prepare(subset);
         setState(() {
           _questions = quiz;
           _isLoading = false;

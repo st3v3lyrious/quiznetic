@@ -10,7 +10,9 @@ import 'package:quiznetic_flutter/utils/helpers.dart';
 
 class UserProfileScreen extends StatelessWidget {
   static const routeName = '/profile';
-  const UserProfileScreen({super.key});
+  final Future<List<CategoryScore>> Function()? scoreLoader;
+
+  const UserProfileScreen({super.key, this.scoreLoader});
 
   // Human-readable labels for your category keys:
   static const _labels = {
@@ -28,7 +30,7 @@ class UserProfileScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Your Profile')),
       body: FutureBuilder<List<CategoryScore>>(
-        future: ScoreService().getAllHighScores(),
+        future: (scoreLoader ?? ScoreService().getAllHighScores)(),
         builder: (context, snap) {
           if (snap.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());

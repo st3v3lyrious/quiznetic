@@ -1,0 +1,14 @@
+{
+  "name": "quiznetic-playwright-e2e",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:list": "playwright test --list",
+    "install:browsers": "PLAYWRIGHT_BROWSERS_PATH=0 playwright install chromium"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.50.0"
+  }
+}

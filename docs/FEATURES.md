@@ -13,7 +13,10 @@ Use this as an editable feature checklist.
 ## Accounts And Auth
 
 - [x] Firebase initialization at app startup
+- [x] Explicit first-entry auth choice when no session exists (guest or sign in)
 - [x] Anonymous sign-in path with user doc creation (`users/{uid}`)
+- [x] Provider sign-in path with user doc creation (`users/{uid}`)
+- [x] Route-level auth guards on gameplay/profile routes (requires guest or signed-in session)
 - [x] Login screen scaffold with Email, Google, Apple providers
 - [x] "Continue as Guest" path from login screen
 - [x] Upgrade account screen scaffold for anonymous users
@@ -29,7 +32,6 @@ Use this as an editable feature checklist.
 - [ ] Unify high-score source of truth (Firestore + SharedPreferences are both used)
 - [ ] Configure real Google OAuth client ID
 - [ ] Fix login header image reference (`assets/images/logo.png`)
-- [ ] Apply `AuthGuard` consistently on protected routes
 
 ## Planned Features
 
@@ -37,3 +39,9 @@ Use this as an editable feature checklist.
 - [ ] Add Capitals quiz category
 - [ ] Enable "Change Quiz Type" flow when multiple categories are live
 - [ ] Expose anonymous-to-account upgrade in primary UX flow
+
+## Test Scaffolding
+
+- [x] Manual testing agent that generates unit/widget test scaffolds under `test/`
+- [x] Manual testing agent that generates integration scaffolds under `integration_test/`
+- [x] Manual testing agent that generates Playwright e2e scaffolds under `playwright/`

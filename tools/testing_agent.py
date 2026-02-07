@@ -10,7 +10,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 LIB_DIR = ROOT / "lib"
 TEST_DIR = ROOT / "test"
+UNIT_TEST_DIR = TEST_DIR / "unit"
+WIDGET_TEST_DIR = TEST_DIR / "widget"
 INTEGRATION_TEST_DIR = ROOT / "integration_test"
+PLAYWRIGHT_ROOT = ROOT / "playwright"
+PLAYWRIGHT_TEST_DIR = PLAYWRIGHT_ROOT / "tests"
 PUBSPEC = ROOT / "pubspec.yaml"
 
 UNIT_SOURCE_FOLDERS = {"services", "data", "models", "utils"}
@@ -87,19 +91,37 @@ def import_for_source(pkg: str, source_rel: Path) -> str:
 
 def unit_test_destination(source_rel: Path) -> Path:
     sub = source_rel.relative_to("lib")
-    return TEST_DIR / "unit" / sub.parent / f"{source_rel.stem}_test.dart"
+    return UNIT_TEST_DIR / sub.parent / f"{source_rel.stem}_test.dart"
 
 
 def widget_test_destination(source_rel: Path) -> Path:
     sub = source_rel.relative_to("lib")
-    return TEST_DIR / "widget" / sub.parent / f"{source_rel.stem}_test.dart"
+    return WIDGET_TEST_DIR / sub.parent / f"{source_rel.stem}_test.dart"
+
+
+def integration_test_destination() -> Path:
+    return INTEGRATION_TEST_DIR / "app_smoke_integration_test.dart"
+
+
+def playwright_package_destination() -> Path:
+    return PLAYWRIGHT_ROOT / "package.json"
+
+
+def playwright_config_destination() -> Path:
+    return PLAYWRIGHT_ROOT / "playwright.config.ts"
+
+
+def playwright_test_destination() -> Path:
+    return PLAYWRIGHT_TEST_DIR / "app-smoke.spec.ts"
 
 
 def make_unit_scaffold(pkg: str, source_rel: Path) -> Scaffold:
     title = title_from_stem(source_rel.stem)
     source_import = import_for_source(pkg, source_rel)
     destination = unit_test_destination(source_rel)
-    content = f"""import 'package:flutter_test/flutter_test.dart';
+    content = f"""// ignore_for_file: unused_import
+
+import 'package:flutter_test/flutter_test.dart';
 import '{source_import}';
 
 void main() {{
@@ -107,41 +129,33 @@ void main() {{
     test('TODO: add behavioral assertions', () {{
       // TODO: Replace this scaffold with real unit tests.
       expect(true, isTrue);
-    }}, skip: 'Generated scaffold');
+    }}, skip: true);
   }});
 }}
 """
-    return Scaffold(
-        source=source_rel,
-        destination=destination,
-        kind="unit",
-        content=content,
-    )
+    return Scaffold(source=source_rel, destination=destination, kind="unit", content=content)
 
 
 def make_widget_scaffold(pkg: str, source_rel: Path) -> Scaffold:
     title = title_from_stem(source_rel.stem)
     source_import = import_for_source(pkg, source_rel)
     destination = widget_test_destination(source_rel)
-    content = f"""import 'package:flutter_test/flutter_test.dart';
+    content = f"""// ignore_for_file: unused_import
+
+import 'package:flutter_test/flutter_test.dart';
 import '{source_import}';
 
 void main() {{
   testWidgets('TODO: {title} renders expected behavior', (tester) async {{
     // TODO: Pump the widget under test and assert visible behavior.
-  }}, skip: 'Generated scaffold');
+  }}, skip: true);
 }}
 """
-    return Scaffold(
-        source=source_rel,
-        destination=destination,
-        kind="widget",
-        content=content,
-    )
+    return Scaffold(source=source_rel, destination=destination, kind="widget", content=content)
 
 
-def make_e2e_scaffold(pkg: str) -> Scaffold:
-    destination = INTEGRATION_TEST_DIR / "app_smoke_e2e_test.dart"
+def make_integration_scaffold(pkg: str) -> Scaffold:
+    destination = integration_test_destination()
     content = f"""import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:{pkg}/main.dart' as app;
@@ -149,20 +163,74 @@ import 'package:{pkg}/main.dart' as app;
 void main() {{
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('TODO: smoke test app launch and first flow', (tester) async {{
+  testWidgets('TODO: app launch integration flow', (tester) async {{
     app.main();
     await tester.pumpAndSettle();
 
-    // TODO: Add end-to-end assertions for the expected entry flow.
-  }}, skip: 'Generated scaffold');
+    // TODO: Add integration assertions for startup and first navigation steps.
+  }}, skip: true);
 }}
 """
-    return Scaffold(
-        source=None,
-        destination=destination,
-        kind="e2e",
-        content=content,
-    )
+    return Scaffold(source=None, destination=destination, kind="integration", content=content)
+
+
+def make_playwright_package_scaffold() -> Scaffold:
+    destination = playwright_package_destination()
+    content = """{
+  "name": "quiznetic-playwright-e2e",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:list": "playwright test --list",
+    "install:browsers": "PLAYWRIGHT_BROWSERS_PATH=0 playwright install chromium"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.50.0"
+  }
+}
+"""
+    return Scaffold(source=None, destination=destination, kind="e2e-playwright", content=content)
+
+
+def make_playwright_config_scaffold() -> Scaffold:
+    destination = playwright_config_destination()
+    content = """import { defineConfig } from '@playwright/test';
+
+export default defineConfig({
+  testDir: './tests',
+  timeout: 60_000,
+  expect: {
+    timeout: 10_000,
+  },
+  use: {
+    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? 'http://127.0.0.1:7357',
+    trace: 'on-first-retry',
+  },
+});
+"""
+    return Scaffold(source=None, destination=destination, kind="e2e-playwright", content=content)
+
+
+def make_playwright_test_scaffold() -> Scaffold:
+    destination = playwright_test_destination()
+    content = """import { test, expect } from '@playwright/test';
+
+test('loads either entry choice or home screen', async ({ page }) => {
+  await page.goto('/');
+  await page.waitForLoadState('networkidle');
+
+  const guestButton = page.getByRole('button', { name: 'Continue as Guest' });
+  const homePrompt = page.getByText('Choose Your Quiz');
+
+  const guestVisible = await guestButton.isVisible().catch(() => false);
+  const homeVisible = await homePrompt.isVisible().catch(() => false);
+
+  expect(guestVisible || homeVisible).toBeTruthy();
+});
+"""
+    return Scaffold(source=None, destination=destination, kind="e2e-playwright", content=content)
 
 
 def collect_source_files(filters: list[str]) -> list[Path]:
@@ -177,7 +245,11 @@ def collect_source_files(filters: list[str]) -> list[Path]:
     return out
 
 
-def build_scaffolds(filters: list[str], include_e2e: bool) -> list[Scaffold]:
+def build_scaffolds(
+    filters: list[str],
+    include_integration: bool,
+    include_e2e: bool,
+) -> list[Scaffold]:
     pkg = package_name()
     sources = collect_source_files(filters)
     scaffolds: list[Scaffold] = []
@@ -189,8 +261,13 @@ def build_scaffolds(filters: list[str], include_e2e: bool) -> list[Scaffold]:
         elif kind == "widget":
             scaffolds.append(make_widget_scaffold(pkg, source_rel))
 
+    if include_integration:
+        scaffolds.append(make_integration_scaffold(pkg))
+
     if include_e2e:
-        scaffolds.append(make_e2e_scaffold(pkg))
+        scaffolds.append(make_playwright_package_scaffold())
+        scaffolds.append(make_playwright_config_scaffold())
+        scaffolds.append(make_playwright_test_scaffold())
 
     return scaffolds
 
@@ -198,8 +275,9 @@ def build_scaffolds(filters: list[str], include_e2e: bool) -> list[Scaffold]:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            "Testing agent: scaffolds unit, widget, and e2e tests for new "
-            "or changed features."
+            "Testing agent: scaffolds unit/widget tests plus separated "
+            "integration and Playwright e2e tests under test/, "
+            "integration_test/, and playwright/."
         )
     )
     parser.add_argument(
@@ -210,12 +288,17 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--overwrite",
         action="store_true",
-        help="Overwrite existing test files instead of skipping them.",
+        help="Overwrite existing scaffold files instead of skipping them.",
+    )
+    parser.add_argument(
+        "--skip-integration",
+        action="store_true",
+        help="Skip generating Flutter integration test scaffold.",
     )
     parser.add_argument(
         "--skip-e2e",
         action="store_true",
-        help="Skip generating e2e scaffolds.",
+        help="Skip generating Playwright e2e scaffolds.",
     )
     parser.add_argument(
         "--targets",
@@ -228,8 +311,13 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
+    include_integration = not args.skip_integration
     include_e2e = not args.skip_e2e
-    scaffolds = build_scaffolds(filters=args.targets, include_e2e=include_e2e)
+    scaffolds = build_scaffolds(
+        filters=args.targets,
+        include_integration=include_integration,
+        include_e2e=include_e2e,
+    )
 
     creates: list[Scaffold] = []
     updates: list[Scaffold] = []
@@ -263,10 +351,16 @@ def main() -> int:
     else:
         print("\nNo scaffold files needed.")
 
-    if include_e2e and not has_integration_test_dependency():
+    if include_integration and not has_integration_test_dependency():
         print(
             "\nWarning: `integration_test` dependency not found in pubspec.yaml. "
-            "Add it before running e2e tests."
+            "Add it before running integration tests."
+        )
+
+    if include_e2e:
+        print(
+            "\nPlaywright note: install dependencies with "
+            "`cd playwright && npm install` before running e2e tests."
         )
 
     if not args.apply:

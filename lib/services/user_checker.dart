@@ -47,4 +47,57 @@ class UserChecker {
       return false;
     }
   }
+
+  /// Ensures a Firestore user document exists and updates last-seen metadata.
+  /// Returns true on success.
+  static Future<bool> ensureUserDocument({required User user}) async {
+    try {
+      final ref = FirebaseFirestore.instance.collection('users').doc(user.uid);
+      final now = FieldValue.serverTimestamp();
+      final existing = await ref.get();
+      final data = buildUserDocumentData(
+        user: user,
+        existingDocument: existing.exists,
+        nowToken: now,
+      );
+
+      await ref.set(data, SetOptions(merge: true));
+      return true;
+    } catch (e) {
+      debugPrint('Error ensuring user document: $e');
+      return false;
+    }
+  }
+
+  /// Builds the Firestore payload for a user document.
+  /// Exposed for deterministic unit testing of merge-field logic.
+  @visibleForTesting
+  static Map<String, dynamic> buildUserDocumentData({
+    required User user,
+    required bool existingDocument,
+    required Object nowToken,
+  }) {
+    final data = <String, dynamic>{
+      'isAnonymous': user.isAnonymous,
+      'lastSeen': nowToken,
+    };
+
+    if (!existingDocument) {
+      data['createdAt'] = nowToken;
+    }
+
+    final displayName = user.displayName?.trim();
+    if (displayName != null && displayName.isNotEmpty) {
+      data['displayName'] = displayName;
+    } else if (!existingDocument && user.isAnonymous) {
+      data['displayName'] = 'Guest ${user.uid.substring(0, 4)}';
+    }
+
+    final email = user.email?.trim();
+    if (email != null && email.isNotEmpty) {
+      data['email'] = email;
+    }
+
+    return data;
+  }
 }

@@ -7,13 +7,50 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'user_checker.dart';
 
+typedef CurrentUserProvider = User? Function();
+typedef AuthStateChangesProvider = Stream<User?> Function();
+typedef AnonymousSignInProvider = Future<UserCredential> Function();
+typedef SignOutProvider = Future<void> Function();
+typedef EnsureUserDocumentProvider =
+    Future<bool> Function({required User user});
+typedef LinkWithCredentialProvider =
+    Future<UserCredential> Function(User user, AuthCredential credential);
+
 /// Service class that handles all authentication-related operations.
 /// This includes sign in, sign out, and auth state management.
 class AuthService {
-  final _auth = FirebaseAuth.instance;
+  final CurrentUserProvider _currentUserProvider;
+  final AuthStateChangesProvider _authStateChangesProvider;
+  final AnonymousSignInProvider _anonymousSignInProvider;
+  final SignOutProvider _signOutProvider;
+  final EnsureUserDocumentProvider _ensureUserDocumentProvider;
+  final LinkWithCredentialProvider _linkWithCredentialProvider;
+
+  AuthService({
+    CurrentUserProvider? currentUserProvider,
+    AuthStateChangesProvider? authStateChangesProvider,
+    AnonymousSignInProvider? anonymousSignInProvider,
+    SignOutProvider? signOutProvider,
+    EnsureUserDocumentProvider? ensureUserDocumentProvider,
+    LinkWithCredentialProvider? linkWithCredentialProvider,
+  }) : _currentUserProvider =
+           currentUserProvider ?? (() => FirebaseAuth.instance.currentUser),
+       _authStateChangesProvider =
+           authStateChangesProvider ??
+           (() => FirebaseAuth.instance.authStateChanges()),
+       _anonymousSignInProvider =
+           anonymousSignInProvider ??
+           (() => FirebaseAuth.instance.signInAnonymously()),
+       _signOutProvider =
+           signOutProvider ?? (() => FirebaseAuth.instance.signOut()),
+       _ensureUserDocumentProvider =
+           ensureUserDocumentProvider ?? UserChecker.ensureUserDocument,
+       _linkWithCredentialProvider =
+           linkWithCredentialProvider ??
+           ((user, credential) => user.linkWithCredential(credential));
 
   // Get the current user (null if not signed in)
-  User? get currentUser => _auth.currentUser;
+  User? get currentUser => _currentUserProvider();
 
   // Check if the current user is anonymous
   bool get isAnonymous => currentUser?.isAnonymous ?? true;
@@ -22,26 +59,24 @@ class AuthService {
   bool get isSignedIn => currentUser != null;
 
   // Listen to auth state changes
-  Stream<User?> get authStateChanges => _auth.authStateChanges();
+  Stream<User?> get authStateChanges => _authStateChangesProvider();
 
   // Sign in anonymously
   /// Sign in anonymously and create a user document.
   /// Returns the UserCredential if successful.
   Future<UserCredential> signInAnonymously() async {
     try {
-      final credential = await _auth.signInAnonymously();
+      final credential = await _anonymousSignInProvider();
 
       // Wait for the user to be created in Firebase Auth
       if (credential.user != null) {
-        final uid = credential.user!.uid;
-        final userExists = await UserChecker.userExists(uid: uid);
-        if (!userExists) {
-          // Only create document if it doesn't exist. Pass uid directly to avoid
-          // any race where FirebaseAuth.instance.currentUser isn't populated yet.
-          final created = await UserChecker.createAnonymousUser(uid: uid);
-          if (!created) {
-            debugPrint('❌ Failed to create anonymous user document for $uid');
-          }
+        final created = await _ensureUserDocumentProvider(
+          user: credential.user!,
+        );
+        if (!created) {
+          throw Exception(
+            'Failed to create user profile for ${credential.user!.uid}',
+          );
         }
       }
 
@@ -56,7 +91,7 @@ class AuthService {
   /// Signs out the current user session.
   Future<void> signOut() async {
     try {
-      await _auth.signOut();
+      await _signOutProvider();
     } catch (e) {
       debugPrint('❌ Sign-out failed: $e');
       rethrow;
@@ -73,7 +108,7 @@ class AuthService {
       if (user == null) throw Exception('Not signed in');
       if (!user.isAnonymous) throw Exception('User is not anonymous');
 
-      return await user.linkWithCredential(credential);
+      return await _linkWithCredentialProvider(user, credential);
     } catch (e) {
       debugPrint('❌ Account linking failed: $e');
       rethrow;

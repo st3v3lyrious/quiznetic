@@ -3,41 +3,23 @@
  Title: Main
  Purpose: Initializes Firebase and boots the app with routes and theme.
 */
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:quiznetic_flutter/services/auth_service.dart';
 import 'package:quiznetic_flutter/screens/difficulty_screen.dart';
 import 'package:quiznetic_flutter/screens/home_screen.dart';
 import 'package:quiznetic_flutter/screens/quiz_screen.dart';
 import 'package:quiznetic_flutter/screens/result_screen.dart';
 import 'package:quiznetic_flutter/screens/user_profile_screen.dart';
 import 'package:quiznetic_flutter/screens/login_screen.dart';
+import 'package:quiznetic_flutter/screens/upgrade_account_screen.dart';
+import 'package:quiznetic_flutter/widgets/auth_guard.dart';
 import 'screens/splash_screen.dart';
 import 'firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 
-/// Initializes Firebase, ensures a user session, and launches the app.
+/// Initializes Firebase and launches the app shell.
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  // Attempt anonymous sign-in using AuthService (which handles Firestore doc creation)
-  try {
-    final auth = FirebaseAuth.instance;
-    if (auth.currentUser == null) {
-      // Let AuthService handle both auth and Firestore doc creation
-      final authService = AuthService();
-      final cred = await authService.signInAnonymously();
-      debugPrint('✅ Signed in and created user ${cred.user!.uid}');
-    } else {
-      debugPrint('✅ Using existing auth: ${auth.currentUser!.uid}');
-    }
-  } on FirebaseAuthException catch (e) {
-    // Handle known Firebase auth errors
-    debugPrint('🔐 Auth error [${e.code}]: ${e.message}');
-  } catch (e) {
-    // Catch anything else
-    debugPrint('❌ Unexpected auth error: $e');
-  }
   runApp(const QuizNetic());
 }
 
@@ -69,11 +51,15 @@ class QuizNetic extends StatelessWidget {
       initialRoute: SplashScreen.routeName,
       routes: {
         SplashScreen.routeName: (_) => const SplashScreen(),
-        HomeScreen.routeName: (_) => const HomeScreen(),
-        QuizScreen.routeName: (_) => const QuizScreen(),
-        ResultScreen.routeName: (_) => const ResultScreen(),
-        DifficultyScreen.routeName: (_) => const DifficultyScreen(),
-        UserProfileScreen.routeName: (_) => const UserProfileScreen(),
+        HomeScreen.routeName: (_) => const AuthGuard(child: HomeScreen()),
+        QuizScreen.routeName: (_) => const AuthGuard(child: QuizScreen()),
+        ResultScreen.routeName: (_) => const AuthGuard(child: ResultScreen()),
+        DifficultyScreen.routeName: (_) =>
+            const AuthGuard(child: DifficultyScreen()),
+        UserProfileScreen.routeName: (_) =>
+            const AuthGuard(child: UserProfileScreen()),
+        UpgradeAccountScreen.routeName: (_) =>
+            const AuthGuard(allowAnonymous: false, child: HomeScreen()),
         LoginScreen.routeName: (_) => const LoginScreen(),
       },
       theme: ThemeData(

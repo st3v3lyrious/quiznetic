@@ -304,6 +304,7 @@ def generate_readme() -> str:
     "- `lib/data/` — data sources/loaders",
     "- `test/` — unit + widget tests",
     "- `integration_test/` — integration tests (E2E-style) if present",
+    "- `playwright/` — Playwright E2E tests",
   ]
   out.append(render_section("Project structure", "\n".join(structure_lines)))
 
@@ -330,6 +331,7 @@ def generate_readme() -> str:
       "```bash",
       "flutter test",
       "flutter test integration_test   # if present",
+      "cd playwright && npx playwright test   # if present",
       "```"
     ])
   ))

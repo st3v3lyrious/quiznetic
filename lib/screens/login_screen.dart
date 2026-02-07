@@ -8,6 +8,7 @@ import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:firebase_ui_oauth_apple/firebase_ui_oauth_apple.dart';
 import 'package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart';
 import 'package:quiznetic_flutter/services/auth_service.dart';
+import 'package:quiznetic_flutter/services/user_checker.dart';
 import 'package:quiznetic_flutter/screens/home_screen.dart';
 
 class LoginScreen extends StatelessWidget {
@@ -69,10 +70,36 @@ class LoginScreen extends StatelessWidget {
 
           // Actions (auth state changes)
           actions: [
-            AuthStateChangeAction<SignedIn>((context, state) {
-              if (state.user != null)
-                debugPrint('✅ ${state.user!.uid} signed in');
-              Navigator.of(context).pushReplacementNamed(HomeScreen.routeName);
+            AuthStateChangeAction<SignedIn>((context, state) async {
+              final user = state.user;
+              if (user == null) return;
+
+              debugPrint('✅ ${user.uid} signed in');
+
+              final created = await UserChecker.ensureUserDocument(user: user);
+              if (!created) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Could not create your user profile. Please try again.',
+                      ),
+                    ),
+                  );
+                }
+                try {
+                  await AuthService().signOut();
+                } catch (_) {
+                  // Keep user on login screen even if sign-out cleanup fails.
+                }
+                return;
+              }
+
+              if (context.mounted) {
+                Navigator.of(
+                  context,
+                ).pushReplacementNamed(HomeScreen.routeName);
+              }
             }),
             // Additional auth state actions can be added as needed
           ],

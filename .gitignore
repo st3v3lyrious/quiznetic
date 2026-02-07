@@ -118,3 +118,8 @@ android/key.properties
 *.jks
 *.p12
 *.mobileprovision
+
+# Playwright artifacts
+playwright/node_modules/
+playwright/test-results/
+playwright/playwright-report/

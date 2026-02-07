@@ -11,7 +11,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 class SplashScreen extends StatefulWidget {
   static const routeName = '/splash';
-  const SplashScreen({super.key});
+  final Duration startupDelay;
+  final User? Function()? currentUserProvider;
+
+  const SplashScreen({
+    super.key,
+    this.startupDelay = const Duration(seconds: 2),
+    this.currentUserProvider,
+  });
 
   /// Creates state for the splash screen.
   @override
@@ -28,10 +35,12 @@ class _SplashScreenState extends State<SplashScreen> {
 
   /// Routes to home for signed-in users, otherwise to login.
   Future<void> _checkUserAndNavigate() async {
-    await Future.delayed(const Duration(seconds: 2));
+    await Future.delayed(widget.startupDelay);
     // Only check Firebase Authentication. Do NOT create or read Firestore
     // documents here — creation is handled in the login/signup flows.
-    final currentUser = FirebaseAuth.instance.currentUser;
+    final currentUser = widget.currentUserProvider != null
+        ? widget.currentUserProvider!.call()
+        : FirebaseAuth.instance.currentUser;
     if (!mounted) return;
     if (currentUser != null) {
       Navigator.pushReplacementNamed(

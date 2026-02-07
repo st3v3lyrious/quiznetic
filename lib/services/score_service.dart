@@ -44,7 +44,7 @@ class ScoreService {
           ? (snapshot.data()!['bestScore'] as int)
           : 0;
 
-      if (score > prevBest) {
+      if (shouldUpdateBestScore(previousBest: prevBest, newScore: score)) {
         tx.set(userDoc, {
           'categoryKey': categoryKey, // leave for querying
           'difficulty': difficulty, // store for display
@@ -89,17 +89,9 @@ class ScoreService {
           .collection('scores')
           .get();
 
-      return snap.docs.map((doc) {
-        final parts = doc.id.split('_');
-        final categoryKey = parts[0];
-        final difficulty = parts.length > 1 ? parts[1] : 'unknown';
-        final bestScore = (doc.data()['bestScore'] as int);
-        return CategoryScore(
-          categoryKey: categoryKey,
-          difficulty: difficulty,
-          highScore: bestScore,
-        );
-      }).toList();
+      return snap.docs
+          .map((doc) => parseCategoryScore(docId: doc.id, data: doc.data()))
+          .toList();
     } on FirebaseException catch (e) {
       debugPrint(
         'Firestore error reading user scores for $uid: ${e.code} - ${e.message}',
@@ -111,5 +103,31 @@ class ScoreService {
       }
       rethrow;
     }
+  }
+
+  /// Returns true when [newScore] beats [previousBest].
+  @visibleForTesting
+  static bool shouldUpdateBestScore({
+    required int previousBest,
+    required int newScore,
+  }) {
+    return newScore > previousBest;
+  }
+
+  /// Converts a Firestore score document into a [CategoryScore].
+  @visibleForTesting
+  static CategoryScore parseCategoryScore({
+    required String docId,
+    required Map<String, dynamic> data,
+  }) {
+    final parts = docId.split('_');
+    final categoryKey = parts[0];
+    final difficulty = parts.length > 1 ? parts[1] : 'unknown';
+    final bestScore = (data['bestScore'] as int);
+    return CategoryScore(
+      categoryKey: categoryKey,
+      difficulty: difficulty,
+      highScore: bestScore,
+    );
   }
 }

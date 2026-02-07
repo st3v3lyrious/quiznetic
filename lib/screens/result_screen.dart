@@ -125,8 +125,21 @@ class ResultScreenArgs {
 
 class ResultScreen extends StatefulWidget {
   static const routeName = '/result';
+  final Future<void> Function({
+    required String categoryKey,
+    required String difficulty,
+    required int score,
+  })?
+  saveScore;
+  final Future<int> Function(String categoryKey)? getHighScore;
+  final Future<void> Function(String categoryKey, int score)? setHighScore;
 
-  const ResultScreen({super.key});
+  const ResultScreen({
+    super.key,
+    this.saveScore,
+    this.getHighScore,
+    this.setHighScore,
+  });
 
   /// Creates state for the quiz results screen.
   @override
@@ -144,24 +157,38 @@ class _ResultScreenState extends State<ResultScreen> {
 
     if (!_didInit) {
       _didInit = true;
+      final route = ModalRoute.of(context);
+      if (route == null || route.settings.arguments == null) {
+        return;
+      }
 
       // 1) Grab your args safely now that context is ready
-      final args =
-          ModalRoute.of(context)!.settings.arguments as ResultScreenArgs;
+      final args = route.settings.arguments as ResultScreenArgs;
+      final saveScore =
+          widget.saveScore ??
+          ({
+            required String categoryKey,
+            required String difficulty,
+            required int score,
+          }) => ScoreService().saveScore(
+            categoryKey: categoryKey,
+            score: score,
+            difficulty: difficulty,
+          );
+      final getHighScore = widget.getHighScore ?? UserProfile.getHighScore;
+      final setHighScore = widget.setHighScore ?? UserProfile.setHighScore;
 
       // fire‐and‐forget; we don’t block the UI
-      ScoreService()
-          .saveScore(
-            categoryKey: args.categoryKey,
-            score: args.score,
-            difficulty: args.difficulty,
-          )
-          .catchError((e) => debugPrint('SaveScore error: $e'));
+      saveScore(
+        categoryKey: args.categoryKey,
+        score: args.score,
+        difficulty: args.difficulty,
+      ).catchError((e) => debugPrint('SaveScore error: $e'));
 
       // Read existing high score, update if needed, and expose final value
-      _highScoreFuture = UserProfile.getHighScore(args.categoryKey).then((old) {
+      _highScoreFuture = getHighScore(args.categoryKey).then((old) {
         if (args.score > old) {
-          return UserProfile.setHighScore(
+          return setHighScore(
             args.categoryKey,
             args.score,
           ).then((_) => args.score);

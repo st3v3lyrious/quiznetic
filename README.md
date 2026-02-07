@@ -1,4 +1,4 @@
-# QuizNetic
+# quiznetic_flutter
 
 Quiznetic project built with Flutter.
 
@@ -23,7 +23,10 @@ Use this as an editable feature checklist.
 ## Accounts And Auth
 
 - [x] Firebase initialization at app startup
+- [x] Explicit first-entry auth choice when no session exists (guest or sign in)
 - [x] Anonymous sign-in path with user doc creation (`users/{uid}`)
+- [x] Provider sign-in path with user doc creation (`users/{uid}`)
+- [x] Route-level auth guards on gameplay/profile routes (requires guest or signed-in session)
 - [x] Login screen scaffold with Email, Google, Apple providers
 - [x] "Continue as Guest" path from login screen
 - [x] Upgrade account screen scaffold for anonymous users
@@ -39,7 +42,6 @@ Use this as an editable feature checklist.
 - [ ] Unify high-score source of truth (Firestore + SharedPreferences are both used)
 - [ ] Configure real Google OAuth client ID
 - [ ] Fix login header image reference (`assets/images/logo.png`)
-- [ ] Apply `AuthGuard` consistently on protected routes
 
 ## Planned Features
 
@@ -48,16 +50,22 @@ Use this as an editable feature checklist.
 - [ ] Enable "Change Quiz Type" flow when multiple categories are live
 - [ ] Expose anonymous-to-account upgrade in primary UX flow
 
+## Test Scaffolding
+
+- [x] Manual testing agent that generates unit/widget test scaffolds under `test/`
+- [x] Manual testing agent that generates integration scaffolds under `integration_test/`
+- [x] Manual testing agent that generates Playwright e2e scaffolds under `playwright/`
+
 ## Screens
 
-- **Difficulty** (`lib/screens/difficulty_screen.dart`) — _Add `/// Purpose:` in the file header._
-- **Home** (`lib/screens/home_screen.dart`) — _Add `/// Purpose:` in the file header._
-- **Login** (`lib/screens/login_screen.dart`) — _Add `/// Purpose:` in the file header._
+- **Difficulty Screen** — Lets users choose difficulty and question count. (`lib/screens/difficulty_screen.dart`)
+- **Home Screen** — Shows quiz categories and routes to difficulty selection. (`lib/screens/home_screen.dart`)
+- **Login Screen** — Handles sign-in providers and guest sign-in entry. (`lib/screens/login_screen.dart`)
 - **Quiz** — Presents questions, records answers, and handles scoring. (`lib/screens/quiz_screen.dart`)
-- **Result** (`lib/screens/result_screen.dart`) — _Add `/// Purpose:` in the file header._
-- **Splash** (`lib/screens/splash_screen.dart`) — _Add `/// Purpose:` in the file header._
-- **Upgrade Account** (`lib/screens/upgrade_account_screen.dart`) — _Add `/// Purpose:` in the file header._
-- **User Profile** (`lib/screens/user_profile_screen.dart`) — _Add `/// Purpose:` in the file header._
+- **Result Screen** — Shows result summary and next actions after a quiz. (`lib/screens/result_screen.dart`)
+- **Splash Screen** — Shows startup branding and routes users based on auth state. (`lib/screens/splash_screen.dart`)
+- **Upgrade Account Screen** — Lets anonymous users upgrade to a linked account. (`lib/screens/upgrade_account_screen.dart`)
+- **User Profile Screen** — Displays user profile and saved high-score records. (`lib/screens/user_profile_screen.dart`)
 
 ## Tech stack
 
@@ -70,6 +78,7 @@ Use this as an editable feature checklist.
 - `lib/data/` — data sources/loaders
 - `test/` — unit + widget tests
 - `integration_test/` — integration tests (E2E-style) if present
+- `playwright/` — Playwright E2E tests
 
 ## Key models
 
@@ -84,18 +93,19 @@ flutter run
 
 ## Testing
 
-- **Unit/Widget tests:** `1` files
-- **Integration tests:** `0` files
+- **Unit/Widget tests:** `18` files
+- **Integration tests:** `1` files
 
 ```bash
 flutter test
 flutter test integration_test   # if present
+cd playwright && npx playwright test   # if present
 ```
 
 ## Dependencies (summary)
 
 - **deps:** flutter, sdk, firebase_core, firebase_auth, cloud_firestore, shared_preferences, firebase_ui_auth, git, url, path, ref, firebase_ui_oauth_google…
-- **dev_deps:** flutter_test, sdk, flutter_lints
+- **dev_deps:** flutter_test, sdk, integration_test, sdk, flutter_lints
 
 ## Roadmap
 
@@ -103,16 +113,18 @@ flutter test integration_test   # if present
 
 Use this as a short, editable delivery plan.
 
-- [ ] M1: Stabilize entry auth flow (decide and enforce auto-guest vs explicit login/guest choice).
+- [x] M1: Stabilize entry auth flow (implemented explicit login/guest choice; no startup auto-guest auth).
 - [ ] M1: Make Firestore the single high-score source and remove local score divergence.
 - [ ] M1: Fix login setup issues (logo asset path and Google OAuth client ID).
 - [ ] M2: Clarify leaderboard semantics (best score vs latest score per user).
 - [ ] M2: Harden profile display (difficulty labels, ordering, empty/error states).
-- [ ] M2: Apply `AuthGuard` strategy consistently to protected routes.
+- [x] M2: Apply `AuthGuard` strategy consistently to protected routes.
 - [ ] M3: Implement a second quiz category (Logo or Capitals) using current category-key pattern.
 - [ ] M3: Enable quiz-type switching in navigation/results flow.
-- [ ] M4: Replace template widget test with app-specific flow tests.
-- [ ] M4: Regenerate README from docs (`FEATURES`, `ROADMAP`, `ARCHITECTURE`).
+- [ ] M4: Replace template widget test with app-specific flow tests in `test/unit` and `test/widget`.
+- [ ] M4: Add non-scaffold integration assertions in `integration_test`.
+- [ ] M4: Add Playwright e2e assertions in `playwright/tests`.
+- [x] M4: Regenerate README from docs (`FEATURES`, `ROADMAP`, `ARCHITECTURE`).
 
 
 ---
