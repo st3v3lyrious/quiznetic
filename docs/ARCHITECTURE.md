@@ -7,7 +7,7 @@ It is intended to be source material for generated docs (including `README.md`).
 
 - Platform: Flutter app (Material 3 UI).
 - Backend: Firebase Auth + Cloud Firestore.
-- Local persistence: `SharedPreferences` (currently used for legacy high-score logic).
+- Local persistence: `SharedPreferences` (currently used for high-score logic; planned extension for local-first score queue/projections).
 - Current product scope: Flag quiz with category-key based expansion path.
 
 ## Tech Stack
@@ -22,7 +22,7 @@ It is intended to be source material for generated docs (including `README.md`).
 ## Codebase Layout
 
 - `lib/main.dart`: app bootstrap, Firebase init, route registration, global theme.
-- `lib/screens/*`: UI flows (splash, login, home, difficulty, quiz, results, profile, upgrade).
+- `lib/screens/*`: UI flows (splash, entry choice, login, home, difficulty, quiz, results, profile, upgrade).
 - `lib/services/*`: auth, user creation checks, score persistence/retrieval, local profile helper.
 - `lib/data/*`: quiz content loaders (`flag_loader.dart`) and sample data.
 - `lib/models/*`: domain models (`FlagQuestion`).
@@ -31,6 +31,7 @@ It is intended to be source material for generated docs (including `README.md`).
 ## Route Map
 
 - `/splash` -> `SplashScreen`
+- `/entry` -> `EntryChoiceScreen`
 - `/login` -> `LoginScreen`
 - `/home` -> `HomeScreen`
 - `/difficulty` -> `DifficultyScreen`
@@ -43,17 +44,18 @@ It is intended to be source material for generated docs (including `README.md`).
 
 1. `main()` initializes Firebase.
 2. App starts on splash route.
-3. Splash checks auth state after delay and navigates to home (if user exists) or login.
-4. If there is no session, login screen presents explicit user choice:
+3. Splash checks auth state after delay and navigates to home (if user exists) or entry choice.
+4. If there is no session, entry-choice screen presents explicit user choice:
    - Continue as guest
    - Sign in / create account
-5. On explicit auth choice, app ensures `users/{uid}` exists in Firestore.
-6. Auth-guarded routes only allow authenticated users (guest or signed-in) to access gameplay/profile screens.
-7. Home currently exposes one category: `flag`.
-8. Difficulty selects question count and difficulty key.
-9. Quiz loads assets, randomizes questions/options, tracks score.
-10. Results screen saves score, renders session summary, and blocks back navigation via `PopScope` to require explicit next actions.
-11. Profile screen fetches stored user scores from Firestore.
+5. If user selects sign-in, app routes to provider login screen.
+6. On explicit auth choice, app ensures `users/{uid}` exists in Firestore.
+7. Auth-guarded routes only allow authenticated users (guest or signed-in) to access gameplay/profile screens.
+8. Home currently exposes one category: `flag`.
+9. Difficulty selects question count and difficulty key.
+10. Quiz loads assets, randomizes questions/options, tracks score.
+11. Results screen saves score, renders session summary, and blocks back navigation via `PopScope` to require explicit next actions.
+12. Profile screen fetches stored user scores from Firestore.
 
 ## Quiz Engine
 
@@ -83,6 +85,7 @@ Current score document fields:
 - `categoryKey`
 - `difficulty`
 - `bestScore`
+- `source` (`guest` or `account`)
 - `updatedAt`
 
 Current leaderboard entry fields:
@@ -90,6 +93,8 @@ Current leaderboard entry fields:
 - `categoryKey`
 - `difficulty`
 - `score`
+- `isAnonymous`
+- `displayName`
 - `updatedAt`
 
 Anonymous user doc fields (created by `UserChecker`):
@@ -103,33 +108,150 @@ Anonymous user doc fields (created by `UserChecker`):
 
 - App does not auto-create guest sessions at startup.
 - A user is authenticated only after explicit action in login flow:
-  - Guest button -> anonymous auth + user document creation
+  - Entry choice: Guest button -> anonymous auth + user document creation
+  - Entry choice: Sign-in button -> routes to provider login screen
   - Provider sign-in -> account auth + user document creation
 - Route-level guard strategy:
   - `/home`, `/difficulty`, `/quiz`, `/result`, `/profile` are wrapped in `AuthGuard` (anonymous allowed).
-  - `/upgrade` is wrapped so anonymous users can upgrade while unauthenticated users are sent to login.
+  - `/upgrade` is wrapped so anonymous users can upgrade while unauthenticated users are sent to entry choice.
+- `EntryChoiceScreen` provides:
+  - Guest button (`Continue as Guest`)
+  - Provider-login button (`Sign In / Create Account`)
 - `LoginScreen` provides:
   - Email provider
-  - Google provider (placeholder client ID currently in code)
+  - Google provider (enabled when `GOOGLE_OAUTH_CLIENT_ID` is provided via `--dart-define`)
   - Apple provider
-  - Guest button (`Continue as Guest`)
 - `AuthGuard` supports:
-  - unauthenticated -> login
+  - unauthenticated -> entry choice
   - anonymous disallowed -> upgrade screen
   - allowed -> protected child
 
 ## Score Handling
 
-Current implementation uses two score stores:
+Current implementation uses a local-first repository:
 
-- Firestore via `ScoreService`:
-  - saves personal best (transaction)
-  - writes leaderboard entry
-  - reads all high scores for profile
-- Local `SharedPreferences` via `UserProfile`:
-  - used by `ResultScreen` for high-score messaging
+- `LocalFirstScoreRepository` (app-facing):
+  - saves score attempts locally first
+  - stores local best-score projections per `category+difficulty`
+  - attempts immediate Firestore sync for pending records
+  - applies connectivity-aware retry backoff (`nextRetryAt`) after failed sync attempts
+  - can retry pending sync via `syncPendingScores()`, with optional `forceRetry` for explicit flush flows
+- `ScoreSyncScope` (runtime trigger layer):
+  - triggers forced sync on startup
+  - triggers forced sync on app resume
+  - runs periodic retry sync while app is active (non-forced, respects backoff schedule)
+  - triggers forced sync when auth state changes to signed-in
+- `AuthService` and login flow:
+  - trigger best-effort pending sync after anonymous sign-in, provider sign-in, and account-link success
+- `ScoreService` (remote adapter):
+  - saves personal best docs (`users/{uid}/scores/{category_difficulty}`)
+  - writes leaderboard docs only when best score improves (one row per uid/category+difficulty)
+  - tags leaderboard entries with anonymous status and display name
+  - reads user high scores for profile/merge
+- `LeaderboardBandService`:
+  - computes rank bands (`top 10`, `top 20`, `top 100`, `outside top 100`)
+  - uses deterministic tie-breakers for equal scores (`updatedAt`, then `uid`)
+- `SharedPreferences` (local store):
+  - persists pending score queue
+  - persists local/synced score projections
 
-This is a known consistency risk and should be unified.
+## Score Architecture (Local-First + Sync)
+
+### Repository Contract
+
+- Introduce a single app-level API (`ScoreRepository`) used by UI (`ResultScreen`, profile, future leaderboard screens).
+- `ScoreRepository` responsibilities:
+  - Save score attempts locally first.
+  - Expose best-score projections for immediate UI reads.
+  - Sync pending records to Firestore (best score + leaderboard) when allowed.
+  - Return sync/queue state for UI messaging.
+
+### Local Data Model (v1)
+
+- `score_attempts` local records (stored in local persistence):
+  - `id` (uuid)
+  - `uidAtRecord` (nullable)
+  - `categoryKey`
+  - `difficulty`
+  - `score`
+  - `totalQuestions`
+  - `playedAt`
+  - `syncState` (`pending`, `retry_wait`)
+  - `syncAttempts`
+  - `lastSyncError` (nullable)
+  - `lastTriedAt` (nullable)
+  - `nextRetryAt` (nullable; backoff schedule)
+- `score_projection` local records:
+  - key: `categoryKey + difficulty`
+  - `bestScoreLocal`
+  - `bestScoreSynced`
+  - `updatedAt`
+
+### Firestore Model (target)
+
+- Keep:
+  - `users/{uid}/scores/{category_difficulty}`
+  - `leaderboard/{category_difficulty}/entries/{uid}`
+- Add/standardize fields:
+  - score docs: `bestScore`, `updatedAt`, `source` (`guest` or `account`)
+  - leaderboard docs: `score`, `updatedAt`, `isAnonymous`, `displayName`
+
+### Leaderboard Semantics (Current)
+
+- Ranking scope is per `category+difficulty` document id (`leaderboard/{category_difficulty}/entries/{uid}`).
+- Each user has one leaderboard row per scope (`uid` document id).
+- Leaderboard value reflects personal best, not latest attempt.
+- Tie-breakers:
+  - higher `score` ranks first
+  - if equal score, earlier `updatedAt` ranks first
+  - if still tied, lexicographically smaller `uid` ranks first
+- Anonymous policy:
+  - anonymous users are included in leaderboard ranking
+  - anonymous entries are explicitly tagged with `isAnonymous: true`
+
+### Sync State Machine
+
+- `pending` -> `syncing`
+  - Trigger: score saved, app resume, reconnect, explicit retry, post-upgrade/account-link.
+- `syncing` -> `synced`
+  - Firestore write(s) succeed.
+- `syncing` -> `retry_wait`
+  - Network/server error; apply backoff and retry.
+- `retry_wait` -> `syncing`
+  - Backoff delay elapsed and trigger fires.
+
+### Guest Conversion Messaging (Planned)
+
+- On results/profile, compute a leaderboard rank band (`top 10`, `top 20`, `top 100`, or `outside top band`) for the selected category+difficulty.
+- For anonymous users, show conversion CTA:
+  - “Create account to compete globally.”
+  - CTA action routes to `/upgrade` to continue as an upgraded account.
+  - Keep continuity by linking anonymous auth to permanent credentials.
+- Anonymous leaderboard participation policy is now fixed to include + tag.
+- Current rollout status:
+  - result screen CTA implemented
+  - profile screen CTA implemented
+  - CTA action wiring to `/upgrade` implemented
+
+### Implementation Tasks
+
+1. [x] Add `ScoreRepository` interface and default implementation in `lib/services/`.
+2. [x] Add local score-attempt/projection persistence layer.
+3. [x] Refactor `ResultScreen` and profile reads to repository-only APIs.
+4. [x] Add sync coordinator (lifecycle/auth/periodic triggers).
+5. [x] Add account-link/sign-in sync trigger to flush pending guest attempts.
+6. [x] Add leaderboard band service for top-band computation.
+7. [x] Add conversion CTA UI surfaces in results/profile.
+   - [x] result screen
+   - [x] profile screen
+8. [x] Add tests:
+   - unit: repository logic, sync state transitions, retry policy
+9. [x] Add tests:
+   - integration: offline scoring and reconnect sync behavior
+10. [x] Add tests:
+   - widget: result/profile messaging and CTA visibility by auth state
+11. [ ] Add tests:
+   - e2e: offline scoring + guest-to-account continuity assertions
 
 ## Architectural Extension Points
 
@@ -142,15 +264,15 @@ This is a known consistency risk and should be unified.
 
 ## Known Constraints / Cleanup Targets
 
-- `LoginScreen` references `assets/images/logo.png`; current assets use `logo-*` naming.
-- Google OAuth client ID is a placeholder.
+- Google sign-in requires environment-specific `--dart-define=GOOGLE_OAUTH_CLIENT_ID=...` in local/dev/CI builds.
 - `main.dart` still contains template `MyHomePage` counter code that is not used by app routing.
-- `ResultScreen` relies on local high score while profile uses Firestore high scores.
 - `firebase_options.dart` is configured for Android/iOS/Web; macOS/Linux/Windows throw unsupported errors unless configured.
 
 ## Test Structure
 
 - `test/unit/`: unit test scaffolds generated by `tools/testing_agent.py`.
 - `test/widget/`: widget test scaffolds generated by `tools/testing_agent.py`.
-- `integration_test/`: Flutter integration test scaffolds generated by `tools/testing_agent.py`.
-- `playwright/`: Playwright e2e configuration and specs generated by `tools/testing_agent.py` (smoke + per-screen scaffolds in `playwright/tests/screens/`).
+- `integration_test/`: Flutter integration tests, including:
+  - scaffold smoke file (`app_smoke_integration_test.dart`)
+  - score sync reconnect assertions (`score_sync_reconnect_integration_test.dart`)
+- `playwright/`: Playwright e2e configuration and specs generated by `tools/testing_agent.py` (smoke + per-screen scaffolds in `playwright/tests/screens/`), with critical-flow assertions progressively replacing scaffolds.

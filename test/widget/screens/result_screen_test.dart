@@ -3,20 +3,28 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:quiznetic_flutter/screens/difficulty_screen.dart';
 import 'package:quiznetic_flutter/screens/quiz_screen.dart';
 import 'package:quiznetic_flutter/screens/result_screen.dart';
+import 'package:quiznetic_flutter/screens/upgrade_account_screen.dart';
 import 'package:quiznetic_flutter/screens/user_profile_screen.dart';
+import 'package:quiznetic_flutter/services/auth_service.dart';
+import 'package:quiznetic_flutter/services/leaderboard_band_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 void main() {
   Future<void> pumpResult(
     WidgetTester tester, {
     required ResultScreenArgs args,
-    required Future<void> Function({
+    required Future<int> Function({
       required String categoryKey,
       required String difficulty,
       required int score,
+      required int totalQuestions,
     })
     saveScore,
-    required Future<int> Function(String categoryKey) getHighScore,
-    required Future<void> Function(String categoryKey, int score) setHighScore,
+    required Future<int> Function(String categoryKey, String difficulty)
+    getHighScore,
+    AuthService? authService,
+    LeaderboardBandService? leaderboardBandService,
+    WidgetBuilder? upgradeRouteBuilder,
   }) async {
     await tester.pumpWidget(
       MaterialApp(
@@ -29,7 +37,8 @@ void main() {
             builder: (_) => ResultScreen(
               saveScore: saveScore,
               getHighScore: getHighScore,
-              setHighScore: setHighScore,
+              authService: authService,
+              leaderboardBandService: leaderboardBandService,
             ),
           ),
         ],
@@ -37,6 +46,8 @@ void main() {
           QuizScreen.routeName: (_) => const _QuizArgsProbe(),
           DifficultyScreen.routeName: (_) => const _DifficultyArgsProbe(),
           UserProfileScreen.routeName: (_) => const _ProfileProbe(),
+          UpgradeAccountScreen.routeName:
+              upgradeRouteBuilder ?? (_) => const _UpgradeProbe(),
         },
       ),
     );
@@ -54,7 +65,6 @@ void main() {
 
   testWidgets('renders score summary and high-score message', (tester) async {
     var saveScoreCalled = false;
-    var setHighScoreCalled = false;
     await pumpResult(
       tester,
       args: ResultScreenArgs(
@@ -64,20 +74,22 @@ void main() {
         difficulty: 'easy',
       ),
       saveScore:
-          ({required categoryKey, required difficulty, required score}) async {
+          ({
+            required categoryKey,
+            required difficulty,
+            required score,
+            required totalQuestions,
+          }) async {
             saveScoreCalled = true;
+            return score;
           },
-      getHighScore: (categoryKey) async => 5,
-      setHighScore: (categoryKey, score) async {
-        setHighScoreCalled = true;
-      },
+      getHighScore: (categoryKey, difficulty) async => 5,
     );
 
     expect(find.text('You scored 7 out of 10'), findsOneWidget);
     expect(find.text('70%'), findsOneWidget);
     expect(find.textContaining('New High Score: 7!'), findsOneWidget);
     expect(saveScoreCalled, isTrue);
-    expect(setHighScoreCalled, isTrue);
   });
 
   testWidgets('play again button routes to quiz with expected args', (
@@ -96,9 +108,9 @@ void main() {
             required categoryKey,
             required difficulty,
             required score,
-          }) async {},
-      getHighScore: (categoryKey) async => 10,
-      setHighScore: (categoryKey, score) async {},
+            required totalQuestions,
+          }) async => 10,
+      getHighScore: (categoryKey, difficulty) async => 10,
     );
 
     await tester.tap(find.text('Play Again'));
@@ -123,9 +135,9 @@ void main() {
             required categoryKey,
             required difficulty,
             required score,
-          }) async {},
-      getHighScore: (categoryKey) async => 10,
-      setHighScore: (categoryKey, score) async {},
+            required totalQuestions,
+          }) async => 10,
+      getHighScore: (categoryKey, difficulty) async => 10,
     );
 
     await tester.tap(find.text('Change Difficulty'));
@@ -163,9 +175,9 @@ void main() {
                 required categoryKey,
                 required difficulty,
                 required score,
-              }) async {},
-          getHighScore: (categoryKey) async => 10,
-          setHighScore: (categoryKey, score) async {},
+                required totalQuestions,
+              }) async => 10,
+          getHighScore: (categoryKey, difficulty) async => 10,
         ),
       ),
     );
@@ -178,6 +190,177 @@ void main() {
 
     expect(find.text('You scored 4 out of 15'), findsOneWidget);
     expect(find.text('base-screen'), findsNothing);
+  });
+
+  testWidgets('shows guest conversion CTA text for top-20 anonymous band', (
+    tester,
+  ) async {
+    await pumpResult(
+      tester,
+      args: ResultScreenArgs(
+        categoryKey: 'flag',
+        score: 86,
+        total: 100,
+        difficulty: 'easy',
+      ),
+      saveScore:
+          ({
+            required categoryKey,
+            required difficulty,
+            required score,
+            required totalQuestions,
+          }) async => score,
+      getHighScore: (categoryKey, difficulty) async => 90,
+      authService: AuthService(
+        currentUserProvider: () =>
+            _FakeUser(uid: 'guest123', isAnonymous: true),
+      ),
+      leaderboardBandService: LeaderboardBandService(
+        entriesLoader:
+            ({
+              required categoryKey,
+              required difficulty,
+              required limit,
+            }) async => _seededEntries(count: 30),
+      ),
+    );
+
+    expect(find.byKey(const Key('guest-conversion-cta')), findsOneWidget);
+    expect(find.text("You're in the top 20 as a guest."), findsOneWidget);
+    expect(find.text('Create an account to compete globally.'), findsOneWidget);
+  });
+
+  testWidgets(
+    'shows outside-top100 guest message when score is below top band',
+    (tester) async {
+      await pumpResult(
+        tester,
+        args: ResultScreenArgs(
+          categoryKey: 'flag',
+          score: 0,
+          total: 100,
+          difficulty: 'easy',
+        ),
+        saveScore:
+            ({
+              required categoryKey,
+              required difficulty,
+              required score,
+              required totalQuestions,
+            }) async => score,
+        getHighScore: (categoryKey, difficulty) async => 20,
+        authService: AuthService(
+          currentUserProvider: () =>
+              _FakeUser(uid: 'guest999', isAnonymous: true),
+        ),
+        leaderboardBandService: LeaderboardBandService(
+          entriesLoader:
+              ({
+                required categoryKey,
+                required difficulty,
+                required limit,
+              }) async => _seededEntries(count: 100),
+        ),
+      );
+
+      expect(find.byKey(const Key('guest-conversion-cta')), findsOneWidget);
+      expect(
+        find.text("You're climbing the rankings as a guest."),
+        findsOneWidget,
+      );
+      expect(
+        find.text('Create an account to compete globally.'),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets('create account CTA routes guests to upgrade screen', (
+    tester,
+  ) async {
+    await pumpResult(
+      tester,
+      args: ResultScreenArgs(
+        categoryKey: 'flag',
+        score: 86,
+        total: 100,
+        difficulty: 'easy',
+      ),
+      saveScore:
+          ({
+            required categoryKey,
+            required difficulty,
+            required score,
+            required totalQuestions,
+          }) async => score,
+      getHighScore: (categoryKey, difficulty) async => 90,
+      authService: AuthService(
+        currentUserProvider: () =>
+            _FakeUser(uid: 'guest-convert', isAnonymous: true),
+      ),
+      leaderboardBandService: LeaderboardBandService(
+        entriesLoader:
+            ({
+              required categoryKey,
+              required difficulty,
+              required limit,
+            }) async => _seededEntries(count: 30),
+      ),
+    );
+
+    await tester.tap(find.byKey(const Key('guest-conversion-cta-action')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('upgrade-screen'), findsOneWidget);
+  });
+
+  testWidgets('hides guest CTA after successful account upgrade returns', (
+    tester,
+  ) async {
+    User currentUser = _FakeUser(uid: 'guest-active', isAnonymous: true);
+
+    await pumpResult(
+      tester,
+      args: ResultScreenArgs(
+        categoryKey: 'flag',
+        score: 86,
+        total: 100,
+        difficulty: 'easy',
+      ),
+      saveScore:
+          ({
+            required categoryKey,
+            required difficulty,
+            required score,
+            required totalQuestions,
+          }) async => score,
+      getHighScore: (categoryKey, difficulty) async => 90,
+      authService: AuthService(currentUserProvider: () => currentUser),
+      leaderboardBandService: LeaderboardBandService(
+        entriesLoader:
+            ({
+              required categoryKey,
+              required difficulty,
+              required limit,
+            }) async => _seededEntries(count: 30),
+      ),
+      upgradeRouteBuilder: (_) => _UpgradeCompleteProbe(
+        onComplete: () {
+          currentUser = _FakeUser(uid: 'account-active', isAnonymous: false);
+        },
+      ),
+    );
+
+    expect(find.byKey(const Key('guest-conversion-cta')), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('guest-conversion-cta-action')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('complete-upgrade'), findsOneWidget);
+    await tester.tap(find.text('complete-upgrade'));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('guest-conversion-cta')), findsNothing);
   });
 }
 
@@ -213,4 +396,63 @@ class _ProfileProbe extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Scaffold(body: Text('profile-screen'));
   }
+}
+
+class _UpgradeProbe extends StatelessWidget {
+  const _UpgradeProbe();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(body: Text('upgrade-screen'));
+  }
+}
+
+class _UpgradeCompleteProbe extends StatelessWidget {
+  final VoidCallback onComplete;
+
+  const _UpgradeCompleteProbe({required this.onComplete});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: TextButton(
+          onPressed: () {
+            onComplete();
+            Navigator.of(context).pop();
+          },
+          child: const Text('complete-upgrade'),
+        ),
+      ),
+    );
+  }
+}
+
+List<LeaderboardEntry> _seededEntries({required int count}) {
+  return List.generate(count, (index) {
+    final rank = index + 1;
+    return LeaderboardEntry(
+      uid: 'u$rank',
+      score: 101 - rank,
+      updatedAt: DateTime.utc(2025, 1, 1, 0, rank, 0),
+      isAnonymous: false,
+      displayName: 'User$rank',
+    );
+  });
+}
+
+class _FakeUser implements User {
+  _FakeUser({required this.uid, required this.isAnonymous});
+
+  @override
+  final String uid;
+
+  @override
+  final bool isAnonymous;
+
+  @override
+  String? get displayName => null;
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

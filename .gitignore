@@ -101,6 +101,7 @@ app.*.map.json
 # secret files
 *.keystore
 *.p8
+.vscode/dart_defines.local.json
 
 # Additional local/system files
 coverage/

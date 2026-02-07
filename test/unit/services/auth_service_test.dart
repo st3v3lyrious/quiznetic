@@ -41,6 +41,7 @@ void main() {
 
     test('signInAnonymously ensures user document when user exists', () async {
       var ensureCalled = false;
+      var syncCalled = false;
       final fakeUser = _FakeUser(uid: 'guest1', isAnonymous: true);
       final credential = _FakeUserCredential(user: fakeUser);
       final service = AuthService(
@@ -52,11 +53,16 @@ void main() {
           ensureCalled = true;
           return true;
         },
+        syncPendingScoresProvider: () async {
+          syncCalled = true;
+          return 0;
+        },
       );
 
       final result = await service.signInAnonymously();
       expect(result, same(credential));
       expect(ensureCalled, isTrue);
+      expect(syncCalled, isTrue);
     });
 
     test('signInAnonymously throws when profile creation fails', () async {
@@ -129,6 +135,7 @@ void main() {
     test('linkAnonymousWithCredential delegates to link provider', () async {
       final user = _FakeUser(uid: 'u2', isAnonymous: true);
       final expectedCredential = _FakeUserCredential(user: user);
+      var syncCalled = false;
       final service = AuthService(
         currentUserProvider: () => user,
         authStateChangesProvider: () => const Stream<User?>.empty(),
@@ -138,6 +145,10 @@ void main() {
           expect(linkedUser.uid, equals('u2'));
           return expectedCredential;
         },
+        syncPendingScoresProvider: () async {
+          syncCalled = true;
+          return 0;
+        },
       );
 
       final credential = EmailAuthProvider.credential(
@@ -146,6 +157,7 @@ void main() {
       );
       final result = await service.linkAnonymousWithCredential(credential);
       expect(result, same(expectedCredential));
+      expect(syncCalled, isTrue);
     });
   });
 }

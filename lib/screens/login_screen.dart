@@ -1,34 +1,54 @@
 /*
  DOC: Screen
  Title: Login Screen
- Purpose: Handles sign-in providers and guest sign-in entry.
+ Purpose: Handles provider-based sign-in and account creation.
 */
 import 'package:flutter/material.dart';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:firebase_ui_oauth_apple/firebase_ui_oauth_apple.dart';
 import 'package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart';
+import 'package:quiznetic_flutter/config/app_config.dart';
 import 'package:quiznetic_flutter/services/auth_service.dart';
+import 'package:quiznetic_flutter/services/score_repository.dart';
 import 'package:quiznetic_flutter/services/user_checker.dart';
 import 'package:quiznetic_flutter/screens/home_screen.dart';
 
 class LoginScreen extends StatelessWidget {
   static const routeName = '/login';
-  const LoginScreen({super.key});
+  static const logoAssetPath = 'assets/images/logo-no-background.png';
+  final String? googleOAuthClientId;
 
-  /// Builds provider sign-in and guest-entry actions.
+  const LoginScreen({super.key, this.googleOAuthClientId});
+
+  /// Returns true when Google provider config is available.
+  @visibleForTesting
+  static bool isGoogleProviderEnabled(String clientId) {
+    return clientId.trim().isNotEmpty;
+  }
+
+  /// Builds provider list, conditionally including Google based on config.
+  @visibleForTesting
+  static List<AuthProvider> buildProviders({required String googleClientId}) {
+    return [
+      EmailAuthProvider(),
+      if (isGoogleProviderEnabled(googleClientId))
+        GoogleProvider(clientId: googleClientId.trim()),
+      AppleProvider(),
+    ];
+  }
+
+  /// Builds provider sign-in and account-creation actions.
   @override
   Widget build(BuildContext context) {
+    final resolvedGoogleClientId =
+        googleOAuthClientId ?? AppConfig.googleOAuthClientId;
+    final googleConfigured = isGoogleProviderEnabled(resolvedGoogleClientId);
+
     return Scaffold(
       body: SafeArea(
         child: SignInScreen(
           // Providers
-          providers: [
-            EmailAuthProvider(),
-            GoogleProvider(
-              clientId: 'YOUR-CLIENT-ID.apps.googleusercontent.com',
-            ),
-            AppleProvider(),
-          ],
+          providers: buildProviders(googleClientId: resolvedGoogleClientId),
 
           // Header
           headerBuilder: (context, constraints, shrinkOffset) {
@@ -39,7 +59,7 @@ class LoginScreen extends StatelessWidget {
                 children: [
                   AspectRatio(
                     aspectRatio: 1,
-                    child: Image.asset('assets/images/logo.png'),
+                    child: Image.asset(logoAssetPath),
                   ),
                   Text(
                     'QuizNetic',
@@ -60,11 +80,23 @@ class LoginScreen extends StatelessWidget {
           subtitleBuilder: (context, action) {
             return Padding(
               padding: const EdgeInsets.symmetric(vertical: 8),
-              child: action == AuthAction.signIn
-                  ? const Text('Welcome back! Please sign in to continue.')
-                  : const Text(
-                      'Welcome! Please create an account to continue.',
+              child: Column(
+                children: [
+                  action == AuthAction.signIn
+                      ? const Text('Welcome back! Please sign in to continue.')
+                      : const Text(
+                          'Welcome! Please create an account to continue.',
+                        ),
+                  if (!googleConfigured)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 8),
+                      child: Text(
+                        'Google sign-in is currently unavailable.',
+                        textAlign: TextAlign.center,
+                      ),
                     ),
+                ],
+              ),
             );
           },
 
@@ -95,6 +127,17 @@ class LoginScreen extends StatelessWidget {
                 return;
               }
 
+              // If scores were queued while offline, attempt a best-effort sync.
+              try {
+                await LocalFirstScoreRepository().syncPendingScores(
+                  forceRetry: true,
+                );
+              } catch (e) {
+                debugPrint(
+                  '⚠️ Deferred score sync after provider sign-in failed: $e',
+                );
+              }
+
               if (context.mounted) {
                 Navigator.of(
                   context,
@@ -103,40 +146,6 @@ class LoginScreen extends StatelessWidget {
             }),
             // Additional auth state actions can be added as needed
           ],
-
-          // Footer with guest sign-in
-          footerBuilder: (context, _) {
-            return Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: const Size.fromHeight(50),
-                  ),
-                  onPressed: () async {
-                    try {
-                      final authService = AuthService();
-                      final cred = await authService.signInAnonymously();
-                      if (cred.user != null && context.mounted) {
-                        Navigator.of(
-                          context,
-                        ).pushReplacementNamed(HomeScreen.routeName);
-                      }
-                    } catch (e) {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(
-                          context,
-                        ).showSnackBar(SnackBar(content: Text('Error: $e')));
-                      }
-                    }
-                  },
-                  child: const Text('Continue as Guest'),
-                ),
-                const SizedBox(height: 12),
-              ],
-            );
-          },
 
           // Styles
           styles: const {

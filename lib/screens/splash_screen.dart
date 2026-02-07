@@ -5,8 +5,8 @@
 */
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:quiznetic_flutter/screens/entry_choice_screen.dart';
 import 'package:quiznetic_flutter/screens/home_screen.dart';
-import 'package:quiznetic_flutter/screens/login_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -33,7 +33,7 @@ class _SplashScreenState extends State<SplashScreen> {
     _checkUserAndNavigate();
   }
 
-  /// Routes to home for signed-in users, otherwise to login.
+  /// Routes to home for signed-in users, otherwise to entry choice.
   Future<void> _checkUserAndNavigate() async {
     await Future.delayed(widget.startupDelay);
     // Only check Firebase Authentication. Do NOT create or read Firestore
@@ -49,7 +49,7 @@ class _SplashScreenState extends State<SplashScreen> {
         arguments: (),
       );
     } else {
-      Navigator.pushReplacementNamed(context, LoginScreen.routeName);
+      Navigator.pushReplacementNamed(context, EntryChoiceScreen.routeName);
     }
   }
 

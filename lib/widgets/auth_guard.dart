@@ -5,11 +5,11 @@
 */
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:quiznetic_flutter/screens/login_screen.dart';
+import 'package:quiznetic_flutter/screens/entry_choice_screen.dart';
 import 'package:quiznetic_flutter/screens/upgrade_account_screen.dart';
 
 /// A widget that enforces authentication state:
-/// - If user is not signed in -> show login screen
+/// - If user is not signed in -> show entry choice screen
 /// - If user is anonymous -> optionally show upgrade prompt
 /// - If user is fully authenticated -> show child
 class AuthGuard extends StatelessWidget {
@@ -48,9 +48,9 @@ class AuthGuard extends StatelessWidget {
 
         final user = snapshot.data;
 
-        // Not signed in -> login screen
+        // Not signed in -> first-entry choice screen
         if (user == null) {
-          return const LoginScreen();
+          return const EntryChoiceScreen();
         }
 
         // Anonymous but not allowed -> upgrade prompt

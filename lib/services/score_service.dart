@@ -28,7 +28,11 @@ class ScoreService {
     required String difficulty,
     required int score,
   }) async {
-    final uid = _auth.currentUser!.uid;
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw Exception('Not signed in');
+    }
+    final uid = user.uid;
     final now = FieldValue.serverTimestamp();
 
     // Update user’s personal best for this category
@@ -38,6 +42,7 @@ class ScoreService {
         .collection('scores')
         .doc('${categoryKey}_$difficulty');
 
+    var didWriteBest = false;
     await _db.runTransaction((tx) async {
       final snapshot = await tx.get(userDoc);
       final prevBest = snapshot.exists
@@ -45,14 +50,21 @@ class ScoreService {
           : 0;
 
       if (shouldUpdateBestScore(previousBest: prevBest, newScore: score)) {
+        didWriteBest = true;
         tx.set(userDoc, {
           'categoryKey': categoryKey, // leave for querying
           'difficulty': difficulty, // store for display
           'bestScore': score,
+          'source': user.isAnonymous ? 'guest' : 'account',
           'updatedAt': now,
         }, SetOptions(merge: true));
       }
     });
+
+    // Keep leaderboard semantics aligned with personal-best semantics.
+    if (!didWriteBest) {
+      return;
+    }
 
     // Also write into a global leaderboard
     final leadDoc = _db
@@ -65,8 +77,40 @@ class ScoreService {
       'categoryKey': categoryKey,
       'difficulty': difficulty,
       'score': score,
+      'isAnonymous': user.isAnonymous,
+      'displayName': leaderboardDisplayName(
+        uid: uid,
+        isAnonymous: user.isAnonymous,
+        displayName: user.displayName,
+        email: user.email,
+      ),
       'updatedAt': now,
-    });
+    }, SetOptions(merge: true));
+  }
+
+  /// Fetches one high score for the current user and category+difficulty pair.
+  Future<int> getHighScore({
+    required String categoryKey,
+    required String difficulty,
+  }) async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      return 0;
+    }
+
+    final docId = '${categoryKey}_$difficulty';
+    final snap = await _db
+        .collection('users')
+        .doc(user.uid)
+        .collection('scores')
+        .doc(docId)
+        .get();
+
+    final data = snap.data();
+    if (data == null) {
+      return 0;
+    }
+    return ((data['bestScore'] as num?) ?? 0).toInt();
   }
 
   /// Fetches *one* high score per category for the current user.
@@ -129,5 +173,31 @@ class ScoreService {
       difficulty: difficulty,
       highScore: bestScore,
     );
+  }
+
+  /// Returns the display name used for leaderboard entries.
+  @visibleForTesting
+  static String leaderboardDisplayName({
+    required String uid,
+    required bool isAnonymous,
+    String? displayName,
+    String? email,
+  }) {
+    final normalizedDisplayName = displayName?.trim();
+    if (normalizedDisplayName != null && normalizedDisplayName.isNotEmpty) {
+      return normalizedDisplayName;
+    }
+
+    final normalizedEmail = email?.trim();
+    if (normalizedEmail != null && normalizedEmail.isNotEmpty) {
+      return normalizedEmail.split('@').first;
+    }
+
+    if (isAnonymous) {
+      final suffix = uid.length >= 6 ? uid.substring(0, 6) : uid;
+      return 'Guest-$suffix';
+    }
+
+    return 'Player';
   }
 }

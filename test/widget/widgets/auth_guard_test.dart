@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:quiznetic_flutter/screens/entry_choice_screen.dart';
 import 'package:quiznetic_flutter/widgets/auth_guard.dart';
 
 void main() {
@@ -55,6 +56,20 @@ void main() {
 
     await tester.pump();
     expect(find.text('protected'), findsOneWidget);
+  });
+
+  testWidgets('shows entry choice when no user is signed in', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: AuthGuard(
+          authStateChanges: Stream<User?>.value(null),
+          child: const Text('protected'),
+        ),
+      ),
+    );
+
+    await tester.pump();
+    expect(find.byType(EntryChoiceScreen), findsOneWidget);
   });
 
   testWidgets('uses custom builder when provided', (tester) async {

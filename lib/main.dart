@@ -5,6 +5,7 @@
 */
 import 'package:flutter/material.dart';
 import 'package:quiznetic_flutter/screens/difficulty_screen.dart';
+import 'package:quiznetic_flutter/screens/entry_choice_screen.dart';
 import 'package:quiznetic_flutter/screens/home_screen.dart';
 import 'package:quiznetic_flutter/screens/quiz_screen.dart';
 import 'package:quiznetic_flutter/screens/result_screen.dart';
@@ -12,6 +13,7 @@ import 'package:quiznetic_flutter/screens/user_profile_screen.dart';
 import 'package:quiznetic_flutter/screens/login_screen.dart';
 import 'package:quiznetic_flutter/screens/upgrade_account_screen.dart';
 import 'package:quiznetic_flutter/widgets/auth_guard.dart';
+import 'package:quiznetic_flutter/widgets/score_sync_scope.dart';
 import 'screens/splash_screen.dart';
 import 'firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -46,49 +48,52 @@ class QuizNetic extends StatelessWidget {
       onSurfaceVariant: Colors.black87, // text on grey
     );
 
-    return MaterialApp(
-      title: 'QuizNetic',
-      initialRoute: SplashScreen.routeName,
-      routes: {
-        SplashScreen.routeName: (_) => const SplashScreen(),
-        HomeScreen.routeName: (_) => const AuthGuard(child: HomeScreen()),
-        QuizScreen.routeName: (_) => const AuthGuard(child: QuizScreen()),
-        ResultScreen.routeName: (_) => const AuthGuard(child: ResultScreen()),
-        DifficultyScreen.routeName: (_) =>
-            const AuthGuard(child: DifficultyScreen()),
-        UserProfileScreen.routeName: (_) =>
-            const AuthGuard(child: UserProfileScreen()),
-        UpgradeAccountScreen.routeName: (_) =>
-            const AuthGuard(allowAnonymous: false, child: HomeScreen()),
-        LoginScreen.routeName: (_) => const LoginScreen(),
-      },
-      theme: ThemeData(
-        // Opt in to Material 3 so background/onBackground are honored:
-        useMaterial3: true,
+    return ScoreSyncScope(
+      child: MaterialApp(
+        title: 'QuizNetic',
+        initialRoute: SplashScreen.routeName,
+        routes: {
+          SplashScreen.routeName: (_) => const SplashScreen(),
+          HomeScreen.routeName: (_) => const AuthGuard(child: HomeScreen()),
+          QuizScreen.routeName: (_) => const AuthGuard(child: QuizScreen()),
+          ResultScreen.routeName: (_) => const AuthGuard(child: ResultScreen()),
+          DifficultyScreen.routeName: (_) =>
+              const AuthGuard(child: DifficultyScreen()),
+          UserProfileScreen.routeName: (_) =>
+              const AuthGuard(child: UserProfileScreen()),
+          UpgradeAccountScreen.routeName: (_) =>
+              const AuthGuard(allowAnonymous: false, child: HomeScreen()),
+          EntryChoiceScreen.routeName: (_) => const EntryChoiceScreen(),
+          LoginScreen.routeName: (_) => const LoginScreen(),
+        },
+        theme: ThemeData(
+          // Opt in to Material 3 so background/onBackground are honored:
+          useMaterial3: true,
 
-        // Supply your generated scheme:
-        colorScheme: scheme,
+          // Supply your generated scheme:
+          colorScheme: scheme,
 
-        // Now you can reference scheme.background without error:
-        scaffoldBackgroundColor: scheme.surface,
-        // Button styling uses scheme.primary / scheme.onPrimary:
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: scheme.primary,
-            foregroundColor: scheme.onPrimary,
-            shape: const StadiumBorder(),
-            minimumSize: const Size.fromHeight(48),
+          // Now you can reference scheme.background without error:
+          scaffoldBackgroundColor: scheme.surface,
+          // Button styling uses scheme.primary / scheme.onPrimary:
+          elevatedButtonTheme: ElevatedButtonThemeData(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: scheme.primary,
+              foregroundColor: scheme.onPrimary,
+              shape: const StadiumBorder(),
+              minimumSize: const Size.fromHeight(48),
+            ),
+          ),
+
+          // AppBar uses scheme.surface / scheme.onSurface:
+          appBarTheme: AppBarTheme(
+            backgroundColor: scheme.surface,
+            foregroundColor: scheme.onSurface,
+            elevation: 0,
           ),
         ),
-
-        // AppBar uses scheme.surface / scheme.onSurface:
-        appBarTheme: AppBarTheme(
-          backgroundColor: scheme.surface,
-          foregroundColor: scheme.onSurface,
-          elevation: 0,
-        ),
+        home: const SplashScreen(),
       ),
-      home: const SplashScreen(),
     );
   }
 }

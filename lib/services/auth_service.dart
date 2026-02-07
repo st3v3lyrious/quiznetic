@@ -5,6 +5,7 @@
 */
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'package:quiznetic_flutter/services/score_repository.dart';
 import 'user_checker.dart';
 
 typedef CurrentUserProvider = User? Function();
@@ -15,6 +16,7 @@ typedef EnsureUserDocumentProvider =
     Future<bool> Function({required User user});
 typedef LinkWithCredentialProvider =
     Future<UserCredential> Function(User user, AuthCredential credential);
+typedef SyncPendingScoresProvider = Future<int> Function();
 
 /// Service class that handles all authentication-related operations.
 /// This includes sign in, sign out, and auth state management.
@@ -25,6 +27,7 @@ class AuthService {
   final SignOutProvider _signOutProvider;
   final EnsureUserDocumentProvider _ensureUserDocumentProvider;
   final LinkWithCredentialProvider _linkWithCredentialProvider;
+  final SyncPendingScoresProvider _syncPendingScoresProvider;
 
   AuthService({
     CurrentUserProvider? currentUserProvider,
@@ -33,6 +36,7 @@ class AuthService {
     SignOutProvider? signOutProvider,
     EnsureUserDocumentProvider? ensureUserDocumentProvider,
     LinkWithCredentialProvider? linkWithCredentialProvider,
+    SyncPendingScoresProvider? syncPendingScoresProvider,
   }) : _currentUserProvider =
            currentUserProvider ?? (() => FirebaseAuth.instance.currentUser),
        _authStateChangesProvider =
@@ -47,7 +51,11 @@ class AuthService {
            ensureUserDocumentProvider ?? UserChecker.ensureUserDocument,
        _linkWithCredentialProvider =
            linkWithCredentialProvider ??
-           ((user, credential) => user.linkWithCredential(credential));
+           ((user, credential) => user.linkWithCredential(credential)),
+       _syncPendingScoresProvider =
+           syncPendingScoresProvider ??
+           (() =>
+               LocalFirstScoreRepository().syncPendingScores(forceRetry: true));
 
   // Get the current user (null if not signed in)
   User? get currentUser => _currentUserProvider();
@@ -76,6 +84,15 @@ class AuthService {
         if (!created) {
           throw Exception(
             'Failed to create user profile for ${credential.user!.uid}',
+          );
+        }
+
+        // Try syncing any queued local scores once auth is available.
+        try {
+          await _syncPendingScoresProvider();
+        } catch (e) {
+          debugPrint(
+            '⚠️ Deferred score sync after anonymous sign-in failed: $e',
           );
         }
       }
@@ -108,7 +125,14 @@ class AuthService {
       if (user == null) throw Exception('Not signed in');
       if (!user.isAnonymous) throw Exception('User is not anonymous');
 
-      return await _linkWithCredentialProvider(user, credential);
+      final linked = await _linkWithCredentialProvider(user, credential);
+      // Linking can unlock pending score sync for now-identified users.
+      try {
+        await _syncPendingScoresProvider();
+      } catch (e) {
+        debugPrint('⚠️ Deferred score sync after account linking failed: $e');
+      }
+      return linked;
     } catch (e) {
       debugPrint('❌ Account linking failed: $e');
       rethrow;

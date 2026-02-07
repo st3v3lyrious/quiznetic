@@ -1,8 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:quiznetic_flutter/screens/entry_choice_screen.dart';
 import 'package:quiznetic_flutter/screens/home_screen.dart';
-import 'package:quiznetic_flutter/screens/login_screen.dart';
 import 'package:quiznetic_flutter/screens/splash_screen.dart';
 
 void main() {
@@ -14,7 +14,7 @@ void main() {
             startupDelay: Duration.zero,
             currentUserProvider: _nullUser,
           ),
-          LoginScreen.routeName: (_) => const _LoginProbe(),
+          EntryChoiceScreen.routeName: (_) => const _EntryProbe(),
           HomeScreen.routeName: (_) => const _HomeProbe(),
         },
         initialRoute: SplashScreen.routeName,
@@ -25,7 +25,9 @@ void main() {
     await tester.pumpAndSettle();
   });
 
-  testWidgets('routes to login when no active user exists', (tester) async {
+  testWidgets('routes to entry choice when no active user exists', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         routes: {
@@ -33,7 +35,7 @@ void main() {
             startupDelay: Duration.zero,
             currentUserProvider: _nullUser,
           ),
-          LoginScreen.routeName: (_) => const _LoginProbe(),
+          EntryChoiceScreen.routeName: (_) => const _EntryProbe(),
           HomeScreen.routeName: (_) => const _HomeProbe(),
         },
         initialRoute: SplashScreen.routeName,
@@ -43,7 +45,7 @@ void main() {
     await tester.pump();
     await tester.pumpAndSettle();
 
-    expect(find.text('login-screen'), findsOneWidget);
+    expect(find.text('entry-screen'), findsOneWidget);
   });
 
   testWidgets('routes to home when an active user exists', (tester) async {
@@ -54,7 +56,7 @@ void main() {
             startupDelay: Duration.zero,
             currentUserProvider: () => _FakeUser(uid: 'u1', isAnonymous: true),
           ),
-          LoginScreen.routeName: (_) => const _LoginProbe(),
+          EntryChoiceScreen.routeName: (_) => const _EntryProbe(),
           HomeScreen.routeName: (_) => const _HomeProbe(),
         },
         initialRoute: SplashScreen.routeName,
@@ -70,12 +72,12 @@ void main() {
 
 User? _nullUser() => null;
 
-class _LoginProbe extends StatelessWidget {
-  const _LoginProbe();
+class _EntryProbe extends StatelessWidget {
+  const _EntryProbe();
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(body: Text('login-screen'));
+    return const Scaffold(body: Text('entry-screen'));
   }
 }
 

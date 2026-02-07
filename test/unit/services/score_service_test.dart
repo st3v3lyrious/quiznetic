@@ -39,5 +39,38 @@ void main() {
       expect(parsed.difficulty, equals('unknown'));
       expect(parsed.highScore, equals(9));
     });
+
+    test('leaderboardDisplayName prefers explicit display name', () {
+      final name = ScoreService.leaderboardDisplayName(
+        uid: 'abcdef123',
+        isAnonymous: false,
+        displayName: 'Alice',
+        email: 'alice@example.com',
+      );
+
+      expect(name, equals('Alice'));
+    });
+
+    test('leaderboardDisplayName falls back to email local-part', () {
+      final name = ScoreService.leaderboardDisplayName(
+        uid: 'abcdef123',
+        isAnonymous: false,
+        displayName: null,
+        email: 'alice@example.com',
+      );
+
+      expect(name, equals('alice'));
+    });
+
+    test('leaderboardDisplayName renders guest token for anonymous users', () {
+      final name = ScoreService.leaderboardDisplayName(
+        uid: 'abcdef123',
+        isAnonymous: true,
+        displayName: null,
+        email: null,
+      );
+
+      expect(name, equals('Guest-abcdef'));
+    });
   });
 }
