@@ -101,3 +101,20 @@ app.*.map.json
 # secret files
 *.keystore
 *.p8
+
+# Additional local/system files
+coverage/
+.fvm/
+Thumbs.db
+
+# Flutter local generated files (platform-specific)
+**/android/local.properties
+**/ios/Flutter/ephemeral/
+**/ios/Flutter/flutter_export_environment.sh
+**/macos/Flutter/ephemeral/
+
+# Additional signing artifacts
+android/key.properties
+*.jks
+*.p12
+*.mobileprovision
