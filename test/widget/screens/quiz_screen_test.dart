@@ -11,7 +11,18 @@ void main() {
     options: ['France', 'Italy', 'Spain', 'Germany'],
   );
 
-  Future<void> pumpQuiz(WidgetTester tester) async {
+  final capitalQuestion = FlagQuestion(
+    imagePath: 'assets/flags/france.png',
+    correctAnswer: 'Paris',
+    options: ['Paris', 'Rome', 'Madrid', 'Berlin'],
+  );
+
+  Future<void> pumpQuiz(
+    WidgetTester tester, {
+    String categoryKey = 'flag',
+    FlagQuestion? injectedQuestion,
+  }) async {
+    final q = injectedQuestion ?? question;
     tester.view.devicePixelRatio = 1.0;
     tester.view.physicalSize = const Size(1200, 2200);
     addTearDown(() {
@@ -26,14 +37,14 @@ void main() {
             settings: RouteSettings(
               name: QuizScreen.routeName,
               arguments: QuizScreenArgs(
-                categoryKey: 'flag',
+                categoryKey: categoryKey,
                 flagsPerSession: 1,
                 difficulty: 'easy',
               ),
             ),
             builder: (_) => QuizScreen(
-              flagsLoader: () async => [question],
-              quizPreparer: (_) => [question],
+              flagsLoader: () async => [q],
+              quizPreparer: (_) => [q],
             ),
           ),
         ],
@@ -47,11 +58,30 @@ void main() {
     await pumpQuiz(tester);
 
     expect(find.text('Flag Quiz (1/1)'), findsOneWidget);
+    expect(
+      find.text('Which country does this flag belong to?'),
+      findsOneWidget,
+    );
     expect(find.text('France'), findsOneWidget);
     expect(find.text('Italy'), findsOneWidget);
     expect(find.text('Spain'), findsOneWidget);
     expect(find.text('Germany'), findsOneWidget);
   });
+
+  testWidgets(
+    'renders capital quiz title and prompt when category is capital',
+    (tester) async {
+      await pumpQuiz(
+        tester,
+        categoryKey: 'capital',
+        injectedQuestion: capitalQuestion,
+      );
+
+      expect(find.text('Capital Quiz (1/1)'), findsOneWidget);
+      expect(find.text('What is the capital of this country?'), findsOneWidget);
+      expect(find.text('Paris'), findsOneWidget);
+    },
+  );
 
   testWidgets('reveals See Results after selecting an answer', (tester) async {
     await pumpQuiz(tester);

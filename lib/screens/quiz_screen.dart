@@ -5,6 +5,7 @@
 */
 
 import 'package:flutter/material.dart';
+import '../data/capital_loader.dart';
 import '../data/flag_loader.dart';
 import '../models/flag_question.dart';
 import 'result_screen.dart';
@@ -48,6 +49,50 @@ class _QuizScreenState extends State<QuizScreen> {
     super.initState();
   }
 
+  /// Returns default question loader for the requested category.
+  Future<List<FlagQuestion>> Function() _defaultLoaderForCategory(
+    String categoryKey,
+  ) {
+    return switch (categoryKey) {
+      'capital' => loadAllCapitals,
+      _ => loadAllFlags,
+    };
+  }
+
+  /// Returns default quiz-preparer for the requested category.
+  List<FlagQuestion> Function(List<FlagQuestion>) _defaultPreparerForCategory(
+    String categoryKey,
+  ) {
+    return switch (categoryKey) {
+      'capital' => prepareCapitalQuiz,
+      _ => prepareQuiz,
+    };
+  }
+
+  /// Returns app-bar category title from category key.
+  String _categoryTitle(String categoryKey) {
+    return switch (categoryKey) {
+      'capital' => 'Capital Quiz',
+      _ => 'Flag Quiz',
+    };
+  }
+
+  /// Returns prompt text shown above answer options.
+  String _questionPrompt(String categoryKey) {
+    return switch (categoryKey) {
+      'capital' => 'What is the capital of this country?',
+      _ => 'Which country does this flag belong to?',
+    };
+  }
+
+  /// Returns empty-state message by category type.
+  String _emptyStateMessage(String categoryKey) {
+    return switch (categoryKey) {
+      'capital' => 'No capital questions found.\nPlease verify flag assets.',
+      _ => 'No flags found.\nPlease add images to assets/flags/',
+    };
+  }
+
   /// Reads route args once, loads flags, and prepares randomized questions.
   @override
   void didChangeDependencies() {
@@ -55,10 +100,12 @@ class _QuizScreenState extends State<QuizScreen> {
     if (!_argsLoaded) {
       args = ModalRoute.of(context)!.settings.arguments as QuizScreenArgs;
       _argsLoaded = true;
-      final loadFlags = widget.flagsLoader ?? loadAllFlags;
-      final prepare = widget.quizPreparer ?? prepareQuiz;
+      final loadQuestions =
+          widget.flagsLoader ?? _defaultLoaderForCategory(args.categoryKey);
+      final prepare =
+          widget.quizPreparer ?? _defaultPreparerForCategory(args.categoryKey);
       // -> HERE: load + randomize once at startup
-      loadFlags().then((allFlags) {
+      loadQuestions().then((allFlags) {
         // Shuffle & pick only widget.flagsPerSession
         allFlags.shuffle();
         final count = args.flagsPerSession < allFlags.length
@@ -122,10 +169,10 @@ class _QuizScreenState extends State<QuizScreen> {
     // Guard against empty questions (in case no assets were found)
     if (_questions.isEmpty) {
       return Scaffold(
-        appBar: AppBar(title: Text('Flag Quiz')),
-        body: const Center(
+        appBar: AppBar(title: Text(_categoryTitle(args.categoryKey))),
+        body: Center(
           child: Text(
-            'No flags found.\nPlease add images to assets/flags/',
+            _emptyStateMessage(args.categoryKey),
             textAlign: TextAlign.center,
           ),
         ),
@@ -138,7 +185,9 @@ class _QuizScreenState extends State<QuizScreen> {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: true,
-        title: Text('Flag Quiz (${_currentIndex + 1}/${_questions.length})'),
+        title: Text(
+          '${_categoryTitle(args.categoryKey)} (${_currentIndex + 1}/${_questions.length})',
+        ),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(12),
           child: Center(
@@ -167,6 +216,15 @@ class _QuizScreenState extends State<QuizScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  Text(
+                    _questionPrompt(args.categoryKey),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
                   Image.asset(q.imagePath, height: 180, fit: BoxFit.contain),
                   const SizedBox(height: 24),
                   ...q.options.map((opt) {
