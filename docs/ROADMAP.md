@@ -40,7 +40,7 @@ Use this as a short, editable delivery plan.
 - [ ] M16: Improve UI/UX polish (animations, progress indicators, feedback styling).
 - [ ] M17: Launch MVP (release checklist, store metadata, and production rollout).
 - [ ] M18: Build content licensing + attribution pipeline for celebrity/song/anime datasets.
-- [ ] M19: Harden Firestore security rules and add automated Firestore-rules tests in CI.
+- [x] M19: Harden Firestore security rules and add automated Firestore-rules tests in CI.
 - [ ] M20: Add leaderboard integrity protections (anti-cheat scoring checks, abuse controls, rate limits).
 - [ ] M21: Enforce CI/CD quality gates (GitHub Actions + branch protection required checks; workflows added, branch rule activation pending).
 - [ ] M22: Complete privacy/legal readiness (Privacy Policy, Terms, consent copy, age rating inputs).

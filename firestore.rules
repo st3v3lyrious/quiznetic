@@ -26,7 +26,7 @@ service cloud.firestore {
           && request.resource.data.isAnonymous is bool
           && request.resource.data.displayName is string
           && request.resource.data.displayName.size() > 0
-          && request.resource.data.displayName.size() <= 60
+          && request.resource.data.displayName.size() <= 120
           && request.resource.data.updatedAt is timestamp;
     }
 
