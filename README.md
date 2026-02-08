@@ -60,7 +60,7 @@ Use this as an editable feature checklist.
 - [ ] Add Guess the Song from Lyrics quiz category
 - [ ] Add Guess the Anime quiz category
 - [ ] Add Apple sign-in as a production-ready auth option
-- [ ] Implement a global leaderboard screen (with UX/design and ranking presentation)
+- [x] Implement a global leaderboard screen (with UX/design, category+difficulty filters, and ranking presentation)
 - [ ] Create branded app icons for all target platforms
 - [ ] Create branded splash screens for all target platforms
 - [ ] Create a Settings screen
@@ -71,7 +71,7 @@ Use this as an editable feature checklist.
 - [ ] Integrate monetization via in-app purchases (IAP)
 - [ ] Improve UI/UX polish (animations, progress bar behavior, answer feedback styling)
 - [ ] Add content licensing + attribution pipeline for celebrity/song/anime datasets
-- [ ] Harden Firestore security rules with automated rule tests
+- [x] Harden Firestore security rules with automated rule tests
 - [ ] Add leaderboard integrity protections (anti-cheat heuristics, abuse controls, write throttling)
 - [ ] Add CI/CD quality gates (analyze, unit/widget/integration/e2e, coverage threshold)
 - [ ] Add privacy and legal readiness artifacts (Privacy Policy, Terms, consent flow, age-rating metadata)
@@ -96,6 +96,7 @@ Use this as an editable feature checklist.
 - **Difficulty Screen** — Lets users choose difficulty and question count. (`lib/screens/difficulty_screen.dart`)
 - **Entry Choice Screen** — Lets unauthenticated users choose between guest mode or provider sign-in. (`lib/screens/entry_choice_screen.dart`)
 - **Home Screen** — Shows quiz categories, guest upgrade CTA, and routes to difficulty selection. (`lib/screens/home_screen.dart`)
+- **Leaderboard Screen** — Displays global ranking with category+difficulty filters and user highlight. (`lib/screens/leaderboard_screen.dart`)
 - **Login Screen** — Handles provider-based sign-in and account creation. (`lib/screens/login_screen.dart`)
 - **Quiz** — Presents questions, records answers, and handles scoring. (`lib/screens/quiz_screen.dart`)
 - **Result Screen** — Shows result summary and next actions after a quiz. (`lib/screens/result_screen.dart`)
@@ -129,8 +130,8 @@ flutter run
 
 ## Testing
 
-- **Unit/Widget tests:** `23` files
-- **Integration tests:** `6` files
+- **Unit/Widget tests:** `25` files
+- **Integration tests:** `7` files
 
 ```bash
 flutter test
@@ -181,7 +182,7 @@ Use this as a short, editable delivery plan.
 - [ ] M8: Add Guess the Song from Lyrics quiz category (licensed lyric snippets + answer metadata + tests).
 - [ ] M9: Add Guess the Anime quiz category (content set + quiz loader + tests).
 - [ ] M10: Ship Apple sign-in as a production-ready provider across supported platforms.
-- [ ] M11: Implement global leaderboard experience (data query strategy + screen design + filters).
+- [x] M11: Implement global leaderboard experience (data query strategy + screen design + filters).
 - [ ] M12: Add branded app icons and splash screens for all target platforms.
 - [ ] M13: Build Settings and About screens.
 - [ ] M14: Add analytics and crash reporting instrumentation.
@@ -189,7 +190,7 @@ Use this as a short, editable delivery plan.
 - [ ] M16: Improve UI/UX polish (animations, progress indicators, feedback styling).
 - [ ] M17: Launch MVP (release checklist, store metadata, and production rollout).
 - [ ] M18: Build content licensing + attribution pipeline for celebrity/song/anime datasets.
-- [ ] M19: Harden Firestore security rules and add automated Firestore-rules tests in CI.
+- [x] M19: Harden Firestore security rules and add automated Firestore-rules tests in CI.
 - [ ] M20: Add leaderboard integrity protections (anti-cheat scoring checks, abuse controls, rate limits).
 - [ ] M21: Enforce CI/CD quality gates (GitHub Actions + branch protection required checks; workflows added, branch rule activation pending).
 - [ ] M22: Complete privacy/legal readiness (Privacy Policy, Terms, consent copy, age rating inputs).
