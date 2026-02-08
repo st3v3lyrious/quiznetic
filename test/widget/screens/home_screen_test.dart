@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quiznetic_flutter/screens/difficulty_screen.dart';
 import 'package:quiznetic_flutter/screens/home_screen.dart';
+import 'package:quiznetic_flutter/screens/leaderboard_screen.dart';
 import 'package:quiznetic_flutter/screens/upgrade_account_screen.dart';
 import 'package:quiznetic_flutter/screens/user_profile_screen.dart';
 import 'package:quiznetic_flutter/services/auth_service.dart';
@@ -74,6 +75,22 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('profile-screen'), findsOneWidget);
+  });
+
+  testWidgets('routes to leaderboard when leaderboard action is tapped', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: const HomeScreen(),
+        routes: {LeaderboardScreen.routeName: (_) => const _LeaderboardProbe()},
+      ),
+    );
+
+    await tester.tap(find.byTooltip('Leaderboard'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('leaderboard-screen'), findsOneWidget);
   });
 
   testWidgets(
@@ -153,6 +170,15 @@ class _UpgradeProbe extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Scaffold(body: Text('upgrade-screen'));
+  }
+}
+
+class _LeaderboardProbe extends StatelessWidget {
+  const _LeaderboardProbe();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(body: Text('leaderboard-screen'));
   }
 }
 

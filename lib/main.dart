@@ -10,6 +10,7 @@ import 'package:quiznetic_flutter/screens/home_screen.dart';
 import 'package:quiznetic_flutter/screens/quiz_screen.dart';
 import 'package:quiznetic_flutter/screens/result_screen.dart';
 import 'package:quiznetic_flutter/screens/user_profile_screen.dart';
+import 'package:quiznetic_flutter/screens/leaderboard_screen.dart';
 import 'package:quiznetic_flutter/screens/login_screen.dart';
 import 'package:quiznetic_flutter/screens/upgrade_account_screen.dart';
 import 'package:quiznetic_flutter/widgets/auth_guard.dart';
@@ -61,6 +62,8 @@ class QuizNetic extends StatelessWidget {
               const AuthGuard(child: DifficultyScreen()),
           UserProfileScreen.routeName: (_) =>
               const AuthGuard(child: UserProfileScreen()),
+          LeaderboardScreen.routeName: (_) =>
+              const AuthGuard(child: LeaderboardScreen()),
           UpgradeAccountScreen.routeName: (_) =>
               const AuthGuard(allowAnonymous: false, child: HomeScreen()),
           EntryChoiceScreen.routeName: (_) => const EntryChoiceScreen(),

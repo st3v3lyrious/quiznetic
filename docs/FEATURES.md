@@ -50,7 +50,7 @@ Use this as an editable feature checklist.
 - [ ] Add Guess the Song from Lyrics quiz category
 - [ ] Add Guess the Anime quiz category
 - [ ] Add Apple sign-in as a production-ready auth option
-- [ ] Implement a global leaderboard screen (with UX/design and ranking presentation)
+- [x] Implement a global leaderboard screen (with UX/design, category+difficulty filters, and ranking presentation)
 - [ ] Create branded app icons for all target platforms
 - [ ] Create branded splash screens for all target platforms
 - [ ] Create a Settings screen

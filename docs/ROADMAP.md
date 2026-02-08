@@ -32,7 +32,7 @@ Use this as a short, editable delivery plan.
 - [ ] M8: Add Guess the Song from Lyrics quiz category (licensed lyric snippets + answer metadata + tests).
 - [ ] M9: Add Guess the Anime quiz category (content set + quiz loader + tests).
 - [ ] M10: Ship Apple sign-in as a production-ready provider across supported platforms.
-- [ ] M11: Implement global leaderboard experience (data query strategy + screen design + filters).
+- [x] M11: Implement global leaderboard experience (data query strategy + screen design + filters).
 - [ ] M12: Add branded app icons and splash screens for all target platforms.
 - [ ] M13: Build Settings and About screens.
 - [ ] M14: Add analytics and crash reporting instrumentation.
