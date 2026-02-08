@@ -12,7 +12,8 @@ concurrency:
 jobs:
   integration_tests:
     name: Flutter Integration Tests
-    runs-on: ubuntu-latest
+    # Keep 22.04 for linux desktop plugin compatibility (`webkit2gtk-4.0` dev pkg).
+    runs-on: ubuntu-22.04
     timeout-minutes: 30
 
     steps:
@@ -50,8 +51,24 @@ jobs:
       - name: List devices
         run: flutter devices
 
-      - name: Run integration tests
-        run: xvfb-run -a flutter test integration_test -d linux
+      - name: Run integration tests (serial per file)
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          test_files=(integration_test/*_integration_test.dart)
+          if [ ${#test_files[@]} -eq 0 ]; then
+            echo "No integration tests found in integration_test/."
+            exit 1
+          fi
+
+          # Run one file at a time and force single test concurrency to avoid
+          # linux desktop debug connection flakiness in CI.
+          for test_file in "${test_files[@]}"; do
+            echo "::group::${test_file}"
+            xvfb-run -a flutter test "${test_file}" -d linux --concurrency=1 --reporter expanded
+            echo "::endgroup::"
+          done
 
   playwright_e2e:
     name: Playwright E2E
@@ -104,7 +121,9 @@ jobs:
         working-directory: playwright
 
       - name: Run Playwright tests
-        run: npm run test:e2e
+        run: |
+          mkdir -p playwright-report test-results
+          npm run test:e2e
         working-directory: playwright
         env:
           PLAYWRIGHT_BASE_URL: http://127.0.0.1:7357
@@ -115,3 +134,12 @@ jobs:
         with:
           name: playwright-report
           path: playwright/playwright-report
+          if-no-files-found: ignore
+
+      - name: Upload Playwright test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-test-results
+          path: playwright/test-results
+          if-no-files-found: ignore

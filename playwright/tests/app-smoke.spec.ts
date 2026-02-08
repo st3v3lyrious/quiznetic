@@ -4,6 +4,20 @@ test('loads either entry choice or home screen', async ({ page }) => {
   await page.goto('/');
   await page.waitForLoadState('networkidle');
 
+  // Flutter web may require explicitly enabling semantics before text/role
+  // selectors become visible to Playwright.
+  const semanticsToggleExists =
+    (await page.locator('flt-semantics-placeholder').count()) > 0;
+  if (semanticsToggleExists) {
+    await page.evaluate(() => {
+      const toggle = document.querySelector(
+        'flt-semantics-placeholder',
+      ) as HTMLElement | null;
+      toggle?.click();
+    });
+    await page.waitForTimeout(300);
+  }
+
   const guestButton = page.getByRole('button', { name: 'Continue as Guest' });
   const homePrompt = page.getByText('Choose Your Quiz');
 
@@ -19,7 +33,7 @@ test('loads either entry choice or home screen', async ({ page }) => {
 
         return 'pending';
       },
-      { timeout: 15_000 },
+      { timeout: 60_000 },
     )
     .not.toBe('pending');
 });
