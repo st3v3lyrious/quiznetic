@@ -28,8 +28,14 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Install Xvfb
+        run: sudo apt-get update && sudo apt-get install -y xvfb
+
+      - name: List devices
+        run: flutter devices
+
       - name: Run integration tests
-        run: flutter test integration_test
+        run: xvfb-run -a flutter test integration_test -d linux
 
   playwright_e2e:
     name: Playwright E2E
