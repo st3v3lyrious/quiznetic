@@ -202,7 +202,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                             width: 220,
                             child: DropdownButtonFormField<String>(
                               key: const Key('leaderboard-category-filter'),
+                              // ignore: deprecated_member_use
                               value: _selectedCategory,
+                              isExpanded: true,
                               decoration: const InputDecoration(
                                 labelText: 'Category',
                               ),
@@ -221,7 +223,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                             width: 220,
                             child: DropdownButtonFormField<String>(
                               key: const Key('leaderboard-difficulty-filter'),
+                              // ignore: deprecated_member_use
                               value: _selectedDifficulty,
+                              isExpanded: true,
                               decoration: const InputDecoration(
                                 labelText: 'Difficulty',
                               ),
