@@ -11,6 +11,7 @@ import 'package:quiznetic_flutter/services/leaderboard_band_service.dart';
 import 'package:quiznetic_flutter/services/score_repository.dart';
 import 'quiz_screen.dart';
 import 'difficulty_screen.dart';
+import 'home_screen.dart';
 import 'user_profile_screen.dart';
 
 class ResultScreenArgs {
@@ -366,17 +367,16 @@ class _ResultScreenState extends State<ResultScreen> {
                                 child: const Text('Change Difficulty'),
                               ),
                               const SizedBox(height: 12),
-                              /*
-                            OutlinedButton(
-                              onPressed: () {
-                                Navigator.pushNamed(
-                                  context,
-                                  QuizTypeSelectionScreen.routeName,
-                                );
-                              },
-                              child: const Text('Change Quiz Type'),
-                            ),
-                            */
+                              OutlinedButton(
+                                onPressed: () {
+                                  Navigator.pushNamedAndRemoveUntil(
+                                    context,
+                                    HomeScreen.routeName,
+                                    (route) => false,
+                                  );
+                                },
+                                child: const Text('Change Quiz Type'),
+                              ),
                             ],
                           ),
                         ],

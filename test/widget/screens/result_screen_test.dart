@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quiznetic_flutter/screens/difficulty_screen.dart';
+import 'package:quiznetic_flutter/screens/home_screen.dart';
 import 'package:quiznetic_flutter/screens/quiz_screen.dart';
 import 'package:quiznetic_flutter/screens/result_screen.dart';
 import 'package:quiznetic_flutter/screens/upgrade_account_screen.dart';
@@ -45,6 +46,7 @@ void main() {
         routes: {
           QuizScreen.routeName: (_) => const _QuizArgsProbe(),
           DifficultyScreen.routeName: (_) => const _DifficultyArgsProbe(),
+          HomeScreen.routeName: (_) => const _HomeProbe(),
           UserProfileScreen.routeName: (_) => const _ProfileProbe(),
           UpgradeAccountScreen.routeName:
               upgradeRouteBuilder ?? (_) => const _UpgradeProbe(),
@@ -144,6 +146,31 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('difficulty:flag'), findsOneWidget);
+  });
+
+  testWidgets('change quiz type button routes to home', (tester) async {
+    await pumpResult(
+      tester,
+      args: ResultScreenArgs(
+        categoryKey: 'flag',
+        score: 4,
+        total: 15,
+        difficulty: 'intermediate',
+      ),
+      saveScore:
+          ({
+            required categoryKey,
+            required difficulty,
+            required score,
+            required totalQuestions,
+          }) async => 10,
+      getHighScore: (categoryKey, difficulty) async => 10,
+    );
+
+    await tester.tap(find.text('Change Quiz Type'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('home-screen'), findsOneWidget);
   });
 
   testWidgets('blocks back navigation while on the result screen', (
@@ -395,6 +422,15 @@ class _ProfileProbe extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Scaffold(body: Text('profile-screen'));
+  }
+}
+
+class _HomeProbe extends StatelessWidget {
+  const _HomeProbe();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(body: Text('home-screen'));
   }
 }
 

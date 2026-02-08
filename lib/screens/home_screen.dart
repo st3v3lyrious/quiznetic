@@ -1,29 +1,49 @@
 /*
  DOC: Screen
  Title: Home Screen
- Purpose: Shows quiz categories and routes to difficulty selection.
+ Purpose: Shows quiz categories, guest upgrade CTA, and routes to difficulty selection.
 */
 import 'package:flutter/material.dart';
+import 'package:quiznetic_flutter/services/auth_service.dart';
 import 'difficulty_screen.dart';
+import 'upgrade_account_screen.dart';
 import 'user_profile_screen.dart';
 // Later, you’ll have other screens like 'logo_quiz_screen.dart'
 
 class HomeScreen extends StatelessWidget {
   static const routeName = '/home';
-  const HomeScreen({super.key});
+  final AuthService? authService;
 
-  // List your categories here; for now, just "Flag Quiz"
-  // 1) Give each category a unique key, name, and icon
+  const HomeScreen({super.key, this.authService});
+
+  // Give each category a unique key, name, and icon.
   final List<Category> categories = const [
     Category(key: 'flag', name: 'Flag Quiz', icon: Icons.flag),
-    // You could add more later:
+    Category(
+      key: 'capital',
+      name: 'Capital Quiz',
+      icon: Icons.location_city_outlined,
+    ),
+    // Example future category:
     // Category(key: 'logo', name: 'Logo Quiz', icon: Icons.image),
-    // Category(key: 'capital', name: 'Capital Quiz', icon: Icons.location_city),
   ];
+
+  /// Returns whether guest conversion CTA should be shown on home.
+  bool _shouldShowGuestUpgradeCta(AuthService service) {
+    try {
+      final user = service.currentUser;
+      return user != null && user.isAnonymous;
+    } catch (_) {
+      return false;
+    }
+  }
 
   /// Builds the category selection UI and handles category navigation.
   @override
   Widget build(BuildContext context) {
+    final resolvedAuthService = authService ?? AuthService();
+    final showGuestUpgradeCta = _shouldShowGuestUpgradeCta(resolvedAuthService);
+
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false, // Disable back button
@@ -61,6 +81,44 @@ class HomeScreen extends StatelessWidget {
                     style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
+                  if (showGuestUpgradeCta) ...[
+                    Card(
+                      key: const Key('guest-home-conversion-cta'),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          children: [
+                            const Text(
+                              'Playing as guest',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            const Text(
+                              'Create an account to compete globally.',
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 12),
+                            ElevatedButton(
+                              key: const Key(
+                                'guest-home-conversion-cta-action',
+                              ),
+                              onPressed: () {
+                                Navigator.pushNamed(
+                                  context,
+                                  UpgradeAccountScreen.routeName,
+                                );
+                              },
+                              child: const Text('Create Account'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
 
                   // 2) Dynamic ListView of categories
                   Expanded(
@@ -82,8 +140,7 @@ class HomeScreen extends StatelessWidget {
                               minimumSize: const Size.fromHeight(60),
                             ),
                             onPressed: () {
-                              // For now, only Flag Quiz is implemented:
-                              if (cat.key == 'flag') {
+                              if (cat.key == 'flag' || cat.key == 'capital') {
                                 Navigator.pushNamed(
                                   context,
                                   DifficultyScreen.routeName,

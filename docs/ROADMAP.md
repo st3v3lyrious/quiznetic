@@ -18,11 +18,35 @@ Use this as a short, editable delivery plan.
 - [x] M2: Harden profile display (difficulty labels, ordering, empty/error states).
 - [x] M2: Apply `AuthGuard` strategy consistently to protected routes.
 - [x] M2: Replace deprecated result-screen back handling (`WillPopScope`) with `PopScope` and cover it with widget tests.
-- [ ] M3: Implement a second quiz category (Logo or Capitals) using current category-key pattern.
-- [ ] M3: Enable quiz-type switching in navigation/results flow.
-- [ ] M4: Replace template widget test with app-specific flow tests in `test/unit` and `test/widget`.
+- [x] M3: Implement a second quiz category (Capitals) using current category-key pattern.
+- [x] M3: Enable quiz-type switching in navigation/results flow.
+- [x] M3: Expose anonymous-to-account upgrade in primary home UX flow.
+- [x] M4: Replace template widget test with app-specific flow tests in `test/unit` and `test/widget`.
 - [x] M4: Add non-scaffold integration assertions in `integration_test`.
 - [x] M4: Add Playwright e2e assertions in `playwright/tests`.
 - [x] M4: Auto-generate Playwright smoke + per-screen e2e scaffolds as screens are added.
 - [x] M4: Regenerate README from docs (`FEATURES`, `ROADMAP`, `ARCHITECTURE`).
 - [x] M5: Bump macOS deployment target to 10.15+ so FlutterFire integration tests can run on macOS.
+- [ ] M6: Add Logo quiz category (deferred until curated/licensed logo asset set + mapping metadata are available).
+- [ ] M7: Add Guess the Celebrity quiz category (content set + quiz loader + tests).
+- [ ] M8: Add Guess the Song from Lyrics quiz category (licensed lyric snippets + answer metadata + tests).
+- [ ] M9: Add Guess the Anime quiz category (content set + quiz loader + tests).
+- [ ] M10: Ship Apple sign-in as a production-ready provider across supported platforms.
+- [ ] M11: Implement global leaderboard experience (data query strategy + screen design + filters).
+- [ ] M12: Add branded app icons and splash screens for all target platforms.
+- [ ] M13: Build Settings and About screens.
+- [ ] M14: Add analytics and crash reporting instrumentation.
+- [ ] M15: Integrate monetization stack (ads + in-app purchases).
+- [ ] M16: Improve UI/UX polish (animations, progress indicators, feedback styling).
+- [ ] M17: Launch MVP (release checklist, store metadata, and production rollout).
+- [ ] M18: Build content licensing + attribution pipeline for celebrity/song/anime datasets.
+- [ ] M19: Harden Firestore security rules and add automated Firestore-rules tests in CI.
+- [ ] M20: Add leaderboard integrity protections (anti-cheat scoring checks, abuse controls, rate limits).
+- [ ] M21: Enforce CI/CD quality gates (GitHub Actions + branch protection required checks; workflows added, branch rule activation pending).
+- [ ] M22: Complete privacy/legal readiness (Privacy Policy, Terms, consent copy, age rating inputs).
+- [ ] M23: Introduce Remote Config/feature flags for staged feature rollout.
+- [ ] M24: Implement localization foundation (externalized strings, locale resolution, default i18n coverage).
+- [ ] M25: Add user-selectable app language in Settings with persisted preference and safe fallback.
+- [ ] M26: Complete accessibility baseline (semantics labels, contrast, dynamic type/text scaling).
+- [ ] M27: Establish release operations readiness (alerts, KPI dashboard, rollback playbook, beta process).
+- [ ] M28: Build feedback intelligence loop (in-app feedback capture, tagged triage, and recurring roadmap review cadence).

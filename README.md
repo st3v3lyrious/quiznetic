@@ -16,10 +16,12 @@ Use this as an editable feature checklist.
 
 - [x] Splash -> Home -> Difficulty -> Quiz -> Results flow
 - [x] Flag quiz category (`categoryKey: flag`)
+- [x] Capital quiz category (`categoryKey: capital`)
 - [x] Difficulty modes: easy (15), intermediate (30), expert (50)
 - [x] Randomized quiz generation from `assets/flags/`
 - [x] Per-session score tracking and progress indicator
 - [x] Results flow prevents back navigation and requires explicit follow-up action buttons
+- [x] Quiz-type switching action from difficulty/result screens back to category selection
 
 ## Accounts And Auth
 
@@ -46,6 +48,7 @@ Use this as an editable feature checklist.
 - [x] Leaderboard band service for top 10/20/100 rank messaging
 - [x] Anonymous guest conversion CTA on result screen using leaderboard band messaging
 - [x] Anonymous guest conversion CTA on profile screen using best-band leaderboard messaging
+- [x] Anonymous guest conversion CTA in primary home flow (routes to `/upgrade`)
 - [x] Guest conversion CTA actions route to account-upgrade flow (`/upgrade`)
 - [x] Profile screen listing stored high scores
 - [x] Profile screen uses full difficulty labels + deterministic score ordering
@@ -53,10 +56,33 @@ Use this as an editable feature checklist.
 
 ## Planned Features
 
-- [ ] Add Logo quiz category
-- [ ] Add Capitals quiz category
-- [ ] Enable "Change Quiz Type" flow when multiple categories are live
-- [ ] Expose anonymous-to-account upgrade in primary UX flow
+- [ ] Add Guess the Celebrity quiz category
+- [ ] Add Guess the Song from Lyrics quiz category
+- [ ] Add Guess the Anime quiz category
+- [ ] Add Apple sign-in as a production-ready auth option
+- [ ] Implement a global leaderboard screen (with UX/design and ranking presentation)
+- [ ] Create branded app icons for all target platforms
+- [ ] Create branded splash screens for all target platforms
+- [ ] Create a Settings screen
+- [ ] Create an About screen
+- [ ] Add product analytics instrumentation
+- [ ] Add crash reporting
+- [ ] Integrate monetization via ads
+- [ ] Integrate monetization via in-app purchases (IAP)
+- [ ] Improve UI/UX polish (animations, progress bar behavior, answer feedback styling)
+- [ ] Add content licensing + attribution pipeline for celebrity/song/anime datasets
+- [ ] Harden Firestore security rules with automated rule tests
+- [ ] Add leaderboard integrity protections (anti-cheat heuristics, abuse controls, write throttling)
+- [ ] Add CI/CD quality gates (analyze, unit/widget/integration/e2e, coverage threshold)
+- [ ] Add privacy and legal readiness artifacts (Privacy Policy, Terms, consent flow, age-rating metadata)
+- [ ] Add Remote Config feature flags for staged rollout
+- [ ] Implement localization by default (i18n-ready string resources + locale resolution)
+- [ ] Add language selection in Settings (persisted user preference + fallback locale)
+- [ ] Add accessibility baseline (screen-reader labels, contrast checks, text-scaling support)
+- [ ] Add release operations readiness (crash alert routing, KPI dashboard, rollback playbook)
+- [ ] Add user feedback collection loop (in-app feedback form + categorization + roadmap review input)
+- [ ] Launch MVP
+- [ ] Add Logo quiz category (Deferred: blocked by logo asset dataset + answer metadata map)
 
 ## Test Scaffolding
 
@@ -69,7 +95,7 @@ Use this as an editable feature checklist.
 
 - **Difficulty Screen** — Lets users choose difficulty and question count. (`lib/screens/difficulty_screen.dart`)
 - **Entry Choice Screen** — Lets unauthenticated users choose between guest mode or provider sign-in. (`lib/screens/entry_choice_screen.dart`)
-- **Home Screen** — Shows quiz categories and routes to difficulty selection. (`lib/screens/home_screen.dart`)
+- **Home Screen** — Shows quiz categories, guest upgrade CTA, and routes to difficulty selection. (`lib/screens/home_screen.dart`)
 - **Login Screen** — Handles provider-based sign-in and account creation. (`lib/screens/login_screen.dart`)
 - **Quiz** — Presents questions, records answers, and handles scoring. (`lib/screens/quiz_screen.dart`)
 - **Result Screen** — Shows result summary and next actions after a quiz. (`lib/screens/result_screen.dart`)
@@ -103,8 +129,8 @@ flutter run
 
 ## Testing
 
-- **Unit/Widget tests:** `22` files
-- **Integration tests:** `4` files
+- **Unit/Widget tests:** `23` files
+- **Integration tests:** `6` files
 
 ```bash
 flutter test
@@ -141,14 +167,38 @@ Use this as a short, editable delivery plan.
 - [x] M2: Harden profile display (difficulty labels, ordering, empty/error states).
 - [x] M2: Apply `AuthGuard` strategy consistently to protected routes.
 - [x] M2: Replace deprecated result-screen back handling (`WillPopScope`) with `PopScope` and cover it with widget tests.
-- [ ] M3: Implement a second quiz category (Logo or Capitals) using current category-key pattern.
-- [ ] M3: Enable quiz-type switching in navigation/results flow.
-- [ ] M4: Replace template widget test with app-specific flow tests in `test/unit` and `test/widget`.
+- [x] M3: Implement a second quiz category (Capitals) using current category-key pattern.
+- [x] M3: Enable quiz-type switching in navigation/results flow.
+- [x] M3: Expose anonymous-to-account upgrade in primary home UX flow.
+- [x] M4: Replace template widget test with app-specific flow tests in `test/unit` and `test/widget`.
 - [x] M4: Add non-scaffold integration assertions in `integration_test`.
 - [x] M4: Add Playwright e2e assertions in `playwright/tests`.
 - [x] M4: Auto-generate Playwright smoke + per-screen e2e scaffolds as screens are added.
 - [x] M4: Regenerate README from docs (`FEATURES`, `ROADMAP`, `ARCHITECTURE`).
 - [x] M5: Bump macOS deployment target to 10.15+ so FlutterFire integration tests can run on macOS.
+- [ ] M6: Add Logo quiz category (deferred until curated/licensed logo asset set + mapping metadata are available).
+- [ ] M7: Add Guess the Celebrity quiz category (content set + quiz loader + tests).
+- [ ] M8: Add Guess the Song from Lyrics quiz category (licensed lyric snippets + answer metadata + tests).
+- [ ] M9: Add Guess the Anime quiz category (content set + quiz loader + tests).
+- [ ] M10: Ship Apple sign-in as a production-ready provider across supported platforms.
+- [ ] M11: Implement global leaderboard experience (data query strategy + screen design + filters).
+- [ ] M12: Add branded app icons and splash screens for all target platforms.
+- [ ] M13: Build Settings and About screens.
+- [ ] M14: Add analytics and crash reporting instrumentation.
+- [ ] M15: Integrate monetization stack (ads + in-app purchases).
+- [ ] M16: Improve UI/UX polish (animations, progress indicators, feedback styling).
+- [ ] M17: Launch MVP (release checklist, store metadata, and production rollout).
+- [ ] M18: Build content licensing + attribution pipeline for celebrity/song/anime datasets.
+- [ ] M19: Harden Firestore security rules and add automated Firestore-rules tests in CI.
+- [ ] M20: Add leaderboard integrity protections (anti-cheat scoring checks, abuse controls, rate limits).
+- [ ] M21: Enforce CI/CD quality gates (GitHub Actions + branch protection required checks; workflows added, branch rule activation pending).
+- [ ] M22: Complete privacy/legal readiness (Privacy Policy, Terms, consent copy, age rating inputs).
+- [ ] M23: Introduce Remote Config/feature flags for staged feature rollout.
+- [ ] M24: Implement localization foundation (externalized strings, locale resolution, default i18n coverage).
+- [ ] M25: Add user-selectable app language in Settings with persisted preference and safe fallback.
+- [ ] M26: Complete accessibility baseline (semantics labels, contrast, dynamic type/text scaling).
+- [ ] M27: Establish release operations readiness (alerts, KPI dashboard, rollback playbook, beta process).
+- [ ] M28: Build feedback intelligence loop (in-app feedback capture, tagged triage, and recurring roadmap review cadence).
 
 
 ---
