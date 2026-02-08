@@ -12,6 +12,7 @@ concurrency:
 jobs:
   integration_tests:
     name: Flutter Integration Tests
+    # Keep 22.04 for linux desktop plugin compatibility (`webkit2gtk-4.0` dev pkg).
     runs-on: ubuntu-22.04
     timeout-minutes: 30
 
@@ -50,12 +51,23 @@ jobs:
       - name: List devices
         run: flutter devices
 
-      - name: Run integration tests
+      - name: Run integration tests (serial per file)
+        shell: bash
         run: |
           set -euo pipefail
-          for test_file in $(find integration_test -maxdepth 1 -name '*_integration_test.dart' | sort); do
-            echo "Running ${test_file}"
+          shopt -s nullglob
+          test_files=(integration_test/*_integration_test.dart)
+          if [ ${#test_files[@]} -eq 0 ]; then
+            echo "No integration tests found in integration_test/."
+            exit 1
+          fi
+
+          # Run one file at a time and force single test concurrency to avoid
+          # linux desktop debug connection flakiness in CI.
+          for test_file in "${test_files[@]}"; do
+            echo "::group::${test_file}"
             xvfb-run -a flutter test "${test_file}" -d linux --concurrency=1 --reporter expanded
+            echo "::endgroup::"
           done
 
   playwright_e2e:
@@ -120,3 +132,10 @@ jobs:
         with:
           name: playwright-report
           path: playwright/playwright-report
+
+      - name: Upload Playwright test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-test-results
+          path: playwright/test-results
