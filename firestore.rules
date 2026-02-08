@@ -1,0 +1,54 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    function validUserScore() {
+      return request.resource.data.categoryKey is string
+          && request.resource.data.difficulty is string
+          && request.resource.data.bestScore is int
+          && request.resource.data.bestScore >= 0
+          && request.resource.data.source is string
+          && request.resource.data.updatedAt is timestamp;
+    }
+
+    function validLeaderboardEntry() {
+      return request.resource.data.categoryKey is string
+          && request.resource.data.difficulty is string
+          && request.resource.data.score is int
+          && request.resource.data.score >= 0
+          && request.resource.data.isAnonymous is bool
+          && request.resource.data.displayName is string
+          && request.resource.data.displayName.size() > 0
+          && request.resource.data.displayName.size() <= 60
+          && request.resource.data.updatedAt is timestamp;
+    }
+
+    match /users/{uid} {
+      allow read, create, update: if isOwner(uid);
+      allow delete: if false;
+
+      match /scores/{scoreId} {
+        allow read: if isOwner(uid);
+        allow create, update: if isOwner(uid) && validUserScore();
+        allow delete: if false;
+      }
+    }
+
+    match /leaderboard/{scope}/entries/{uid} {
+      allow read: if isSignedIn();
+      allow create, update: if isOwner(uid) && validLeaderboardEntry();
+      allow delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
