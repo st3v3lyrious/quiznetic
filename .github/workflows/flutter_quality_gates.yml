@@ -66,3 +66,35 @@ jobs:
         with:
           name: unit-coverage-lcov
           path: coverage/lcov.info
+
+  firestore_rules_tests:
+    name: Firestore Rules Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: firestore_tests/package-lock.json
+
+      - name: Setup Java (for Firestore emulator)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Install Firestore test dependencies
+        run: npm ci
+        working-directory: firestore_tests
+
+      - name: Run Firestore rules tests
+        run: npm run test:emulator
+        working-directory: firestore_tests
+        env:
+          FIREBASE_SKIP_UPDATE_CHECK: "true"

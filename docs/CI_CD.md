@@ -19,6 +19,7 @@ This document defines the repository quality gates and the intended merge flow.
 - `.github/workflows/flutter_quality_gates.yml` (required on PRs)
   - `Analyze`: `flutter analyze`
   - `Tests And Coverage`: `flutter test test/widget` + `./tools/check_unit_coverage.sh`
+  - `Firestore Rules Tests`: emulator-backed security-rules tests in `firestore_tests/`
 - `.github/workflows/extended_tests.yml` (manual + weekly scheduled)
   - `Flutter Integration Tests`: Linux desktop run of `integration_test/*_integration_test.dart`
   - `Playwright E2E`: web build + static server + `npm run test:e2e` in `playwright/`
@@ -46,6 +47,16 @@ This document defines the repository quality gates and the intended merge flow.
 - Script: `tools/check_unit_coverage.sh`
 - Default threshold: `25%` (override via `MIN_UNIT_COVERAGE`)
 
+## Firestore Rules Gate
+
+- Rules source: `firestore.rules`
+- Index source: `firestore.indexes.json`
+- Local/CI test harness: `firestore_tests/`
+- Command:
+  - `cd firestore_tests && npm run test:emulator`
+- Deploy command:
+  - `firebase deploy --only firestore:rules,firestore:indexes --project quiznetic-30734`
+
 ## Branch Protection (GitHub Manual Setup)
 
 1. Go to `Settings` -> `Branches` -> `Add branch protection rule` for `main`.
@@ -54,6 +65,7 @@ This document defines the repository quality gates and the intended merge flow.
 4. Mark as required:
    - `Analyze`
    - `Tests And Coverage`
+   - `Firestore Rules Tests`
 5. Enable `Require branches to be up to date before merging`.
 6. Enable `Require signed commits` (recommended).
 7. Enable `Restrict who can push to matching branches` (recommended).

@@ -1,0 +1,14 @@
+{
+  "name": "quiznetic-firestore-rules-tests",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/firestore.rules.test.js",
+    "test:emulator": "FIREBASE_SKIP_UPDATE_CHECK=true firebase emulators:exec --only firestore --project demo-quiznetic \"npm run test\""
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^4.0.1",
+    "firebase": "^11.1.0",
+    "firebase-tools": "^14.10.1"
+  }
+}

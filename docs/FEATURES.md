@@ -61,7 +61,7 @@ Use this as an editable feature checklist.
 - [ ] Integrate monetization via in-app purchases (IAP)
 - [ ] Improve UI/UX polish (animations, progress bar behavior, answer feedback styling)
 - [ ] Add content licensing + attribution pipeline for celebrity/song/anime datasets
-- [ ] Harden Firestore security rules with automated rule tests
+- [x] Harden Firestore security rules with automated rule tests
 - [ ] Add leaderboard integrity protections (anti-cheat heuristics, abuse controls, write throttling)
 - [ ] Add CI/CD quality gates (analyze, unit/widget/integration/e2e, coverage threshold)
 - [ ] Add privacy and legal readiness artifacts (Privacy Policy, Terms, consent flow, age-rating metadata)

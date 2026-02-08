@@ -24,6 +24,7 @@ doc/api/
 *.js_
 *.js.deps
 *.js.map
+!firestore_tests/tests/*.js
 
 .flutter-plugins
 .flutter-plugins-dependencies
@@ -124,3 +125,7 @@ android/key.properties
 playwright/node_modules/
 playwright/test-results/
 playwright/playwright-report/
+
+# Firestore rules test harness artifacts
+firestore_tests/node_modules/
+firestore_tests/firebase-debug.log
