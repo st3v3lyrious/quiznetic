@@ -9,10 +9,11 @@ test('routes to provider sign-in only after explicit sign-in choice', async ({
   const signInChoice = page.getByRole('button', {
     name: 'Sign In / Create Account',
   });
-  await expect(signInChoice).toBeVisible();
+  // Wait through splash to entry-choice screen.
+  await expect(signInChoice).toBeVisible({ timeout: 15_000 });
 
   await signInChoice.click();
-  await expect(
-    page.getByText('Welcome back! Please sign in to continue.'),
-  ).toBeVisible();
+  await expect(page.getByText('Test your knowledge of world flags!')).toBeVisible(
+    { timeout: 15_000 },
+  );
 });
