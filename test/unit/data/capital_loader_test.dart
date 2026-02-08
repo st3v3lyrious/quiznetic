@@ -17,27 +17,27 @@ void main() {
   group('prepareCapitalQuiz', () {
     final all = <FlagQuestion>[
       FlagQuestion(
-        imagePath: 'assets/flags/france.png',
+        imagePath: 'assets/flags/France.png',
         correctAnswer: 'Paris',
         options: const [],
       ),
       FlagQuestion(
-        imagePath: 'assets/flags/japan.png',
+        imagePath: 'assets/flags/Japan.png',
         correctAnswer: 'Tokyo',
         options: const [],
       ),
       FlagQuestion(
-        imagePath: 'assets/flags/canada.png',
+        imagePath: 'assets/flags/Canada.png',
         correctAnswer: 'Ottawa',
         options: const [],
       ),
       FlagQuestion(
-        imagePath: 'assets/flags/brazil.png',
+        imagePath: 'assets/flags/Brazil.png',
         correctAnswer: 'Brasilia',
         options: const [],
       ),
       FlagQuestion(
-        imagePath: 'assets/flags/spain.png',
+        imagePath: 'assets/flags/Spain.png',
         correctAnswer: 'Madrid',
         options: const [],
       ),
