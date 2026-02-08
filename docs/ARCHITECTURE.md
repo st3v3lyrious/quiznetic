@@ -84,6 +84,12 @@ Firestore collections in use:
 - `users/{uid}/scores/{category_difficulty}`
 - `leaderboard/{category_difficulty}/entries/{uid}`
 
+Firestore config assets in repo:
+
+- `firestore.rules` (auth + ownership rules for `users`, nested `scores`, and `leaderboard/entries`)
+- `firestore.indexes.json` (composite index for leaderboard ranking query: `score desc`, `updatedAt asc`)
+- `firebase.json` maps Firestore deploy targets to these files
+
 Current score document fields:
 
 - `categoryKey`
