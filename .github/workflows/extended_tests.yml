@@ -28,8 +28,20 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Install Xvfb
-        run: sudo apt-get update && sudo apt-get install -y xvfb
+      - name: Install Linux desktop dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            clang \
+            cmake \
+            ninja-build \
+            pkg-config \
+            libgtk-3-dev \
+            liblzma-dev \
+            xvfb
+
+      - name: Enable Linux desktop
+        run: flutter config --enable-linux-desktop
 
       - name: List devices
         run: flutter devices
