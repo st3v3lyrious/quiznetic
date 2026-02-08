@@ -6,27 +6,27 @@ void main() {
   group('prepareQuiz', () {
     final all = <FlagQuestion>[
       FlagQuestion(
-        imagePath: 'assets/flags/france.png',
+        imagePath: 'assets/flags/France.png',
         correctAnswer: 'France',
         options: const [],
       ),
       FlagQuestion(
-        imagePath: 'assets/flags/japan.png',
+        imagePath: 'assets/flags/Japan.png',
         correctAnswer: 'Japan',
         options: const [],
       ),
       FlagQuestion(
-        imagePath: 'assets/flags/canada.png',
+        imagePath: 'assets/flags/Canada.png',
         correctAnswer: 'Canada',
         options: const [],
       ),
       FlagQuestion(
-        imagePath: 'assets/flags/brazil.png',
+        imagePath: 'assets/flags/Brazil.png',
         correctAnswer: 'Brazil',
         options: const [],
       ),
       FlagQuestion(
-        imagePath: 'assets/flags/spain.png',
+        imagePath: 'assets/flags/Spain.png',
         correctAnswer: 'Spain',
         options: const [],
       ),

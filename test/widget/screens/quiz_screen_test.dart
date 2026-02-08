@@ -6,13 +6,13 @@ import 'package:quiznetic_flutter/screens/result_screen.dart';
 
 void main() {
   final question = FlagQuestion(
-    imagePath: 'assets/flags/france.png',
+    imagePath: 'assets/flags/France.png',
     correctAnswer: 'France',
     options: ['France', 'Italy', 'Spain', 'Germany'],
   );
 
   final capitalQuestion = FlagQuestion(
-    imagePath: 'assets/flags/france.png',
+    imagePath: 'assets/flags/France.png',
     correctAnswer: 'Paris',
     options: ['Paris', 'Rome', 'Madrid', 'Berlin'],
   );
