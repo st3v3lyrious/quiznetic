@@ -26,9 +26,7 @@ test('routes to provider sign-in only after explicit sign-in choice', async ({
   await expect(signInChoice).toBeVisible({ timeout: 60_000 });
 
   await signInChoice.click();
-  await expect(
-    page.getByText('Test your knowledge of world flags!'),
-  ).toBeVisible({
-    timeout: 30_000,
-  });
+  await expect
+    .poll(() => page.url(), { timeout: 30_000 })
+    .toContain('login');
 });
