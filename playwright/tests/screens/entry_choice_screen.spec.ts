@@ -7,9 +7,16 @@ test('routes to provider sign-in only after explicit sign-in choice', async ({
   await page.waitForLoadState('networkidle');
 
   // Flutter web may render into canvas until semantics are enabled.
-  const semanticsToggle = page.locator('flt-semantics-placeholder');
-  if (await semanticsToggle.isVisible().catch(() => false)) {
-    await semanticsToggle.click();
+  const semanticsToggleExists =
+    (await page.locator('flt-semantics-placeholder').count()) > 0;
+  if (semanticsToggleExists) {
+    await page.evaluate(() => {
+      const toggle = document.querySelector(
+        'flt-semantics-placeholder',
+      ) as HTMLElement | null;
+      toggle?.click();
+    });
+    await page.waitForTimeout(300);
   }
 
   const signInChoice = page.getByRole('button', {

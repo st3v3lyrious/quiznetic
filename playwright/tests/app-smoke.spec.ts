@@ -6,9 +6,16 @@ test('loads either entry choice or home screen', async ({ page }) => {
 
   // Flutter web may require explicitly enabling semantics before text/role
   // selectors become visible to Playwright.
-  const semanticsToggle = page.locator('flt-semantics-placeholder');
-  if (await semanticsToggle.isVisible().catch(() => false)) {
-    await semanticsToggle.click();
+  const semanticsToggleExists =
+    (await page.locator('flt-semantics-placeholder').count()) > 0;
+  if (semanticsToggleExists) {
+    await page.evaluate(() => {
+      const toggle = document.querySelector(
+        'flt-semantics-placeholder',
+      ) as HTMLElement | null;
+      toggle?.click();
+    });
+    await page.waitForTimeout(300);
   }
 
   const guestButton = page.getByRole('button', { name: 'Continue as Guest' });
