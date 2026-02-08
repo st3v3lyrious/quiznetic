@@ -36,6 +36,7 @@ This document defines the repository quality gates and the intended merge flow.
 - Flutter web app is built first and served from `build/web` on `http://127.0.0.1:7357`.
 - Tests use `PLAYWRIGHT_BASE_URL` so URL changes are config-driven.
 - Flutter web semantics may need explicit enabling in tests (`flt-semantics-placeholder`) before role/text selectors become stable.
+- Some screen-level specs are intentionally scaffolded with `test.skip(...)` until their assertions are implemented, so a non-zero skipped count is currently expected.
 - CI uploads both:
   - `playwright/playwright-report`
   - `playwright/test-results`

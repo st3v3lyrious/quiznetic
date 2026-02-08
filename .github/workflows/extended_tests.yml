@@ -121,7 +121,9 @@ jobs:
         working-directory: playwright
 
       - name: Run Playwright tests
-        run: npm run test:e2e
+        run: |
+          mkdir -p playwright-report test-results
+          npm run test:e2e
         working-directory: playwright
         env:
           PLAYWRIGHT_BASE_URL: http://127.0.0.1:7357
@@ -132,6 +134,7 @@ jobs:
         with:
           name: playwright-report
           path: playwright/playwright-report
+          if-no-files-found: ignore
 
       - name: Upload Playwright test results
         if: always()
@@ -139,3 +142,4 @@ jobs:
         with:
           name: playwright-test-results
           path: playwright/test-results
+          if-no-files-found: ignore
