@@ -41,6 +41,10 @@ Use this as a short, editable delivery plan.
 - [x] M13: Build Settings and About screens.
   - Includes account/session controls, sign-out flow, legal links, and app metadata/support surface.
 - [ ] M14: Add analytics and crash reporting instrumentation.
+  - [x] Crash reporting baseline shipped (Firebase Crashlytics init + Flutter/zone unhandled error capture).
+  - [x] Crash reporting kill switch added: `ENABLE_CRASH_REPORTING` (default `true`).
+  - [ ] Add analytics event breadcrumbs for crash triage (screen views + critical flow actions).
+  - [ ] Product analytics instrumentation still pending.
 - [ ] M15: Integrate monetization stack (ads + in-app purchases).
 - [ ] M16: Improve UI/UX polish (animations, progress indicators, feedback styling).
 - [ ] M17: Launch MVP (release checklist, store metadata, and production rollout).
@@ -65,4 +69,10 @@ Use this as a short, editable delivery plan.
   - Added non-color quiz answer feedback (icon + text states) and live semantic announcements for quiz progress/result summary.
   - Follow-up audit and prioritized backlog: `docs/ACCESSIBILITY_AUDIT.md`.
 - [ ] M27: Establish release operations readiness (alerts, KPI dashboard, rollback playbook, beta process).
+  - [x] Baseline release ops runbook published: `docs/RELEASE_OPS_RUNBOOK.md`.
+  - [x] Rollback playbook and kill-switch checklist documented.
+  - [x] Alert routing policy + KPI thresholds documented: `docs/ALERT_ROUTING_AND_KPI_THRESHOLDS.md`.
+  - [x] CI failure alert routing automation shipped (webhook via `ALERT_WEBHOOK_URL`).
+  - [x] Incident postmortem template + review cadence documented: `docs/INCIDENT_POSTMORTEM_TEMPLATE.md`.
+  - [ ] Dedicated pager/on-call automation and KPI dashboard automation still pending.
 - [ ] M28: Build feedback intelligence loop (in-app feedback capture, tagged triage, and recurring roadmap review cadence).

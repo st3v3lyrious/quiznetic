@@ -62,7 +62,8 @@ Use this as an editable feature checklist.
 - [x] Create a Settings screen
 - [x] Create an About screen
 - [ ] Add product analytics instrumentation
-- [ ] Add crash reporting
+- [ ] Add analytics event breadcrumbs for crash triage (screen views + critical actions)
+- [x] Add crash reporting (Crashlytics baseline with compile-time kill switch)
 - [ ] Integrate monetization via ads
 - [ ] Integrate monetization via in-app purchases (IAP)
 - [ ] Improve UI/UX polish (animations, progress bar behavior, answer feedback styling)
@@ -76,6 +77,11 @@ Use this as an editable feature checklist.
 - [ ] Add language selection in Settings (persisted user preference + fallback locale)
 - [x] Add accessibility baseline (screen-reader labels, contrast checks, text-scaling support)
 - [ ] Add release operations readiness (crash alert routing, KPI dashboard, rollback playbook)
+  - [x] Baseline runbook + kill-switch checklist documented (`docs/RELEASE_OPS_RUNBOOK.md`)
+  - [x] Alert routing + KPI threshold policy documented (`docs/ALERT_ROUTING_AND_KPI_THRESHOLDS.md`)
+  - [x] CI failure webhook routing automation added (optional `ALERT_WEBHOOK_URL`)
+  - [x] Incident postmortem template + cadence documented (`docs/INCIDENT_POSTMORTEM_TEMPLATE.md`)
+  - [ ] Dedicated on-call paging + KPI dashboard automation pending
 - [ ] Add user feedback collection loop (in-app feedback form + categorization + roadmap review input)
 - [ ] Launch MVP
 - [ ] Add Logo quiz category (Deferred: blocked by logo asset dataset + answer metadata map)

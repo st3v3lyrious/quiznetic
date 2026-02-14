@@ -16,6 +16,7 @@ It is intended to be source material for generated docs (including `README.md`).
 - `firebase_core`
 - `firebase_auth`
 - `cloud_firestore`
+- `firebase_crashlytics` (runtime crash capture + release diagnostics)
 - `firebase_ui_auth` + OAuth provider packages (from forked repo ref)
 - `shared_preferences`
 - `cloud_functions` (backend score-submission path behind feature flag)
@@ -23,6 +24,7 @@ It is intended to be source material for generated docs (including `README.md`).
 ## Codebase Layout
 
 - `lib/main.dart`: app bootstrap, Firebase init, route registration, global theme.
+- `lib/services/crash_reporting_service.dart`: Crashlytics wiring and unhandled-error capture hooks.
 - `lib/config/brand_config.dart`: app branding tokens (app name, core colors, web/splash color values).
 - `test/unit/config/accessibility_contrast_test.dart`: WCAG AA contrast guardrails for core theme pairs.
 - `test/widget/screens/accessibility_text_scaling_test.dart`: dynamic type baseline coverage for key screens.
@@ -32,6 +34,9 @@ It is intended to be source material for generated docs (including `README.md`).
 - `lib/models/*`: domain models (`FlagQuestion`).
 - `lib/widgets/*`: shared UI wrappers (`AuthGuard`).
 - `docs/BLAZE_FEATURE_FLAGS.md`: operational guidance for Blaze-dependent feature flags.
+- `docs/RELEASE_OPS_RUNBOOK.md`: release safety runbook (rollback steps + kill-switch checklist).
+- `docs/ALERT_ROUTING_AND_KPI_THRESHOLDS.md`: release alert severity policy, routing matrix, and KPI trigger thresholds.
+- `docs/INCIDENT_POSTMORTEM_TEMPLATE.md`: standardized incident write-up template, ownership model, and follow-up cadence.
 - `docs/BRANDING_ASSETS.md`: branding pipeline (icon/splash source assets + generation/QA workflow).
 - `docs/ACCESSIBILITY_AUDIT.md`: baseline accessibility audit coverage, gaps, and prioritized improvements.
 
@@ -54,23 +59,24 @@ It is intended to be source material for generated docs (including `README.md`).
 ## Runtime Flow (Current)
 
 1. `main()` initializes Firebase.
-2. App starts on splash route.
-3. Splash checks auth state after delay and navigates to home (if user exists) or entry choice.
-4. If there is no session, entry-choice screen presents explicit user choice:
+2. Crash reporting service configures Crashlytics collection and unhandled-error hooks.
+3. App starts on splash route.
+4. Splash checks auth state after delay and navigates to home (if user exists) or entry choice.
+5. If there is no session, entry-choice screen presents explicit user choice:
    - Continue as guest
    - Sign in / create account
-5. If user selects sign-in, app routes to provider login screen.
-6. Entry, login, and upgrade flows present legal consent copy with in-app links to Terms and Privacy documents.
-7. On explicit auth choice, app ensures `users/{uid}` exists in Firestore.
-8. Auth-guarded routes only allow authenticated users (guest or signed-in) to access gameplay/profile screens.
-9. Home currently exposes two categories: `flag` and `capital`, shows a primary guest conversion CTA that routes anonymous users to `/upgrade`, and provides entry into global leaderboard.
-10. Difficulty selects question count and difficulty key.
-11. Difficulty also offers explicit "Change Quiz Type" action back to home category selection.
-12. Quiz loads assets, randomizes questions/options, tracks score.
-13. Results screen saves score, renders session summary, blocks back navigation via `PopScope`, and offers explicit "Change Quiz Type" back to category selection.
-14. Profile screen fetches stored user scores from Firestore and exposes quick links to settings/about.
-15. Settings screen provides account controls, sign-out flow, legal links, and app preference toggles.
-16. About screen provides app metadata/support contact and legal links.
+6. If user selects sign-in, app routes to provider login screen.
+7. Entry, login, and upgrade flows present legal consent copy with in-app links to Terms and Privacy documents.
+8. On explicit auth choice, app ensures `users/{uid}` exists in Firestore.
+9. Auth-guarded routes only allow authenticated users (guest or signed-in) to access gameplay/profile screens.
+10. Home currently exposes two categories: `flag` and `capital`, shows a primary guest conversion CTA that routes anonymous users to `/upgrade`, and provides entry into global leaderboard.
+11. Difficulty selects question count and difficulty key.
+12. Difficulty also offers explicit "Change Quiz Type" action back to home category selection.
+13. Quiz loads assets, randomizes questions/options, tracks score.
+14. Results screen saves score, renders session summary, blocks back navigation via `PopScope`, and offers explicit "Change Quiz Type" back to category selection.
+15. Profile screen fetches stored user scores from Firestore and exposes quick links to settings/about.
+16. Settings screen provides account controls, sign-out flow, legal links, and app preference toggles.
+17. About screen provides app metadata/support contact and legal links.
 
 ## Quiz Engine
 

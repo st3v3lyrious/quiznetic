@@ -21,4 +21,13 @@ class AppConfig {
     'ENABLE_BACKEND_SUBMIT_SCORE',
     defaultValue: false,
   );
+
+  /// Enables Firebase Crashlytics collection for runtime crash reporting.
+  ///
+  /// Keep this ON for release builds unless Crashlytics itself is suspected to
+  /// be causing startup/runtime instability.
+  static const enableCrashReporting = bool.fromEnvironment(
+    'ENABLE_CRASH_REPORTING',
+    defaultValue: true,
+  );
 }

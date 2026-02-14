@@ -7,6 +7,7 @@ This document defines the repository quality gates and the intended merge flow.
 - Block direct pushes to `main`.
 - Enforce automated quality checks before merge.
 - Keep heavier tests available in CI even when local hardware is constrained.
+- Route CI failures to an explicit alert channel.
 
 ## Current Enforcement Status
 
@@ -26,9 +27,11 @@ This document defines the repository quality gates and the intended merge flow.
   - `Analyze`: `flutter analyze`
   - `Tests And Coverage`: `flutter test test/widget` + `./tools/check_unit_coverage.sh`
   - `Firestore Rules Tests`: emulator-backed security-rules tests in `firestore_tests/`
+  - `Notify Failure`: webhook alert when any required job fails (enabled only if `ALERT_WEBHOOK_URL` is set)
 - `.github/workflows/extended_tests.yml` (manual + weekly scheduled)
   - `Flutter Integration Tests`: Linux desktop run of `integration_test/*_integration_test.dart`
   - `Playwright E2E`: web build + static server + `npm run test:e2e` in `playwright/`
+  - `Notify Failure`: webhook alert when integration/e2e job fails (enabled only if `ALERT_WEBHOOK_URL` is set)
 
 ## Integration CI Notes
 
@@ -75,6 +78,21 @@ This document defines the repository quality gates and the intended merge flow.
 5. Enable `Require branches to be up to date before merging`.
 6. Enable `Require signed commits` (recommended).
 7. Enable `Restrict who can push to matching branches` (recommended).
+
+## Alert Webhook Setup (Optional)
+
+1. Create a chat incoming webhook endpoint.
+2. Add repository secret `ALERT_WEBHOOK_URL`.
+3. Trigger a controlled failing CI run and verify alert delivery.
+
+Webhook payload contract used by CI jobs:
+
+- JSON object with `text` field containing workflow, branch, short SHA, and run URL.
+
+When `ALERT_WEBHOOK_URL` is not set:
+
+- CI quality gates still run and enforce merge checks.
+- No external alert webhook request is made.
 
 ## Daily Flow
 

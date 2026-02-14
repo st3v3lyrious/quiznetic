@@ -3,8 +3,11 @@
  Title: Main
  Purpose: Initializes Firebase and boots the app with routes and theme.
 */
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:quiznetic_flutter/config/brand_config.dart';
+import 'package:quiznetic_flutter/services/crash_reporting_service.dart';
 import 'package:quiznetic_flutter/screens/difficulty_screen.dart';
 import 'package:quiznetic_flutter/screens/entry_choice_screen.dart';
 import 'package:quiznetic_flutter/screens/home_screen.dart';
@@ -27,7 +30,21 @@ import 'package:firebase_core/firebase_core.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  runApp(const QuizNetic());
+  final crashReportingService = CrashReportingService();
+  await crashReportingService.initialize();
+
+  await runZonedGuarded(
+    () async {
+      runApp(const QuizNetic());
+    },
+    (error, stackTrace) async {
+      await crashReportingService.recordUnhandledError(
+        error,
+        stackTrace,
+        fatal: true,
+      );
+    },
+  );
 }
 
 class QuizNetic extends StatelessWidget {

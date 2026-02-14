@@ -98,3 +98,40 @@ jobs:
         working-directory: firestore_tests
         env:
           FIREBASE_SKIP_UPDATE_CHECK: "true"
+
+  notify_failure:
+    name: Notify Failure
+    runs-on: ubuntu-latest
+    needs:
+      - analyze
+      - tests_and_coverage
+      - firestore_rules_tests
+    if: >
+      always() &&
+      secrets.ALERT_WEBHOOK_URL != '' &&
+      (
+        needs.analyze.result == 'failure' ||
+        needs.tests_and_coverage.result == 'failure' ||
+        needs.firestore_rules_tests.result == 'failure'
+      )
+
+    steps:
+      - name: Post failure alert webhook
+        env:
+          ALERT_WEBHOOK_URL: ${{ secrets.ALERT_WEBHOOK_URL }}
+          WORKFLOW_NAME: ${{ github.workflow }}
+          RUN_ID: ${{ github.run_id }}
+          REPO: ${{ github.repository }}
+          REF_NAME: ${{ github.ref_name }}
+          SHA: ${{ github.sha }}
+          SERVER_URL: ${{ github.server_url }}
+        run: |
+          set -euo pipefail
+          short_sha="${SHA:0:7}"
+          run_url="${SERVER_URL}/${REPO}/actions/runs/${RUN_ID}"
+          message="Quiznetic CI alert: ${WORKFLOW_NAME} failed on ${REF_NAME} (${short_sha}). Run: ${run_url}"
+          payload=$(printf '{"text":"%s"}' "$message")
+          curl -fsS -X POST \
+            -H "Content-Type: application/json" \
+            -d "$payload" \
+            "$ALERT_WEBHOOK_URL"

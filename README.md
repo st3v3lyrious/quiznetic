@@ -72,7 +72,8 @@ Use this as an editable feature checklist.
 - [x] Create a Settings screen
 - [x] Create an About screen
 - [ ] Add product analytics instrumentation
-- [ ] Add crash reporting
+- [ ] Add analytics event breadcrumbs for crash triage (screen views + critical actions)
+- [x] Add crash reporting (Crashlytics baseline with compile-time kill switch)
 - [ ] Integrate monetization via ads
 - [ ] Integrate monetization via in-app purchases (IAP)
 - [ ] Improve UI/UX polish (animations, progress bar behavior, answer feedback styling)
@@ -86,6 +87,11 @@ Use this as an editable feature checklist.
 - [ ] Add language selection in Settings (persisted user preference + fallback locale)
 - [x] Add accessibility baseline (screen-reader labels, contrast checks, text-scaling support)
 - [ ] Add release operations readiness (crash alert routing, KPI dashboard, rollback playbook)
+  - [x] Baseline runbook + kill-switch checklist documented (`docs/RELEASE_OPS_RUNBOOK.md`)
+  - [x] Alert routing + KPI threshold policy documented (`docs/ALERT_ROUTING_AND_KPI_THRESHOLDS.md`)
+  - [x] CI failure webhook routing automation added (optional `ALERT_WEBHOOK_URL`)
+  - [x] Incident postmortem template + cadence documented (`docs/INCIDENT_POSTMORTEM_TEMPLATE.md`)
+  - [ ] Dedicated on-call paging + KPI dashboard automation pending
 - [ ] Add user feedback collection loop (in-app feedback form + categorization + roadmap review input)
 - [ ] Launch MVP
 - [ ] Add Logo quiz category (Deferred: blocked by logo asset dataset + answer metadata map)
@@ -139,7 +145,7 @@ flutter run
 
 ## Testing
 
-- **Unit/Widget tests:** `34` files
+- **Unit/Widget tests:** `35` files
 - **Integration tests:** `7` files
 
 ```bash
@@ -152,7 +158,7 @@ cd playwright && npx playwright test   # if present
 
 ## Dependencies (summary)
 
-- **deps:** flutter, sdk, firebase_core, firebase_auth, cloud_firestore, cloud_functions, shared_preferences, firebase_ui_auth, git, url, path, ref…
+- **deps:** flutter, sdk, firebase_core, firebase_auth, cloud_firestore, cloud_functions, firebase_crashlytics, shared_preferences, firebase_ui_auth, git, url, path…
 - **dev_deps:** flutter_test, sdk, integration_test, sdk, flutter_lints, flutter_launcher_icons, flutter_native_splash
 
 ## Roadmap
@@ -200,6 +206,10 @@ Use this as a short, editable delivery plan.
 - [x] M13: Build Settings and About screens.
   - Includes account/session controls, sign-out flow, legal links, and app metadata/support surface.
 - [ ] M14: Add analytics and crash reporting instrumentation.
+  - [x] Crash reporting baseline shipped (Firebase Crashlytics init + Flutter/zone unhandled error capture).
+  - [x] Crash reporting kill switch added: `ENABLE_CRASH_REPORTING` (default `true`).
+  - [ ] Add analytics event breadcrumbs for crash triage (screen views + critical flow actions).
+  - [ ] Product analytics instrumentation still pending.
 - [ ] M15: Integrate monetization stack (ads + in-app purchases).
 - [ ] M16: Improve UI/UX polish (animations, progress indicators, feedback styling).
 - [ ] M17: Launch MVP (release checklist, store metadata, and production rollout).
@@ -224,6 +234,12 @@ Use this as a short, editable delivery plan.
   - Added non-color quiz answer feedback (icon + text states) and live semantic announcements for quiz progress/result summary.
   - Follow-up audit and prioritized backlog: `docs/ACCESSIBILITY_AUDIT.md`.
 - [ ] M27: Establish release operations readiness (alerts, KPI dashboard, rollback playbook, beta process).
+  - [x] Baseline release ops runbook published: `docs/RELEASE_OPS_RUNBOOK.md`.
+  - [x] Rollback playbook and kill-switch checklist documented.
+  - [x] Alert routing policy + KPI thresholds documented: `docs/ALERT_ROUTING_AND_KPI_THRESHOLDS.md`.
+  - [x] CI failure alert routing automation shipped (webhook via `ALERT_WEBHOOK_URL`).
+  - [x] Incident postmortem template + review cadence documented: `docs/INCIDENT_POSTMORTEM_TEMPLATE.md`.
+  - [ ] Dedicated pager/on-call automation and KPI dashboard automation still pending.
 - [ ] M28: Build feedback intelligence loop (in-app feedback capture, tagged triage, and recurring roadmap review cadence).
 
 

@@ -6,5 +6,9 @@ void main() {
     test('backend submit score feature flag defaults to false', () {
       expect(AppConfig.enableBackendSubmitScore, isFalse);
     });
+
+    test('crash reporting feature flag defaults to true', () {
+      expect(AppConfig.enableCrashReporting, isTrue);
+    });
   });
 }
