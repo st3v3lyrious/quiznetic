@@ -61,6 +61,8 @@ Use this as a short, editable delivery plan.
 - [x] M26: Complete accessibility baseline (semantics labels, contrast, dynamic type/text scaling).
   - Added semantic labels for core logo/question imagery surfaces.
   - Added WCAG AA contrast unit checks for primary theme color pairs.
-  - Added large text-scaling widget coverage for entry, settings, about, and difficulty flows.
+  - Added large text-scaling widget coverage for entry, settings, about, difficulty, home, quiz, result, leaderboard, and profile flows.
+  - Added non-color quiz answer feedback (icon + text states) and live semantic announcements for quiz progress/result summary.
+  - Follow-up audit and prioritized backlog: `docs/ACCESSIBILITY_AUDIT.md`.
 - [ ] M27: Establish release operations readiness (alerts, KPI dashboard, rollback playbook, beta process).
 - [ ] M28: Build feedback intelligence loop (in-app feedback capture, tagged triage, and recurring roadmap review cadence).

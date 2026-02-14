@@ -67,6 +67,7 @@ void main() {
     expect(find.text('Italy'), findsOneWidget);
     expect(find.text('Spain'), findsOneWidget);
     expect(find.text('Germany'), findsOneWidget);
+    expect(find.byKey(const Key('quiz-progress-semantics')), findsOneWidget);
     expect(
       find.bySemanticsLabel(BrandConfig.quizQuestionImageSemanticLabel),
       findsOneWidget,
@@ -94,6 +95,9 @@ void main() {
     await tester.tap(find.text('France'));
     await tester.pumpAndSettle();
 
+    expect(find.byKey(const Key('quiz-answer-feedback-card')), findsOneWidget);
+    expect(find.text('Correct'), findsOneWidget);
+    expect(find.text('France is the right answer.'), findsOneWidget);
     expect(find.text('See Results'), findsOneWidget);
   });
 

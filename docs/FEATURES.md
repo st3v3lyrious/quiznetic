@@ -11,6 +11,8 @@ Use this as an editable feature checklist.
 - [x] Randomized quiz generation from `assets/flags/`
 - [x] Per-session score tracking and progress indicator
 - [x] Results flow prevents back navigation and requires explicit follow-up action buttons
+- [x] Quiz answer feedback includes non-color states (icon + text)
+- [x] Quiz progress and result summary expose live semantic announcements
 - [x] Quiz-type switching action from difficulty/result screens back to category selection
 
 ## Accounts And Auth

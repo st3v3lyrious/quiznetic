@@ -33,6 +33,7 @@ It is intended to be source material for generated docs (including `README.md`).
 - `lib/widgets/*`: shared UI wrappers (`AuthGuard`).
 - `docs/BLAZE_FEATURE_FLAGS.md`: operational guidance for Blaze-dependent feature flags.
 - `docs/BRANDING_ASSETS.md`: branding pipeline (icon/splash source assets + generation/QA workflow).
+- `docs/ACCESSIBILITY_AUDIT.md`: baseline accessibility audit coverage, gaps, and prioritized improvements.
 
 ## Route Map
 
@@ -88,6 +89,8 @@ It is intended to be source material for generated docs (including `README.md`).
   - easy: 15
   - intermediate: 30
   - expert: 50
+- Quiz UX provides non-color answer feedback (icon + text) after each selection.
+- Quiz progress and result summary are exposed via live semantic announcements.
 
 ## Data Model
 

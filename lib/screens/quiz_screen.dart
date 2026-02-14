@@ -44,6 +44,9 @@ class _QuizScreenState extends State<QuizScreen> {
   late final QuizScreenArgs args;
   bool _argsLoaded = false;
 
+  static const quizProgressSemanticsKey = Key('quiz-progress-semantics');
+  static const answerFeedbackCardKey = Key('quiz-answer-feedback-card');
+
   /// Initializes state before route-bound data is loaded.
   @override
   void initState() {
@@ -159,6 +162,27 @@ class _QuizScreenState extends State<QuizScreen> {
     }
   }
 
+  /// Returns concise non-color feedback details for the answered question.
+  _AnswerFeedback _answerFeedbackFor(FlagQuestion question) {
+    final selected = _selectedOption ?? '';
+    if (selected == question.correctAnswer) {
+      return _AnswerFeedback(
+        icon: Icons.check_circle_outline,
+        title: 'Correct',
+        detail: '$selected is the right answer.',
+        semanticsLabel: 'Correct. $selected is the right answer.',
+      );
+    }
+    return _AnswerFeedback(
+      icon: Icons.error_outline,
+      title: 'Incorrect',
+      detail:
+          'You selected $selected. Correct answer: ${question.correctAnswer}.',
+      semanticsLabel:
+          'Incorrect. You selected $selected. Correct answer: ${question.correctAnswer}.',
+    );
+  }
+
   /// Builds loading, empty, and active-quiz UI states.
   @override
   Widget build(BuildContext context) {
@@ -197,11 +221,19 @@ class _QuizScreenState extends State<QuizScreen> {
               width: double.infinity, // fills up to that 600px max
               height: 6,
               margin: const EdgeInsets.symmetric(vertical: 4),
-              child: LinearProgressIndicator(
-                value: (_currentIndex + 1) / _questions.length,
-                backgroundColor: Colors.grey.shade300,
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  Theme.of(context).colorScheme.primary,
+              child: Semantics(
+                key: quizProgressSemanticsKey,
+                container: true,
+                liveRegion: true,
+                label: 'Question ${_currentIndex + 1} of ${_questions.length}',
+                value:
+                    '${(((_currentIndex + 1) / _questions.length) * 100).round()} percent complete',
+                child: LinearProgressIndicator(
+                  value: (_currentIndex + 1) / _questions.length,
+                  backgroundColor: Colors.grey.shade300,
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    Theme.of(context).colorScheme.primary,
+                  ),
                 ),
               ),
             ),
@@ -212,75 +244,141 @@ class _QuizScreenState extends State<QuizScreen> {
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 600),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    _questionPrompt(args.categoryKey),
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 24,
+                  ),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight,
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  Image.asset(
-                    q.imagePath,
-                    height: 180,
-                    fit: BoxFit.contain,
-                    semanticLabel: BrandConfig.quizQuestionImageSemanticLabel,
-                  ),
-                  const SizedBox(height: 24),
-                  ...q.options.map((opt) {
-                    final isCorrect = opt == q.correctAnswer;
-                    final isSelected = opt == _selectedOption;
-                    Color bg;
-                    Color fg = cs.onPrimary;
-
-                    if (!_answered) {
-                      bg = cs.primary;
-                    } else if (isCorrect) {
-                      bg = cs.secondary;
-                    } else if (isSelected) {
-                      bg = cs.error;
-                      fg = cs.onError;
-                    } else {
-                      bg = cs.surfaceContainerHighest;
-                      fg = cs.onSurface;
-                    }
-
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: bg,
-                          foregroundColor: fg,
-                          minimumSize: const Size.fromHeight(48),
-                          shape: const StadiumBorder(),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          _questionPrompt(args.categoryKey),
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                        onPressed: () => _handleAnswer(opt),
-                        child: Text(opt, style: const TextStyle(fontSize: 16)),
-                      ),
-                    );
-                  }),
-                  const SizedBox(height: 20),
-                  if (_answered)
-                    ElevatedButton(
-                      onPressed: _nextQuestion,
-                      child: Text(
-                        _currentIndex < _questions.length - 1
-                            ? 'Next'
-                            : 'See Results',
-                      ),
+                        const SizedBox(height: 16),
+                        Image.asset(
+                          q.imagePath,
+                          height: 180,
+                          fit: BoxFit.contain,
+                          semanticLabel:
+                              BrandConfig.quizQuestionImageSemanticLabel,
+                        ),
+                        const SizedBox(height: 24),
+                        ...q.options.map((opt) {
+                          final isCorrect = opt == q.correctAnswer;
+                          final isSelected = opt == _selectedOption;
+                          Color bg;
+                          Color fg = cs.onPrimary;
+
+                          if (!_answered) {
+                            bg = cs.primary;
+                          } else if (isCorrect) {
+                            bg = cs.secondary;
+                          } else if (isSelected) {
+                            bg = cs.error;
+                            fg = cs.onError;
+                          } else {
+                            bg = cs.surfaceContainerHighest;
+                            fg = cs.onSurface;
+                          }
+
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: bg,
+                                foregroundColor: fg,
+                                minimumSize: const Size.fromHeight(48),
+                                shape: const StadiumBorder(),
+                              ),
+                              onPressed: () => _handleAnswer(opt),
+                              child: Text(
+                                opt,
+                                style: const TextStyle(fontSize: 16),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          );
+                        }),
+                        if (_answered) ...[
+                          const SizedBox(height: 12),
+                          Semantics(
+                            liveRegion: true,
+                            label: _answerFeedbackFor(q).semanticsLabel,
+                            child: Card(
+                              key: answerFeedbackCardKey,
+                              child: Padding(
+                                padding: const EdgeInsets.all(12),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Icon(_answerFeedbackFor(q).icon),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            _answerFeedbackFor(q).title,
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(_answerFeedbackFor(q).detail),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          ElevatedButton(
+                            onPressed: _nextQuestion,
+                            child: Text(
+                              _currentIndex < _questions.length - 1
+                                  ? 'Next'
+                                  : 'See Results',
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
-                ],
-              ),
+                  ),
+                );
+              },
             ),
           ),
         ),
       ),
     );
   }
+}
+
+class _AnswerFeedback {
+  final IconData icon;
+  final String title;
+  final String detail;
+  final String semanticsLabel;
+
+  const _AnswerFeedback({
+    required this.icon,
+    required this.title,
+    required this.detail,
+    required this.semanticsLabel,
+  });
 }

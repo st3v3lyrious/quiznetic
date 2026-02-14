@@ -21,6 +21,8 @@ Use this as an editable feature checklist.
 - [x] Randomized quiz generation from `assets/flags/`
 - [x] Per-session score tracking and progress indicator
 - [x] Results flow prevents back navigation and requires explicit follow-up action buttons
+- [x] Quiz answer feedback includes non-color states (icon + text)
+- [x] Quiz progress and result summary expose live semantic announcements
 - [x] Quiz-type switching action from difficulty/result screens back to category selection
 
 ## Accounts And Auth
@@ -218,7 +220,9 @@ Use this as a short, editable delivery plan.
 - [x] M26: Complete accessibility baseline (semantics labels, contrast, dynamic type/text scaling).
   - Added semantic labels for core logo/question imagery surfaces.
   - Added WCAG AA contrast unit checks for primary theme color pairs.
-  - Added large text-scaling widget coverage for entry, settings, about, and difficulty flows.
+  - Added large text-scaling widget coverage for entry, settings, about, difficulty, home, quiz, result, leaderboard, and profile flows.
+  - Added non-color quiz answer feedback (icon + text states) and live semantic announcements for quiz progress/result summary.
+  - Follow-up audit and prioritized backlog: `docs/ACCESSIBILITY_AUDIT.md`.
 - [ ] M27: Establish release operations readiness (alerts, KPI dashboard, rollback playbook, beta process).
 - [ ] M28: Build feedback intelligence loop (in-app feedback capture, tagged triage, and recurring roadmap review cadence).
 
