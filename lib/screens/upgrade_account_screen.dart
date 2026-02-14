@@ -11,6 +11,7 @@ import 'package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart';
 import 'package:quiznetic_flutter/config/app_config.dart';
 import 'package:quiznetic_flutter/services/score_repository.dart';
 import 'package:quiznetic_flutter/services/user_checker.dart';
+import 'package:quiznetic_flutter/widgets/legal_consent_notice.dart';
 
 /// Screen that allows anonymous users to upgrade to a full account
 class UpgradeAccountScreen extends StatefulWidget {
@@ -173,9 +174,16 @@ class _UpgradeAccountScreenState extends State<UpgradeAccountScreen> {
             _finalizeUpgrade(state.user);
           }),
         ],
-        footerBuilder: (context, _) => TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Maybe Later'),
+        footerBuilder: (context, _) => Column(
+          children: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Maybe Later'),
+            ),
+            const LegalConsentNotice(
+              padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
+            ),
+          ],
         ),
       ),
     );

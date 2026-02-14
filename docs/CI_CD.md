@@ -8,6 +8,12 @@ This document defines the repository quality gates and the intended merge flow.
 - Enforce automated quality checks before merge.
 - Keep heavier tests available in CI even when local hardware is constrained.
 
+## Current Enforcement Status
+
+- Branch protection is active on `main`.
+- Pull requests must pass required checks before merge.
+- Direct merge without required passing checks is blocked.
+
 ## Test Layout
 
 - `test/`: Flutter unit + widget tests (`flutter test`)
@@ -57,7 +63,7 @@ This document defines the repository quality gates and the intended merge flow.
 - Deploy command:
   - `firebase deploy --only firestore:rules,firestore:indexes --project quiznetic-30734`
 
-## Branch Protection (GitHub Manual Setup)
+## Branch Protection (Reference Setup)
 
 1. Go to `Settings` -> `Branches` -> `Add branch protection rule` for `main`.
 2. Enable `Require a pull request before merging`.

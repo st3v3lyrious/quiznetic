@@ -12,6 +12,7 @@ import 'package:quiznetic_flutter/services/auth_service.dart';
 import 'package:quiznetic_flutter/services/score_repository.dart';
 import 'package:quiznetic_flutter/services/user_checker.dart';
 import 'package:quiznetic_flutter/screens/home_screen.dart';
+import 'package:quiznetic_flutter/widgets/legal_consent_notice.dart';
 
 class LoginScreen extends StatelessWidget {
   static const routeName = '/login';
@@ -97,6 +98,13 @@ class LoginScreen extends StatelessWidget {
                     ),
                 ],
               ),
+            );
+          },
+
+          // Footer
+          footerBuilder: (context, action) {
+            return const LegalConsentNotice(
+              padding: EdgeInsets.fromLTRB(16, 8, 16, 20),
             );
           },
 

@@ -23,7 +23,7 @@ It is intended to be source material for generated docs (including `README.md`).
 ## Codebase Layout
 
 - `lib/main.dart`: app bootstrap, Firebase init, route registration, global theme.
-- `lib/screens/*`: UI flows (splash, entry choice, login, home, leaderboard, difficulty, quiz, results, profile, upgrade).
+- `lib/screens/*`: UI flows (splash, entry choice, login, legal docs, home, leaderboard, difficulty, quiz, results, profile, upgrade).
 - `lib/services/*`: auth, user creation checks, score persistence/retrieval, leaderboard reads, local profile helper.
 - `lib/data/*`: quiz content loaders (`flag_loader.dart`, `capital_loader.dart`) and sample data.
 - `lib/models/*`: domain models (`FlagQuestion`).
@@ -35,6 +35,7 @@ It is intended to be source material for generated docs (including `README.md`).
 - `/splash` -> `SplashScreen`
 - `/entry` -> `EntryChoiceScreen`
 - `/login` -> `LoginScreen`
+- `/legal/document` -> `LegalDocumentScreen` (opened from consent links on entry/login/upgrade flows)
 - `/home` -> `HomeScreen`
 - `/leaderboard` -> `LeaderboardScreen`
 - `/difficulty` -> `DifficultyScreen`
@@ -52,14 +53,15 @@ It is intended to be source material for generated docs (including `README.md`).
    - Continue as guest
    - Sign in / create account
 5. If user selects sign-in, app routes to provider login screen.
-6. On explicit auth choice, app ensures `users/{uid}` exists in Firestore.
-7. Auth-guarded routes only allow authenticated users (guest or signed-in) to access gameplay/profile screens.
-8. Home currently exposes two categories: `flag` and `capital`, shows a primary guest conversion CTA that routes anonymous users to `/upgrade`, and provides entry into global leaderboard.
-9. Difficulty selects question count and difficulty key.
-10. Difficulty also offers explicit "Change Quiz Type" action back to home category selection.
-11. Quiz loads assets, randomizes questions/options, tracks score.
-12. Results screen saves score, renders session summary, blocks back navigation via `PopScope`, and offers explicit "Change Quiz Type" back to category selection.
-13. Profile screen fetches stored user scores from Firestore.
+6. Entry, login, and upgrade flows present legal consent copy with in-app links to Terms and Privacy documents.
+7. On explicit auth choice, app ensures `users/{uid}` exists in Firestore.
+8. Auth-guarded routes only allow authenticated users (guest or signed-in) to access gameplay/profile screens.
+9. Home currently exposes two categories: `flag` and `capital`, shows a primary guest conversion CTA that routes anonymous users to `/upgrade`, and provides entry into global leaderboard.
+10. Difficulty selects question count and difficulty key.
+11. Difficulty also offers explicit "Change Quiz Type" action back to home category selection.
+12. Quiz loads assets, randomizes questions/options, tracks score.
+13. Results screen saves score, renders session summary, blocks back navigation via `PopScope`, and offers explicit "Change Quiz Type" back to category selection.
+14. Profile screen fetches stored user scores from Firestore.
 
 ## Quiz Engine
 
@@ -150,6 +152,11 @@ Anonymous user doc fields (created by `UserChecker`):
   - provider linking for Email/Google/Apple using FirebaseUI credential-link flows
   - guest UID continuity guard so upgraded account keeps the original guest identity
   - post-link best-effort pending-score sync
+- `LegalDocumentScreen` provides:
+  - in-app rendering for local Terms and Privacy text assets
+  - a fallback state when route args are missing
+- `LegalConsentNotice` widget provides:
+  - shared consent copy and deep links used by entry, login, and upgrade surfaces
 - `AuthGuard` supports:
   - unauthenticated -> entry choice
   - anonymous disallowed -> upgrade screen

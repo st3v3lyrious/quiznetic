@@ -13,6 +13,7 @@ import 'package:quiznetic_flutter/screens/user_profile_screen.dart';
 import 'package:quiznetic_flutter/screens/leaderboard_screen.dart';
 import 'package:quiznetic_flutter/screens/login_screen.dart';
 import 'package:quiznetic_flutter/screens/upgrade_account_screen.dart';
+import 'package:quiznetic_flutter/screens/legal_document_screen.dart';
 import 'package:quiznetic_flutter/widgets/auth_guard.dart';
 import 'package:quiznetic_flutter/widgets/score_sync_scope.dart';
 import 'screens/splash_screen.dart';
@@ -68,6 +69,7 @@ class QuizNetic extends StatelessWidget {
               const AuthGuard(allowAnonymous: false, child: HomeScreen()),
           EntryChoiceScreen.routeName: (_) => const EntryChoiceScreen(),
           LoginScreen.routeName: (_) => const LoginScreen(),
+          LegalDocumentScreen.routeName: (_) => const LegalDocumentScreen(),
         },
         theme: ThemeData(
           // Opt in to Material 3 so background/onBackground are honored:

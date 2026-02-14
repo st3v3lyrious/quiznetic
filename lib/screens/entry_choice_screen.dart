@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:quiznetic_flutter/screens/home_screen.dart';
 import 'package:quiznetic_flutter/screens/login_screen.dart';
 import 'package:quiznetic_flutter/services/auth_service.dart';
+import 'package:quiznetic_flutter/widgets/legal_consent_notice.dart';
 
 typedef ContinueAsGuestAction = Future<void> Function(BuildContext context);
 typedef SignInChoiceAction = void Function(BuildContext context);
@@ -92,6 +93,8 @@ class EntryChoiceScreen extends StatelessWidget {
                     },
                     child: const Text('Sign In / Create Account'),
                   ),
+                  const SizedBox(height: 12),
+                  const LegalConsentNotice(),
                 ],
               ),
             ),

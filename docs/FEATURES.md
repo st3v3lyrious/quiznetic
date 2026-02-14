@@ -66,8 +66,8 @@ Use this as an editable feature checklist.
 - [ ] Add content licensing + attribution pipeline for celebrity/song/anime datasets
 - [x] Harden Firestore security rules with automated rule tests
 - [ ] Add leaderboard integrity protections (anti-cheat heuristics, abuse controls, write throttling)
-- [ ] Add CI/CD quality gates (analyze, unit/widget/integration/e2e, coverage threshold)
-- [ ] Add privacy and legal readiness artifacts (Privacy Policy, Terms, consent flow, age-rating metadata)
+- [x] Add CI/CD quality gates (analyze, unit/widget/integration/e2e, coverage threshold + branch protection required checks)
+- [x] Add privacy and legal readiness baseline (Privacy Policy, Terms, and consent links in entry/login/upgrade flows)
 - [ ] Add Remote Config feature flags for staged rollout
 - [ ] Implement localization by default (i18n-ready string resources + locale resolution)
 - [ ] Add language selection in Settings (persisted user preference + fallback locale)
