@@ -56,8 +56,9 @@ Use this as an editable feature checklist.
 - [x] Implement a global leaderboard screen (with UX/design, category+difficulty filters, and ranking presentation)
 - [ ] Create branded app icons for all target platforms
 - [ ] Create branded splash screens for all target platforms
-- [ ] Create a Settings screen
-- [ ] Create an About screen
+- [x] Configure branding asset pipeline (launcher icons + native splash generation runbook)
+- [x] Create a Settings screen
+- [x] Create an About screen
 - [ ] Add product analytics instrumentation
 - [ ] Add crash reporting
 - [ ] Integrate monetization via ads

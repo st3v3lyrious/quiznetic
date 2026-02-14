@@ -66,8 +66,9 @@ Use this as an editable feature checklist.
 - [x] Implement a global leaderboard screen (with UX/design, category+difficulty filters, and ranking presentation)
 - [ ] Create branded app icons for all target platforms
 - [ ] Create branded splash screens for all target platforms
-- [ ] Create a Settings screen
-- [ ] Create an About screen
+- [x] Configure branding asset pipeline (launcher icons + native splash generation runbook)
+- [x] Create a Settings screen
+- [x] Create an About screen
 - [ ] Add product analytics instrumentation
 - [ ] Add crash reporting
 - [ ] Integrate monetization via ads
@@ -96,6 +97,7 @@ Use this as an editable feature checklist.
 
 ## Screens
 
+- **About Screen** — Shows app summary, version metadata, support contact, and legal links. (`lib/screens/about_screen.dart`)
 - **Difficulty Screen** — Lets users choose difficulty and question count. (`lib/screens/difficulty_screen.dart`)
 - **Entry Choice Screen** — Lets unauthenticated users choose between guest mode or provider sign-in. (`lib/screens/entry_choice_screen.dart`)
 - **Home Screen** — Shows quiz categories, guest upgrade CTA, and routes to difficulty selection. (`lib/screens/home_screen.dart`)
@@ -104,6 +106,7 @@ Use this as an editable feature checklist.
 - **Login Screen** — Handles provider-based sign-in and account creation. (`lib/screens/login_screen.dart`)
 - **Quiz** — Presents questions, records answers, and handles scoring. (`lib/screens/quiz_screen.dart`)
 - **Result Screen** — Shows result summary and next actions after a quiz. (`lib/screens/result_screen.dart`)
+- **Settings Screen** — Provides account/session controls, legal links, and app preferences. (`lib/screens/settings_screen.dart`)
 - **Splash Screen** — Shows startup branding and routes users based on auth state. (`lib/screens/splash_screen.dart`)
 - **Upgrade Account Screen** — Lets anonymous users link a permanent provider account while preserving guest identity. (`lib/screens/upgrade_account_screen.dart`)
 - **User Profile Screen** — Displays user profile, saved high-score records, and guest conversion CTA. (`lib/screens/user_profile_screen.dart`)
@@ -134,7 +137,7 @@ flutter run
 
 ## Testing
 
-- **Unit/Widget tests:** `29` files
+- **Unit/Widget tests:** `32` files
 - **Integration tests:** `7` files
 
 ```bash
@@ -148,7 +151,7 @@ cd playwright && npx playwright test   # if present
 ## Dependencies (summary)
 
 - **deps:** flutter, sdk, firebase_core, firebase_auth, cloud_firestore, cloud_functions, shared_preferences, firebase_ui_auth, git, url, path, ref…
-- **dev_deps:** flutter_test, sdk, integration_test, sdk, flutter_lints
+- **dev_deps:** flutter_test, sdk, integration_test, sdk, flutter_lints, flutter_launcher_icons, flutter_native_splash
 
 ## Roadmap
 
@@ -188,7 +191,12 @@ Use this as a short, editable delivery plan.
 - [ ] M10: Ship Apple sign-in as a production-ready provider across supported platforms.
 - [x] M11: Implement global leaderboard experience (data query strategy + screen design + filters).
 - [ ] M12: Add branded app icons and splash screens for all target platforms.
-- [ ] M13: Build Settings and About screens.
+  - [x] Baseline asset pipeline configured (`flutter_launcher_icons`, `flutter_native_splash`, and `tools/refresh_branding_assets.sh`).
+  - [x] Brand color tokens centralized in `lib/config/brand_config.dart`.
+  - [ ] Final artwork export + multi-platform visual QA pending.
+  - Activation/update runbook: `docs/BRANDING_ASSETS.md`
+- [x] M13: Build Settings and About screens.
+  - Includes account/session controls, sign-out flow, legal links, and app metadata/support surface.
 - [ ] M14: Add analytics and crash reporting instrumentation.
 - [ ] M15: Integrate monetization stack (ads + in-app purchases).
 - [ ] M16: Improve UI/UX polish (animations, progress indicators, feedback styling).

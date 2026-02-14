@@ -1,11 +1,11 @@
 {
-    "name": "quiznetic_flutter",
-    "short_name": "quiznetic_flutter",
+    "name": "QuizNetic",
+    "short_name": "QuizNetic",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#FFFFFF",
+    "theme_color": "#6A1B9A",
+    "description": "QuizNetic trivia app.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

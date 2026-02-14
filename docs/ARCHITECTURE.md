@@ -23,12 +23,14 @@ It is intended to be source material for generated docs (including `README.md`).
 ## Codebase Layout
 
 - `lib/main.dart`: app bootstrap, Firebase init, route registration, global theme.
+- `lib/config/brand_config.dart`: app branding tokens (app name, core colors, web/splash color values).
 - `lib/screens/*`: UI flows (splash, entry choice, login, legal docs, home, leaderboard, difficulty, quiz, results, profile, upgrade).
 - `lib/services/*`: auth, user creation checks, score persistence/retrieval, leaderboard reads, local profile helper.
 - `lib/data/*`: quiz content loaders (`flag_loader.dart`, `capital_loader.dart`) and sample data.
 - `lib/models/*`: domain models (`FlagQuestion`).
 - `lib/widgets/*`: shared UI wrappers (`AuthGuard`).
 - `docs/BLAZE_FEATURE_FLAGS.md`: operational guidance for Blaze-dependent feature flags.
+- `docs/BRANDING_ASSETS.md`: branding pipeline (icon/splash source assets + generation/QA workflow).
 
 ## Route Map
 
@@ -42,6 +44,8 @@ It is intended to be source material for generated docs (including `README.md`).
 - `/quiz` -> `QuizScreen`
 - `/result` -> `ResultScreen`
 - `/profile` -> `UserProfileScreen`
+- `/settings` -> `SettingsScreen`
+- `/about` -> `AboutScreen`
 - `/upgrade` -> guarded route; anonymous users see upgrade screen, authenticated non-anonymous users are redirected to home.
 
 ## Runtime Flow (Current)
@@ -61,7 +65,9 @@ It is intended to be source material for generated docs (including `README.md`).
 11. Difficulty also offers explicit "Change Quiz Type" action back to home category selection.
 12. Quiz loads assets, randomizes questions/options, tracks score.
 13. Results screen saves score, renders session summary, blocks back navigation via `PopScope`, and offers explicit "Change Quiz Type" back to category selection.
-14. Profile screen fetches stored user scores from Firestore.
+14. Profile screen fetches stored user scores from Firestore and exposes quick links to settings/about.
+15. Settings screen provides account controls, sign-out flow, legal links, and app preference toggles.
+16. About screen provides app metadata/support contact and legal links.
 
 ## Quiz Engine
 
@@ -152,6 +158,12 @@ Anonymous user doc fields (created by `UserChecker`):
   - provider linking for Email/Google/Apple using FirebaseUI credential-link flows
   - guest UID continuity guard so upgraded account keeps the original guest identity
   - post-link best-effort pending-score sync
+- `SettingsScreen` provides:
+  - account/session details and sign-out action
+  - legal deep links and basic gameplay preference toggles
+- `AboutScreen` provides:
+  - app version/support metadata
+  - legal deep links (Terms and Privacy)
 - `LegalDocumentScreen` provides:
   - in-app rendering for local Terms and Privacy text assets
   - a fallback state when route args are missing

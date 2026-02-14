@@ -6,6 +6,8 @@
 // lib/screens/user_profile_screen.dart
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:quiznetic_flutter/screens/about_screen.dart';
+import 'package:quiznetic_flutter/screens/settings_screen.dart';
 import 'package:quiznetic_flutter/screens/upgrade_account_screen.dart';
 import 'package:quiznetic_flutter/services/auth_service.dart';
 import 'package:quiznetic_flutter/services/leaderboard_band_service.dart';
@@ -240,7 +242,25 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Your Profile')),
+      appBar: AppBar(
+        title: const Text('Your Profile'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            tooltip: 'Settings',
+            onPressed: () {
+              Navigator.pushNamed(context, SettingsScreen.routeName);
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.info_outline),
+            tooltip: 'About',
+            onPressed: () {
+              Navigator.pushNamed(context, AboutScreen.routeName);
+            },
+          ),
+        ],
+      ),
       body: FutureBuilder<_ProfileData>(
         future: _profileDataFuture,
         builder: (context, snap) {

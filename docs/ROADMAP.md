@@ -34,7 +34,12 @@ Use this as a short, editable delivery plan.
 - [ ] M10: Ship Apple sign-in as a production-ready provider across supported platforms.
 - [x] M11: Implement global leaderboard experience (data query strategy + screen design + filters).
 - [ ] M12: Add branded app icons and splash screens for all target platforms.
-- [ ] M13: Build Settings and About screens.
+  - [x] Baseline asset pipeline configured (`flutter_launcher_icons`, `flutter_native_splash`, and `tools/refresh_branding_assets.sh`).
+  - [x] Brand color tokens centralized in `lib/config/brand_config.dart`.
+  - [ ] Final artwork export + multi-platform visual QA pending.
+  - Activation/update runbook: `docs/BRANDING_ASSETS.md`
+- [x] M13: Build Settings and About screens.
+  - Includes account/session controls, sign-out flow, legal links, and app metadata/support surface.
 - [ ] M14: Add analytics and crash reporting instrumentation.
 - [ ] M15: Integrate monetization stack (ads + in-app purchases).
 - [ ] M16: Improve UI/UX polish (animations, progress indicators, feedback styling).

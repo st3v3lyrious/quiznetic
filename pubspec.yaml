@@ -70,6 +70,8 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
+  flutter_native_splash: ^2.4.6
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -113,6 +115,38 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  remove_alpha_ios: true
+  image_path: assets/images/logo-color.png
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: assets/images/logo-color.png
+  web:
+    generate: true
+    image_path: assets/images/logo-color.png
+    background_color: "#FFFFFF"
+    theme_color: "#6A1B9A"
+  windows:
+    generate: true
+    image_path: assets/images/logo-color.png
+    icon_size: 48
+  macos:
+    generate: true
+    image_path: assets/images/logo-color.png
+
+flutter_native_splash:
+  color: "#FFFFFF"
+  image: assets/images/logo-color.png
+  color_dark: "#121212"
+  image_dark: assets/images/logo-white.png
+  android_12:
+    color: "#FFFFFF"
+    image: assets/images/logo-color.png
+    color_dark: "#121212"
+    image_dark: assets/images/logo-white.png
+  web: false
 
 # Dependency overrides to fix Brightness type issues in firebase_ui packages
 dependency_overrides:
