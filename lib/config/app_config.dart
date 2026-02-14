@@ -11,4 +11,14 @@ class AppConfig {
     'GOOGLE_OAUTH_CLIENT_ID',
     defaultValue: '',
   );
+
+  /// Enables backend-authoritative score submission via callable `submitScore`.
+  ///
+  /// This is OFF by default to keep Spark-plan compatibility and avoid
+  /// requiring Cloud Functions/Cloud Build billing in local and low-cost
+  /// environments.
+  static const enableBackendSubmitScore = bool.fromEnvironment(
+    'ENABLE_BACKEND_SUBMIT_SCORE',
+    defaultValue: false,
+  );
 }

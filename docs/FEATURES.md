@@ -35,6 +35,9 @@ Use this as an editable feature checklist.
 - [x] Save user best score per category+difficulty in Firestore
 - [x] Save global leaderboard entry in Firestore (best-score semantics, one row per uid)
 - [x] Leaderboard entries include anonymous tagging and normalized display names
+- [x] Score submission validator enforces category, difficulty, question-count, and score bounds
+- [x] Idempotent score-attempt records are persisted under users/{uid}/attempts/{attemptId}
+- [x] Firestore rules enforce monotonic best-score updates and scope/doc-id consistency
 - [x] Leaderboard band service for top 10/20/100 rank messaging
 - [x] Anonymous guest conversion CTA on result screen using leaderboard band messaging
 - [x] Anonymous guest conversion CTA on profile screen using best-band leaderboard messaging
@@ -46,8 +49,8 @@ Use this as an editable feature checklist.
 
 ## Planned Features
 
-- [ ] Add Guess the Celebrity quiz category
-- [ ] Add Guess the Song from Lyrics quiz category
+- [ ] Add Guess the Celebrity quiz category (Deferred outside MVP scope)
+- [ ] Add Guess the Song from Lyrics quiz category (Deferred outside MVP scope)
 - [ ] Add Guess the Anime quiz category
 - [ ] Add Apple sign-in as a production-ready auth option
 - [x] Implement a global leaderboard screen (with UX/design, category+difficulty filters, and ranking presentation)

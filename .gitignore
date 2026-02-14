@@ -129,3 +129,7 @@ playwright/playwright-report/
 # Firestore rules test harness artifacts
 firestore_tests/node_modules/
 firestore_tests/firebase-debug.log
+
+# Cloud Functions artifacts
+functions/node_modules/
+functions/.firebase/

@@ -18,6 +18,7 @@ It is intended to be source material for generated docs (including `README.md`).
 - `cloud_firestore`
 - `firebase_ui_auth` + OAuth provider packages (from forked repo ref)
 - `shared_preferences`
+- `cloud_functions` (backend score-submission path behind feature flag)
 
 ## Codebase Layout
 
@@ -27,6 +28,7 @@ It is intended to be source material for generated docs (including `README.md`).
 - `lib/data/*`: quiz content loaders (`flag_loader.dart`, `capital_loader.dart`) and sample data.
 - `lib/models/*`: domain models (`FlagQuestion`).
 - `lib/widgets/*`: shared UI wrappers (`AuthGuard`).
+- `docs/BLAZE_FEATURE_FLAGS.md`: operational guidance for Blaze-dependent feature flags.
 
 ## Route Map
 
@@ -83,11 +85,12 @@ Firestore collections in use:
 
 - `users/{uid}`
 - `users/{uid}/scores/{category_difficulty}`
+- `users/{uid}/attempts/{attemptId}`
 - `leaderboard/{category_difficulty}/entries/{uid}`
 
 Firestore config assets in repo:
 
-- `firestore.rules` (auth + ownership rules for `users`, nested `scores`, and `leaderboard/entries`)
+- `firestore.rules` (auth + ownership rules for `users`, nested `scores`/`attempts`, and `leaderboard/entries`)
 - `firestore.indexes.json` (composite index for leaderboard ranking query: `score desc`, `updatedAt asc`)
 - `firebase.json` maps Firestore deploy targets to these files
 
@@ -107,6 +110,17 @@ Current leaderboard entry fields:
 - `isAnonymous`
 - `displayName`
 - `updatedAt`
+
+Current score-attempt fields:
+
+- `attemptId`
+- `categoryKey`
+- `difficulty`
+- `correctCount`
+- `totalQuestions`
+- `status`
+- `source` (`guest` or `account`)
+- `createdAt`
 
 Anonymous user doc fields (created by `UserChecker`):
 
@@ -146,6 +160,7 @@ Anonymous user doc fields (created by `UserChecker`):
 Current implementation uses a local-first repository:
 
 - `LocalFirstScoreRepository` (app-facing):
+  - validates score payload bounds before queueing/sync
   - saves score attempts locally first
   - stores local best-score projections per `category+difficulty`
   - attempts immediate Firestore sync for pending records
@@ -159,6 +174,10 @@ Current implementation uses a local-first repository:
 - `AuthService` and login flow:
   - trigger best-effort pending sync after anonymous sign-in, provider sign-in, and account-link success
 - `ScoreService` (remote adapter):
+  - validates category/difficulty/question-count/score bounds before remote write
+  - callable submit path (`submitScore`) is gated by `ENABLE_BACKEND_SUBMIT_SCORE` and defaults off on Spark
+  - uses direct Firestore write path when backend flag is disabled
+  - records idempotent score attempts (`users/{uid}/attempts/{attemptId}`)
   - saves personal best docs (`users/{uid}/scores/{category_difficulty}`)
   - writes leaderboard docs only when best score improves (one row per uid/category+difficulty)
   - tags leaderboard entries with anonymous status and display name
@@ -214,9 +233,11 @@ Current implementation uses a local-first repository:
 
 - Keep:
   - `users/{uid}/scores/{category_difficulty}`
+  - `users/{uid}/attempts/{attemptId}`
   - `leaderboard/{category_difficulty}/entries/{uid}`
 - Add/standardize fields:
   - score docs: `bestScore`, `updatedAt`, `source` (`guest` or `account`)
+  - attempt docs: `attemptId`, `correctCount`, `totalQuestions`, `status`, `source`, `createdAt`
   - leaderboard docs: `score`, `updatedAt`, `isAnonymous`, `displayName`
 
 ### Leaderboard Semantics (Current)
@@ -289,6 +310,9 @@ Current implementation uses a local-first repository:
 ## Known Constraints / Cleanup Targets
 
 - Google sign-in requires environment-specific `--dart-define=GOOGLE_OAUTH_CLIENT_ID=...` in local/dev/CI builds.
+- Backend-authoritative score submission requires
+  `--dart-define=ENABLE_BACKEND_SUBMIT_SCORE=true` and Blaze prerequisites
+  documented in `docs/BLAZE_FEATURE_FLAGS.md`.
 - Logo quiz category is intentionally deferred until curated/licensed logo assets and answer metadata mapping are available.
 - `main.dart` still contains template `MyHomePage` counter code that is not used by app routing.
 - `firebase_options.dart` is configured for Android/iOS/Web; macOS/Linux/Windows throw unsupported errors unless configured.

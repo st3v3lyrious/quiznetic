@@ -28,8 +28,8 @@ Use this as a short, editable delivery plan.
 - [x] M4: Regenerate README from docs (`FEATURES`, `ROADMAP`, `ARCHITECTURE`).
 - [x] M5: Bump macOS deployment target to 10.15+ so FlutterFire integration tests can run on macOS.
 - [ ] M6: Add Logo quiz category (deferred until curated/licensed logo asset set + mapping metadata are available).
-- [ ] M7: Add Guess the Celebrity quiz category (content set + quiz loader + tests).
-- [ ] M8: Add Guess the Song from Lyrics quiz category (licensed lyric snippets + answer metadata + tests).
+- [ ] M7: Add Guess the Celebrity quiz category (deferred outside MVP scope; content set + quiz loader + tests).
+- [ ] M8: Add Guess the Song from Lyrics quiz category (deferred outside MVP scope; licensed lyric snippets + answer metadata + tests).
 - [ ] M9: Add Guess the Anime quiz category (content set + quiz loader + tests).
 - [ ] M10: Ship Apple sign-in as a production-ready provider across supported platforms.
 - [x] M11: Implement global leaderboard experience (data query strategy + screen design + filters).
@@ -42,6 +42,11 @@ Use this as a short, editable delivery plan.
 - [ ] M18: Build content licensing + attribution pipeline for celebrity/song/anime datasets.
 - [x] M19: Harden Firestore security rules and add automated Firestore-rules tests in CI.
 - [ ] M20: Add leaderboard integrity protections (anti-cheat scoring checks, abuse controls, rate limits).
+  - Contract reference: docs/ANTI_CHEAT_CONTRACT.md
+  - [x] Phase 1 baseline shipped: validator, idempotent attempt records, stricter Firestore score bounds/scope checks.
+  - [ ] Phase 2 pending: backend-authoritative submitScore path + direct projection write lock for clients.
+  - Blaze-gated partial implementation shipped: callable `submitScore` + app flag (`ENABLE_BACKEND_SUBMIT_SCORE`) default-off on Spark.
+  - Activation/rollback conditions: docs/BLAZE_FEATURE_FLAGS.md
 - [ ] M21: Enforce CI/CD quality gates (GitHub Actions + branch protection required checks; workflows added, branch rule activation pending).
 - [ ] M22: Complete privacy/legal readiness (Privacy Policy, Terms, consent copy, age rating inputs).
 - [ ] M23: Introduce Remote Config/feature flags for staged feature rollout.
