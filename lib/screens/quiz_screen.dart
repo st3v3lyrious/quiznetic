@@ -5,6 +5,7 @@
 */
 
 import 'package:flutter/material.dart';
+import 'package:quiznetic_flutter/config/brand_config.dart';
 import '../data/capital_loader.dart';
 import '../data/flag_loader.dart';
 import '../models/flag_question.dart';
@@ -225,7 +226,12 @@ class _QuizScreenState extends State<QuizScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  Image.asset(q.imagePath, height: 180, fit: BoxFit.contain),
+                  Image.asset(
+                    q.imagePath,
+                    height: 180,
+                    fit: BoxFit.contain,
+                    semanticLabel: BrandConfig.quizQuestionImageSemanticLabel,
+                  ),
                   const SizedBox(height: 24),
                   ...q.options.map((opt) {
                     final isCorrect = opt == q.correctAnswer;

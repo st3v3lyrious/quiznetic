@@ -43,6 +43,7 @@ class AboutScreen extends StatelessWidget {
               child: Image.asset(
                 'assets/images/logo-no-background.png',
                 height: 84,
+                semanticLabel: BrandConfig.logoSemanticLabel,
               ),
             ),
             const SizedBox(height: 16),

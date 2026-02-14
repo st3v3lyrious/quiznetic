@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:quiznetic_flutter/config/brand_config.dart';
 import 'package:quiznetic_flutter/screens/entry_choice_screen.dart';
 import 'package:quiznetic_flutter/screens/home_screen.dart';
 import 'package:quiznetic_flutter/screens/legal_document_screen.dart';
@@ -16,6 +17,10 @@ void main() {
 
     expect(find.text('Continue as Guest'), findsOneWidget);
     expect(find.text('Sign In / Create Account'), findsOneWidget);
+    expect(
+      find.bySemanticsLabel(BrandConfig.logoSemanticLabel),
+      findsOneWidget,
+    );
     expect(find.byKey(LegalConsentNotice.copyKey), findsOneWidget);
     expect(find.byKey(LegalConsentNotice.termsLinkKey), findsOneWidget);
     expect(find.byKey(LegalConsentNotice.privacyLinkKey), findsOneWidget);

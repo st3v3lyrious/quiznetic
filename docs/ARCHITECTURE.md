@@ -24,6 +24,8 @@ It is intended to be source material for generated docs (including `README.md`).
 
 - `lib/main.dart`: app bootstrap, Firebase init, route registration, global theme.
 - `lib/config/brand_config.dart`: app branding tokens (app name, core colors, web/splash color values).
+- `test/unit/config/accessibility_contrast_test.dart`: WCAG AA contrast guardrails for core theme pairs.
+- `test/widget/screens/accessibility_text_scaling_test.dart`: dynamic type baseline coverage for key screens.
 - `lib/screens/*`: UI flows (splash, entry choice, login, legal docs, home, leaderboard, difficulty, quiz, results, profile, upgrade).
 - `lib/services/*`: auth, user creation checks, score persistence/retrieval, leaderboard reads, local profile helper.
 - `lib/data/*`: quiz content loaders (`flag_loader.dart`, `capital_loader.dart`) and sample data.

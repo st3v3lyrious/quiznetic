@@ -58,6 +58,9 @@ Use this as a short, editable delivery plan.
 - [ ] M23: Introduce Remote Config/feature flags for staged feature rollout.
 - [ ] M24: Implement localization foundation (externalized strings, locale resolution, default i18n coverage).
 - [ ] M25: Add user-selectable app language in Settings with persisted preference and safe fallback.
-- [ ] M26: Complete accessibility baseline (semantics labels, contrast, dynamic type/text scaling).
+- [x] M26: Complete accessibility baseline (semantics labels, contrast, dynamic type/text scaling).
+  - Added semantic labels for core logo/question imagery surfaces.
+  - Added WCAG AA contrast unit checks for primary theme color pairs.
+  - Added large text-scaling widget coverage for entry, settings, about, and difficulty flows.
 - [ ] M27: Establish release operations readiness (alerts, KPI dashboard, rollback playbook, beta process).
 - [ ] M28: Build feedback intelligence loop (in-app feedback capture, tagged triage, and recurring roadmap review cadence).

@@ -72,7 +72,7 @@ Use this as an editable feature checklist.
 - [ ] Add Remote Config feature flags for staged rollout
 - [ ] Implement localization by default (i18n-ready string resources + locale resolution)
 - [ ] Add language selection in Settings (persisted user preference + fallback locale)
-- [ ] Add accessibility baseline (screen-reader labels, contrast checks, text-scaling support)
+- [x] Add accessibility baseline (screen-reader labels, contrast checks, text-scaling support)
 - [ ] Add release operations readiness (crash alert routing, KPI dashboard, rollback playbook)
 - [ ] Add user feedback collection loop (in-app feedback form + categorization + roadmap review input)
 - [ ] Launch MVP

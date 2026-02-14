@@ -4,6 +4,7 @@
  Purpose: Shows quiz categories, guest upgrade CTA, and routes to difficulty selection.
 */
 import 'package:flutter/material.dart';
+import 'package:quiznetic_flutter/config/brand_config.dart';
 import 'package:quiznetic_flutter/services/auth_service.dart';
 import 'difficulty_screen.dart';
 import 'leaderboard_screen.dart';
@@ -89,6 +90,7 @@ class HomeScreen extends StatelessWidget {
                     child: Image.asset(
                       'assets/images/logo-no-background.png',
                       height: 120,
+                      semanticLabel: BrandConfig.logoSemanticLabel,
                     ),
                   ),
                   const SizedBox(height: 24),

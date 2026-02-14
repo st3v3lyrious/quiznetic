@@ -17,6 +17,10 @@ void main() {
     expect(find.text(BrandConfig.tagline), findsOneWidget);
     expect(find.text(BrandConfig.appVersionLabel), findsOneWidget);
     expect(find.text(BrandConfig.supportEmail), findsOneWidget);
+    expect(
+      find.bySemanticsLabel(BrandConfig.logoSemanticLabel),
+      findsOneWidget,
+    );
   });
 
   testWidgets('terms link opens terms document', (tester) async {
