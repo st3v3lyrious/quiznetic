@@ -79,10 +79,18 @@ class EntryChoiceScreen extends StatelessWidget {
                               continueAsGuest ?? _defaultContinueAsGuest;
                           try {
                             await handler(context);
-                          } catch (e) {
+                          } catch (e, stackTrace) {
+                            debugPrint(
+                              'EntryChoiceScreen guest continuation failed: $e',
+                            );
+                            debugPrintStack(stackTrace: stackTrace);
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Error: $e')),
+                                const SnackBar(
+                                  content: Text(
+                                    'Unable to continue as guest. Please try again.',
+                                  ),
+                                ),
                               );
                             }
                           }

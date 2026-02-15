@@ -69,6 +69,31 @@ void main() {
     expect(find.text('home-screen'), findsOneWidget);
   });
 
+  testWidgets(
+    'guest choice failure shows generic snackbar without exception details',
+    (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: EntryChoiceScreen(
+            continueAsGuest: (context) async {
+              throw StateError('internal-debug-details');
+            },
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Continue as Guest'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(
+        find.text('Unable to continue as guest. Please try again.'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('internal-debug-details'), findsNothing);
+    },
+  );
+
   testWidgets('terms link opens the terms document screen', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
