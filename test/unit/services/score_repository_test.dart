@@ -1,7 +1,10 @@
+import 'dart:convert';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quiznetic_flutter/services/score_repository.dart';
 import 'package:quiznetic_flutter/services/score_service.dart';
+import 'package:quiznetic_flutter/services/score_submission_validator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -19,6 +22,8 @@ void main() {
                 required categoryKey,
                 required difficulty,
                 required score,
+                required attemptId,
+                required totalQuestions,
               }) async {
                 remoteSaveCalls++;
               },
@@ -60,6 +65,8 @@ void main() {
                 required categoryKey,
                 required difficulty,
                 required score,
+                required attemptId,
+                required totalQuestions,
               }) async {
                 if (shouldFail) {
                   throw Exception('offline');
@@ -101,6 +108,8 @@ void main() {
                 required categoryKey,
                 required difficulty,
                 required score,
+                required attemptId,
+                required totalQuestions,
               }) async {
                 remoteSaveCalls++;
                 if (shouldFail) {
@@ -146,6 +155,8 @@ void main() {
               required categoryKey,
               required difficulty,
               required score,
+              required attemptId,
+              required totalQuestions,
             }) async {
               remoteSaveCalls++;
               if (shouldFail) {
@@ -171,6 +182,93 @@ void main() {
       expect(remoteSaveCalls, equals(2));
     });
 
+    test('saveScore rejects invalid payload before persisting', () async {
+      SharedPreferences.setMockInitialValues({});
+      var remoteSaveCalls = 0;
+
+      final repo = LocalFirstScoreRepository(
+        currentUserProvider: () => _FakeUser(),
+        saveRemoteScore:
+            ({
+              required categoryKey,
+              required difficulty,
+              required score,
+              required attemptId,
+              required totalQuestions,
+            }) async {
+              remoteSaveCalls++;
+            },
+        loadRemoteBestScore:
+            ({required categoryKey, required difficulty}) async => 0,
+        loadRemoteScores: () async => [],
+      );
+
+      await expectLater(
+        repo.saveScore(
+          categoryKey: 'flag',
+          difficulty: 'easy',
+          score: 10,
+          totalQuestions: 30,
+        ),
+        throwsA(isA<ScoreSubmissionValidationException>()),
+      );
+
+      expect(remoteSaveCalls, equals(0));
+      final best = await repo.getBestScore(
+        categoryKey: 'flag',
+        difficulty: 'easy',
+      );
+      expect(best, equals(0));
+    });
+
+    test('syncPendingScores drops invalid pending payloads', () async {
+      SharedPreferences.setMockInitialValues({
+        'score_attempts_v1': jsonEncode([
+          {
+            'id': 'invalid-attempt-1',
+            'categoryKey': 'flag',
+            'difficulty': 'easy',
+            'score': 22,
+            'totalQuestions': 15,
+            'playedAt': DateTime.utc(2025, 1, 1).toIso8601String(),
+            'syncState': 'pending',
+            'syncAttempts': 0,
+            'lastSyncError': null,
+            'lastTriedAt': null,
+            'nextRetryAt': null,
+          },
+        ]),
+      });
+      var remoteSaveCalls = 0;
+
+      final repo = LocalFirstScoreRepository(
+        currentUserProvider: () => _FakeUser(),
+        saveRemoteScore:
+            ({
+              required categoryKey,
+              required difficulty,
+              required score,
+              required attemptId,
+              required totalQuestions,
+            }) async {
+              remoteSaveCalls++;
+            },
+        loadRemoteBestScore:
+            ({required categoryKey, required difficulty}) async => 0,
+        loadRemoteScores: () async => [],
+      );
+
+      final syncedCount = await repo.syncPendingScores(forceRetry: true);
+      expect(syncedCount, equals(0));
+      expect(remoteSaveCalls, equals(0));
+
+      final prefs = await SharedPreferences.getInstance();
+      final rawAttempts = prefs.getString('score_attempts_v1');
+      expect(rawAttempts, isNotNull);
+      final decoded = jsonDecode(rawAttempts!) as List<dynamic>;
+      expect(decoded, isEmpty);
+    });
+
     test(
       'getAllHighScores merges local and remote using max score per key',
       () async {
@@ -183,6 +281,8 @@ void main() {
                 required categoryKey,
                 required difficulty,
                 required score,
+                required attemptId,
+                required totalQuestions,
               }) async {},
           loadRemoteBestScore:
               ({required categoryKey, required difficulty}) async => 0,
@@ -230,6 +330,8 @@ void main() {
               required categoryKey,
               required difficulty,
               required score,
+              required attemptId,
+              required totalQuestions,
             }) async {},
         loadRemoteBestScore:
             ({required categoryKey, required difficulty}) async => 0,

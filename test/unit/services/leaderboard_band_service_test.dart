@@ -1,8 +1,16 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quiznetic_flutter/services/leaderboard_band_service.dart';
 
 void main() {
   group('LeaderboardBandService', () {
+    test('band labels expose user-facing rank strings', () {
+      expect(LeaderboardBand.top10.label, 'top 10');
+      expect(LeaderboardBand.top20.label, 'top 20');
+      expect(LeaderboardBand.top100.label, 'top 100');
+      expect(LeaderboardBand.outsideTop100.label, 'outside top 100');
+    });
+
     test('maps rank into expected band', () {
       expect(LeaderboardBandService.bandForRank(1), LeaderboardBand.top10);
       expect(LeaderboardBandService.bandForRank(10), LeaderboardBand.top10);
@@ -14,6 +22,73 @@ void main() {
         LeaderboardBandService.bandForRank(101),
         LeaderboardBand.outsideTop100,
       );
+    });
+
+    test('LeaderboardEntry.fromFirestore parses timestamp-backed payloads', () {
+      final updatedAt = DateTime.utc(2025, 1, 1, 8, 30, 0);
+      final entry = LeaderboardEntry.fromFirestore(
+        uid: 'u-timestamp',
+        data: {
+          'score': 42,
+          'updatedAt': Timestamp.fromDate(updatedAt),
+          'isAnonymous': true,
+          'displayName': 'Guest-u',
+        },
+      );
+
+      expect(entry.uid, 'u-timestamp');
+      expect(entry.score, 42);
+      expect(
+        entry.updatedAt.millisecondsSinceEpoch,
+        updatedAt.millisecondsSinceEpoch,
+      );
+      expect(entry.isAnonymous, isTrue);
+      expect(entry.displayName, 'Guest-u');
+    });
+
+    test(
+      'LeaderboardEntry.fromFirestore handles DateTime and fallback values',
+      () {
+        final dateTime = DateTime.utc(2025, 1, 2, 8, 0, 0);
+        final withDateTime = LeaderboardEntry.fromFirestore(
+          uid: 'u-datetime',
+          data: {'score': 7, 'updatedAt': dateTime},
+        );
+        final withFallback = LeaderboardEntry.fromFirestore(
+          uid: 'u-fallback',
+          data: {'score': 3, 'updatedAt': 'invalid'},
+        );
+
+        expect(withDateTime.updatedAt, dateTime);
+        expect(
+          withFallback.updatedAt,
+          DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),
+        );
+        expect(withFallback.isAnonymous, isFalse);
+        expect(withFallback.displayName, isNull);
+      },
+    );
+
+    test('LeaderboardBandResult.isTop100 reflects rank threshold', () {
+      final top = LeaderboardBandResult(
+        categoryKey: 'flag',
+        difficulty: 'easy',
+        rank: 100,
+        score: 50,
+        band: LeaderboardBand.top100,
+        sampledEntries: 100,
+      );
+      final outside = LeaderboardBandResult(
+        categoryKey: 'flag',
+        difficulty: 'easy',
+        rank: 101,
+        score: 49,
+        band: LeaderboardBand.outsideTop100,
+        sampledEntries: 100,
+      );
+
+      expect(top.isTop100, isTrue);
+      expect(outside.isTop100, isFalse);
     });
 
     test(
@@ -66,6 +141,39 @@ void main() {
       expect(result.rank, lessThanOrEqualTo(10));
       expect(result.band, LeaderboardBand.top10);
     });
+
+    test(
+      'uses nowProvider when candidateUpdatedAt is omitted for candidate row',
+      () async {
+        final now = DateTime.utc(2025, 1, 1, 12, 0, 0);
+        final service = LeaderboardBandService(
+          nowProvider: () => now,
+          entriesLoader:
+              ({
+                required categoryKey,
+                required difficulty,
+                required limit,
+              }) async => [
+                LeaderboardEntry(
+                  uid: 'u-a',
+                  score: 50,
+                  updatedAt: now,
+                  isAnonymous: false,
+                ),
+              ],
+        );
+
+        final result = await service.getBandForScore(
+          categoryKey: 'flag',
+          difficulty: 'easy',
+          score: 50,
+          candidateUid: 'candidate',
+        );
+
+        expect(result.rank, 1);
+        expect(result.band, LeaderboardBand.top10);
+      },
+    );
 
     test('computes top20 band for mid candidate score', () async {
       final service = LeaderboardBandService(

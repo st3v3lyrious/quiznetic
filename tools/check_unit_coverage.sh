@@ -6,6 +6,9 @@ cd "${ROOT_DIR}"
 
 MIN_UNIT_COVERAGE="${MIN_UNIT_COVERAGE:-25}"
 
+mkdir -p coverage
+rm -f coverage/lcov.info
+
 echo "Running unit tests with coverage..."
 flutter test test/unit --coverage
 

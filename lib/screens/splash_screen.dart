@@ -5,6 +5,7 @@
 */
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:quiznetic_flutter/config/brand_config.dart';
 import 'package:quiznetic_flutter/screens/entry_choice_screen.dart';
 import 'package:quiznetic_flutter/screens/home_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -58,7 +59,11 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: Image.asset('assets/images/logo-no-background.png', height: 150),
+        child: Image.asset(
+          'assets/images/logo-no-background.png',
+          height: 150,
+          semanticLabel: BrandConfig.logoSemanticLabel,
+        ),
       ),
     );
   }

@@ -3,15 +3,22 @@
  Title: Login Screen
  Purpose: Handles provider-based sign-in and account creation.
 */
+import 'dart:async';
+
+import 'package:firebase_auth/firebase_auth.dart' as fba;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:firebase_ui_oauth_apple/firebase_ui_oauth_apple.dart';
 import 'package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart';
 import 'package:quiznetic_flutter/config/app_config.dart';
+import 'package:quiznetic_flutter/config/brand_config.dart';
+import 'package:quiznetic_flutter/services/analytics_service.dart';
 import 'package:quiznetic_flutter/services/auth_service.dart';
 import 'package:quiznetic_flutter/services/score_repository.dart';
 import 'package:quiznetic_flutter/services/user_checker.dart';
 import 'package:quiznetic_flutter/screens/home_screen.dart';
+import 'package:quiznetic_flutter/widgets/legal_consent_notice.dart';
 
 class LoginScreen extends StatelessWidget {
   static const routeName = '/login';
@@ -26,15 +33,59 @@ class LoginScreen extends StatelessWidget {
     return clientId.trim().isNotEmpty;
   }
 
+  /// Returns true when Apple provider is available in current build/platform.
+  @visibleForTesting
+  static bool isAppleProviderEnabled({
+    bool? appleSignInEnabled,
+    bool isWeb = kIsWeb,
+    TargetPlatform? platform,
+  }) {
+    if (!(appleSignInEnabled ?? AppConfig.enableAppleSignIn)) {
+      return false;
+    }
+    if (isWeb) {
+      return true;
+    }
+
+    final resolvedPlatform = platform ?? defaultTargetPlatform;
+    return resolvedPlatform == TargetPlatform.android ||
+        resolvedPlatform == TargetPlatform.iOS ||
+        resolvedPlatform == TargetPlatform.macOS;
+  }
+
   /// Builds provider list, conditionally including Google based on config.
   @visibleForTesting
-  static List<AuthProvider> buildProviders({required String googleClientId}) {
+  static List<AuthProvider> buildProviders({
+    required String googleClientId,
+    bool? includeAppleProvider,
+  }) {
+    final appleEnabled = includeAppleProvider ?? isAppleProviderEnabled();
     return [
       EmailAuthProvider(),
       if (isGoogleProviderEnabled(googleClientId))
         GoogleProvider(clientId: googleClientId.trim()),
-      AppleProvider(),
+      if (appleEnabled) AppleProvider(scopes: const <String>{'email', 'name'}),
     ];
+  }
+
+  /// Maps Firebase Auth failures to user-safe sign-in messages.
+  @visibleForTesting
+  static String authFailureMessage(Exception exception) {
+    if (exception is fba.FirebaseAuthException) {
+      switch (exception.code) {
+        case 'operation-not-allowed':
+          return 'This sign-in method is currently unavailable. Please try another option.';
+        case 'web-context-cancelled':
+          return 'Sign-in was cancelled. Please try again.';
+        case 'web-context-already-presented':
+          return 'Another sign-in prompt is already open.';
+        case 'missing-or-invalid-nonce':
+          return 'Apple sign-in validation failed. Please try again.';
+        case 'network-request-failed':
+          return 'Network error while signing in. Check your connection and try again.';
+      }
+    }
+    return 'Sign-in failed. Please try again.';
   }
 
   /// Builds provider sign-in and account-creation actions.
@@ -43,12 +94,16 @@ class LoginScreen extends StatelessWidget {
     final resolvedGoogleClientId =
         googleOAuthClientId ?? AppConfig.googleOAuthClientId;
     final googleConfigured = isGoogleProviderEnabled(resolvedGoogleClientId);
+    final appleConfigured = isAppleProviderEnabled();
 
     return Scaffold(
       body: SafeArea(
         child: SignInScreen(
           // Providers
-          providers: buildProviders(googleClientId: resolvedGoogleClientId),
+          providers: buildProviders(
+            googleClientId: resolvedGoogleClientId,
+            includeAppleProvider: appleConfigured,
+          ),
 
           // Header
           headerBuilder: (context, constraints, shrinkOffset) {
@@ -59,7 +114,10 @@ class LoginScreen extends StatelessWidget {
                 children: [
                   AspectRatio(
                     aspectRatio: 1,
-                    child: Image.asset(logoAssetPath),
+                    child: Image.asset(
+                      logoAssetPath,
+                      semanticLabel: BrandConfig.logoSemanticLabel,
+                    ),
                   ),
                   Text(
                     'QuizNetic',
@@ -95,8 +153,23 @@ class LoginScreen extends StatelessWidget {
                         textAlign: TextAlign.center,
                       ),
                     ),
+                  if (!appleConfigured)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 8),
+                      child: Text(
+                        'Apple sign-in is currently unavailable.',
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
                 ],
               ),
+            );
+          },
+
+          // Footer
+          footerBuilder: (context, action) {
+            return const LegalConsentNotice(
+              padding: EdgeInsets.fromLTRB(16, 8, 16, 20),
             );
           },
 
@@ -107,9 +180,25 @@ class LoginScreen extends StatelessWidget {
               if (user == null) return;
 
               debugPrint('✅ ${user.uid} signed in');
+              unawaited(
+                AnalyticsService.instance.logEvent(
+                  'auth_signed_in',
+                  parameters: {
+                    'flow': 'login',
+                    'provider_count': user.providerData.length,
+                    'is_anonymous': user.isAnonymous,
+                  },
+                ),
+              );
 
               final created = await UserChecker.ensureUserDocument(user: user);
               if (!created) {
+                unawaited(
+                  AnalyticsService.instance.logEvent(
+                    'auth_profile_bootstrap_failed',
+                    parameters: {'flow': 'login'},
+                  ),
+                );
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
@@ -123,6 +212,12 @@ class LoginScreen extends StatelessWidget {
                   await AuthService().signOut();
                 } catch (_) {
                   // Keep user on login screen even if sign-out cleanup fails.
+                  unawaited(
+                    AnalyticsService.instance.logEvent(
+                      'auth_cleanup_failed',
+                      parameters: {'flow': 'login'},
+                    ),
+                  );
                 }
                 return;
               }
@@ -136,6 +231,15 @@ class LoginScreen extends StatelessWidget {
                 debugPrint(
                   '⚠️ Deferred score sync after provider sign-in failed: $e',
                 );
+                unawaited(
+                  AnalyticsService.instance.logEvent(
+                    'auth_post_signin_sync_failed',
+                    parameters: {
+                      'flow': 'login',
+                      'error_type': e.runtimeType.toString(),
+                    },
+                  ),
+                );
               }
 
               if (context.mounted) {
@@ -143,6 +247,21 @@ class LoginScreen extends StatelessWidget {
                   context,
                 ).pushReplacementNamed(HomeScreen.routeName);
               }
+            }),
+            AuthStateChangeAction<AuthFailed>((context, state) {
+              final exception = state.exception;
+              final errorCode = exception is fba.FirebaseAuthException
+                  ? exception.code
+                  : exception.runtimeType.toString();
+              unawaited(
+                AnalyticsService.instance.logEvent(
+                  'auth_signin_failed',
+                  parameters: {'flow': 'login', 'error_code': errorCode},
+                ),
+              );
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(authFailureMessage(exception))),
+              );
             }),
             // Additional auth state actions can be added as needed
           ],

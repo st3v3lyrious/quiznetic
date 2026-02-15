@@ -28,25 +28,69 @@ Use this as a short, editable delivery plan.
 - [x] M4: Regenerate README from docs (`FEATURES`, `ROADMAP`, `ARCHITECTURE`).
 - [x] M5: Bump macOS deployment target to 10.15+ so FlutterFire integration tests can run on macOS.
 - [ ] M6: Add Logo quiz category (deferred until curated/licensed logo asset set + mapping metadata are available).
-- [ ] M7: Add Guess the Celebrity quiz category (content set + quiz loader + tests).
-- [ ] M8: Add Guess the Song from Lyrics quiz category (licensed lyric snippets + answer metadata + tests).
+- [ ] M7: Add Guess the Celebrity quiz category (deferred outside MVP scope; content set + quiz loader + tests).
+- [ ] M8: Add Guess the Song from Lyrics quiz category (deferred outside MVP scope; licensed lyric snippets + answer metadata + tests).
 - [ ] M9: Add Guess the Anime quiz category (content set + quiz loader + tests).
 - [ ] M10: Ship Apple sign-in as a production-ready provider across supported platforms.
+  - [x] App-side provider gating + rollback flag shipped (`ENABLE_APPLE_SIGN_IN`, default `false`).
+  - [x] iOS/macOS entitlement baseline committed for Sign in with Apple capability.
+  - [x] Login/upgrade auth failures now map to user-safe provider messages.
+  - [ ] Apple Developer + Firebase provider credentials/configuration per environment still pending.
+  - Manual pre-deployment checklist (required before enabling flag):
+    - [ ] Enable `Sign in with Apple` capability on Apple App ID(s).
+    - [ ] Create Apple sign-in key (`.p8`) and capture Team ID + Key ID.
+    - [ ] Create/configure Apple Service ID and callback URL (`https://<project-id>.firebaseapp.com/__/auth/handler`).
+    - [ ] Configure Firebase Auth Apple provider with Service ID/Team ID/Key ID/private key.
+    - [ ] Run iOS + macOS login/upgrade smoke tests with `ENABLE_APPLE_SIGN_IN=true`.
+  - Activation runbook: `docs/APPLE_SIGN_IN_SETUP.md`
 - [x] M11: Implement global leaderboard experience (data query strategy + screen design + filters).
 - [ ] M12: Add branded app icons and splash screens for all target platforms.
-- [ ] M13: Build Settings and About screens.
-- [ ] M14: Add analytics and crash reporting instrumentation.
+  - [x] Baseline asset pipeline configured (`flutter_launcher_icons`, `flutter_native_splash`, and `tools/refresh_branding_assets.sh`).
+  - [x] Brand color tokens centralized in `lib/config/brand_config.dart`.
+  - [ ] Final artwork export + multi-platform visual QA pending.
+  - Activation/update runbook: `docs/BRANDING_ASSETS.md`
+- [x] M13: Build Settings and About screens.
+  - Includes account/session controls, sign-out flow, legal links, and app metadata/support surface.
+- [x] M14: Add analytics and crash reporting instrumentation.
+  - [x] Crash reporting baseline shipped (Firebase Crashlytics init + Flutter/zone unhandled error capture).
+  - [x] Crash reporting kill switch added: `ENABLE_CRASH_REPORTING` (default `true`).
+  - [x] Analytics event breadcrumbs shipped for crash triage (screen views + critical flow actions).
+  - [x] Product analytics baseline shipped for auth, quiz, and score-submission funnels.
+  - [x] Analytics kill switch added: `ENABLE_ANALYTICS` (default `true`).
 - [ ] M15: Integrate monetization stack (ads + in-app purchases).
 - [ ] M16: Improve UI/UX polish (animations, progress indicators, feedback styling).
 - [ ] M17: Launch MVP (release checklist, store metadata, and production rollout).
+  - [x] Launch preflight automation shipped (`tools/release_preflight.sh` + `.github/workflows/release_preflight.yml`).
+  - If Apple setup is not complete by launch date, keep `ENABLE_APPLE_SIGN_IN=false` for MVP and ship with Email/Google.
 - [ ] M18: Build content licensing + attribution pipeline for celebrity/song/anime datasets.
 - [x] M19: Harden Firestore security rules and add automated Firestore-rules tests in CI.
 - [ ] M20: Add leaderboard integrity protections (anti-cheat scoring checks, abuse controls, rate limits).
-- [ ] M21: Enforce CI/CD quality gates (GitHub Actions + branch protection required checks; workflows added, branch rule activation pending).
-- [ ] M22: Complete privacy/legal readiness (Privacy Policy, Terms, consent copy, age rating inputs).
+  - Contract reference: docs/ANTI_CHEAT_CONTRACT.md
+  - [x] Phase 1 baseline shipped: validator, idempotent attempt records, stricter Firestore score bounds/scope checks.
+  - [ ] Phase 2 pending: backend-authoritative submitScore path + direct projection write lock for clients.
+  - Blaze-gated partial implementation shipped: callable `submitScore` + app flag (`ENABLE_BACKEND_SUBMIT_SCORE`) default-off on Spark.
+  - Activation/rollback conditions: docs/BLAZE_FEATURE_FLAGS.md
+- [x] M21: Enforce CI/CD quality gates (GitHub Actions + branch protection required checks are active on `main`).
+- [x] M22: Complete privacy/legal baseline (Privacy Policy, Terms, consent copy, and in-app legal links).
+  - Formal legal counsel review and age-rating metadata can be finalized before public store launch.
 - [ ] M23: Introduce Remote Config/feature flags for staged feature rollout.
 - [ ] M24: Implement localization foundation (externalized strings, locale resolution, default i18n coverage).
 - [ ] M25: Add user-selectable app language in Settings with persisted preference and safe fallback.
-- [ ] M26: Complete accessibility baseline (semantics labels, contrast, dynamic type/text scaling).
+- [x] M26: Complete accessibility baseline (semantics labels, contrast, dynamic type/text scaling).
+  - Added semantic labels for core logo/question imagery surfaces.
+  - Added WCAG AA contrast unit checks for primary theme color pairs.
+  - Added large text-scaling widget coverage for entry, settings, about, difficulty, home, quiz, result, leaderboard, and profile flows.
+  - Added non-color quiz answer feedback (icon + text states) and live semantic announcements for quiz progress/result summary.
+  - Added opt-in flag-description accessibility support (`Settings > Accessibility > Show flag descriptions` + in-quiz `Describe Flag` affordance backed by metadata).
+  - Expanded flag-description metadata baseline to `263` entries (`100%` current asset coverage) with unit QA guardrails for metadata quality + coverage floor (`>=70%`).
+  - Replaced all seeded placeholder templates with curated per-flag structural descriptions (`0` generic seed-template entries remaining).
+  - [ ] Manual visual QA sweep for flag-description accuracy (owner: user).
+  - Follow-up audit and prioritized backlog: `docs/ACCESSIBILITY_AUDIT.md`.
 - [ ] M27: Establish release operations readiness (alerts, KPI dashboard, rollback playbook, beta process).
+  - [x] Baseline release ops runbook published: `docs/RELEASE_OPS_RUNBOOK.md`.
+  - [x] Rollback playbook and kill-switch checklist documented.
+  - [x] Alert routing policy + KPI thresholds documented: `docs/ALERT_ROUTING_AND_KPI_THRESHOLDS.md`.
+  - [x] CI failure alert routing automation shipped (webhook via `ALERT_WEBHOOK_URL`).
+  - [x] Incident postmortem template + review cadence documented: `docs/INCIDENT_POSTMORTEM_TEMPLATE.md`.
+  - [ ] Dedicated pager/on-call automation and KPI dashboard automation still pending.
 - [ ] M28: Build feedback intelligence loop (in-app feedback capture, tagged triage, and recurring roadmap review cadence).

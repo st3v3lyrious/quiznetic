@@ -3,10 +3,15 @@
  Title: Entry Choice Screen
  Purpose: Lets unauthenticated users choose between guest mode or provider sign-in.
 */
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:quiznetic_flutter/config/brand_config.dart';
 import 'package:quiznetic_flutter/screens/home_screen.dart';
 import 'package:quiznetic_flutter/screens/login_screen.dart';
+import 'package:quiznetic_flutter/services/analytics_service.dart';
 import 'package:quiznetic_flutter/services/auth_service.dart';
+import 'package:quiznetic_flutter/widgets/legal_consent_notice.dart';
 
 typedef ContinueAsGuestAction = Future<void> Function(BuildContext context);
 typedef SignInChoiceAction = void Function(BuildContext context);
@@ -42,60 +47,101 @@ class EntryChoiceScreen extends StatelessWidget {
     final theme = Theme.of(context);
     return Scaffold(
       body: SafeArea(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 420),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Image.asset(
-                    'assets/images/logo-no-background.png',
-                    height: 120,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 420),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Image.asset(
+                        'assets/images/logo-no-background.png',
+                        height: 120,
+                        semanticLabel: BrandConfig.logoSemanticLabel,
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        'Welcome to QuizNetic',
+                        style: theme.textTheme.headlineMedium,
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        'Choose how you want to start.',
+                        style: theme.textTheme.bodyLarge,
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 28),
+                      ElevatedButton(
+                        onPressed: () async {
+                          unawaited(
+                            AnalyticsService.instance.logEvent(
+                              'entry_choice_selected',
+                              parameters: {'mode': 'guest'},
+                            ),
+                          );
+                          final handler =
+                              continueAsGuest ?? _defaultContinueAsGuest;
+                          try {
+                            await handler(context);
+                            unawaited(
+                              AnalyticsService.instance.logEvent(
+                                'auth_guest_continue_success',
+                              ),
+                            );
+                          } catch (e, stackTrace) {
+                            debugPrint(
+                              'EntryChoiceScreen guest continuation failed: $e',
+                            );
+                            debugPrintStack(stackTrace: stackTrace);
+                            unawaited(
+                              AnalyticsService.instance.logEvent(
+                                'auth_guest_continue_failed',
+                                parameters: {
+                                  'error_type': e.runtimeType.toString(),
+                                },
+                              ),
+                            );
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Unable to continue as guest. Please try again.',
+                                  ),
+                                ),
+                              );
+                            }
+                          }
+                        },
+                        child: const Text('Continue as Guest'),
+                      ),
+                      const SizedBox(height: 12),
+                      OutlinedButton(
+                        onPressed: () {
+                          unawaited(
+                            AnalyticsService.instance.logEvent(
+                              'entry_choice_selected',
+                              parameters: {'mode': 'account'},
+                            ),
+                          );
+                          final handler =
+                              onSignInChoice ?? _defaultSignInChoice;
+                          handler(context);
+                        },
+                        child: const Text('Sign In / Create Account'),
+                      ),
+                      const SizedBox(height: 12),
+                      const LegalConsentNotice(),
+                    ],
                   ),
-                  const SizedBox(height: 20),
-                  Text(
-                    'Welcome to QuizNetic',
-                    style: theme.textTheme.headlineMedium,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    'Choose how you want to start.',
-                    style: theme.textTheme.bodyLarge,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 28),
-                  ElevatedButton(
-                    onPressed: () async {
-                      final handler =
-                          continueAsGuest ?? _defaultContinueAsGuest;
-                      try {
-                        await handler(context);
-                      } catch (e) {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(
-                            context,
-                          ).showSnackBar(SnackBar(content: Text('Error: $e')));
-                        }
-                      }
-                    },
-                    child: const Text('Continue as Guest'),
-                  ),
-                  const SizedBox(height: 12),
-                  OutlinedButton(
-                    onPressed: () {
-                      final handler = onSignInChoice ?? _defaultSignInChoice;
-                      handler(context);
-                    },
-                    child: const Text('Sign In / Create Account'),
-                  ),
-                ],
+                ),
               ),
-            ),
-          ),
+            );
+          },
         ),
       ),
     );

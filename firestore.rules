@@ -9,25 +9,80 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == uid;
     }
 
-    function validUserScore() {
-      return request.resource.data.categoryKey is string
-          && request.resource.data.difficulty is string
-          && request.resource.data.bestScore is int
-          && request.resource.data.bestScore >= 0
-          && request.resource.data.source is string
-          && request.resource.data.updatedAt is timestamp;
+    function isAllowedCategory(categoryKey) {
+      return categoryKey in ['flag', 'capital'];
     }
 
-    function validLeaderboardEntry() {
+    function isAllowedDifficulty(difficulty) {
+      return difficulty in ['easy', 'intermediate', 'expert'];
+    }
+
+    function expectedTotalQuestions(difficulty) {
+      return difficulty == 'easy'
+          ? 15
+          : difficulty == 'intermediate'
+              ? 30
+              : difficulty == 'expert'
+                  ? 50
+                  : -1;
+    }
+
+    function isAllowedSource(source) {
+      return source in ['guest', 'account'];
+    }
+
+    function validUserScore(scoreId) {
       return request.resource.data.categoryKey is string
           && request.resource.data.difficulty is string
+          && isAllowedCategory(request.resource.data.categoryKey)
+          && isAllowedDifficulty(request.resource.data.difficulty)
+          && scoreId == (request.resource.data.categoryKey + '_' + request.resource.data.difficulty)
+          && request.resource.data.bestScore is int
+          && request.resource.data.bestScore >= 0
+          && request.resource.data.bestScore <= expectedTotalQuestions(request.resource.data.difficulty)
+          && request.resource.data.source is string
+          && isAllowedSource(request.resource.data.source)
+          && request.resource.data.updatedAt is timestamp
+          && request.resource.data.updatedAt == request.time
+          && (resource == null || request.resource.data.bestScore > resource.data.bestScore);
+    }
+
+    function validLeaderboardEntry(scope) {
+      return request.resource.data.categoryKey is string
+          && request.resource.data.difficulty is string
+          && isAllowedCategory(request.resource.data.categoryKey)
+          && isAllowedDifficulty(request.resource.data.difficulty)
+          && scope == (request.resource.data.categoryKey + '_' + request.resource.data.difficulty)
           && request.resource.data.score is int
           && request.resource.data.score >= 0
+          && request.resource.data.score <= expectedTotalQuestions(request.resource.data.difficulty)
           && request.resource.data.isAnonymous is bool
           && request.resource.data.displayName is string
           && request.resource.data.displayName.size() > 0
           && request.resource.data.displayName.size() <= 120
-          && request.resource.data.updatedAt is timestamp;
+          && request.resource.data.updatedAt is timestamp
+          && request.resource.data.updatedAt == request.time
+          && (resource == null || request.resource.data.score > resource.data.score);
+    }
+
+    function validScoreAttempt(attemptId) {
+      return request.resource.data.attemptId is string
+          && request.resource.data.attemptId == attemptId
+          && request.resource.data.categoryKey is string
+          && request.resource.data.difficulty is string
+          && isAllowedCategory(request.resource.data.categoryKey)
+          && isAllowedDifficulty(request.resource.data.difficulty)
+          && request.resource.data.correctCount is int
+          && request.resource.data.correctCount >= 0
+          && request.resource.data.totalQuestions is int
+          && request.resource.data.totalQuestions == expectedTotalQuestions(request.resource.data.difficulty)
+          && request.resource.data.correctCount <= request.resource.data.totalQuestions
+          && request.resource.data.status is string
+          && request.resource.data.status in ['accepted', 'flagged']
+          && request.resource.data.source is string
+          && isAllowedSource(request.resource.data.source)
+          && request.resource.data.createdAt is timestamp
+          && request.resource.data.createdAt == request.time;
     }
 
     match /users/{uid} {
@@ -36,14 +91,20 @@ service cloud.firestore {
 
       match /scores/{scoreId} {
         allow read: if isOwner(uid);
-        allow create, update: if isOwner(uid) && validUserScore();
+        allow create, update: if isOwner(uid) && validUserScore(scoreId);
         allow delete: if false;
+      }
+
+      match /attempts/{attemptId} {
+        allow read: if isOwner(uid);
+        allow create: if isOwner(uid) && validScoreAttempt(attemptId);
+        allow update, delete: if false;
       }
     }
 
     match /leaderboard/{scope}/entries/{uid} {
       allow read: if isSignedIn();
-      allow create, update: if isOwner(uid) && validLeaderboardEntry();
+      allow create, update: if isOwner(uid) && validLeaderboardEntry(scope);
       allow delete: if false;
     }
 

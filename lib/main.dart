@@ -3,7 +3,12 @@
  Title: Main
  Purpose: Initializes Firebase and boots the app with routes and theme.
 */
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:quiznetic_flutter/config/brand_config.dart';
+import 'package:quiznetic_flutter/services/analytics_service.dart';
+import 'package:quiznetic_flutter/services/crash_reporting_service.dart';
 import 'package:quiznetic_flutter/screens/difficulty_screen.dart';
 import 'package:quiznetic_flutter/screens/entry_choice_screen.dart';
 import 'package:quiznetic_flutter/screens/home_screen.dart';
@@ -13,6 +18,9 @@ import 'package:quiznetic_flutter/screens/user_profile_screen.dart';
 import 'package:quiznetic_flutter/screens/leaderboard_screen.dart';
 import 'package:quiznetic_flutter/screens/login_screen.dart';
 import 'package:quiznetic_flutter/screens/upgrade_account_screen.dart';
+import 'package:quiznetic_flutter/screens/legal_document_screen.dart';
+import 'package:quiznetic_flutter/screens/settings_screen.dart';
+import 'package:quiznetic_flutter/screens/about_screen.dart';
 import 'package:quiznetic_flutter/widgets/auth_guard.dart';
 import 'package:quiznetic_flutter/widgets/score_sync_scope.dart';
 import 'screens/splash_screen.dart';
@@ -23,7 +31,25 @@ import 'package:firebase_core/firebase_core.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  runApp(const QuizNetic());
+  final crashReportingService = CrashReportingService();
+  final analyticsService = AnalyticsService.instance;
+  await crashReportingService.initialize();
+  await analyticsService.initialize();
+
+  await runZonedGuarded(
+    () async {
+      runApp(const QuizNetic());
+    },
+    (error, stackTrace) {
+      unawaited(
+        crashReportingService.recordUnhandledError(
+          error,
+          stackTrace,
+          fatal: true,
+        ),
+      );
+    },
+  );
 }
 
 class QuizNetic extends StatelessWidget {
@@ -35,24 +61,26 @@ class QuizNetic extends StatelessWidget {
   Widget build(BuildContext context) {
     // Build the ColorScheme once:
     final base = ColorScheme.fromSeed(
-      seedColor: const Color(0xFF6A1B9A),
+      seedColor: BrandConfig.seedColor,
       brightness: Brightness.light,
     );
 
     // Override just the roles we want:
     final scheme = base.copyWith(
-      secondary: Colors.green, // correct-answer green
+      secondary: BrandConfig.correctAnswerColor, // correct-answer green
       onSecondary: Colors.white, // text on the green
-      error: Colors.red, // wrong-answer red
+      error: BrandConfig.wrongAnswerColor, // wrong-answer red
       onError: Colors.white, // text on red
-      surfaceContainerHighest: Colors.grey.shade300, // unselected button grey
+      surfaceContainerHighest:
+          BrandConfig.neutralSurfaceColor, // unselected button grey
       onSurfaceVariant: Colors.black87, // text on grey
     );
 
     return ScoreSyncScope(
       child: MaterialApp(
-        title: 'QuizNetic',
+        title: BrandConfig.appName,
         initialRoute: SplashScreen.routeName,
+        navigatorObservers: [AnalyticsNavigationObserver()],
         routes: {
           SplashScreen.routeName: (_) => const SplashScreen(),
           HomeScreen.routeName: (_) => const AuthGuard(child: HomeScreen()),
@@ -68,6 +96,10 @@ class QuizNetic extends StatelessWidget {
               const AuthGuard(allowAnonymous: false, child: HomeScreen()),
           EntryChoiceScreen.routeName: (_) => const EntryChoiceScreen(),
           LoginScreen.routeName: (_) => const LoginScreen(),
+          LegalDocumentScreen.routeName: (_) => const LegalDocumentScreen(),
+          SettingsScreen.routeName: (_) =>
+              const AuthGuard(child: SettingsScreen()),
+          AboutScreen.routeName: (_) => const AuthGuard(child: AboutScreen()),
         },
         theme: ThemeData(
           // Opt in to Material 3 so background/onBackground are honored:

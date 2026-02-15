@@ -16,48 +16,70 @@ It is intended to be source material for generated docs (including `README.md`).
 - `firebase_core`
 - `firebase_auth`
 - `cloud_firestore`
+- `firebase_analytics` (screen views + product funnel events)
+- `firebase_crashlytics` (runtime crash capture + release diagnostics)
 - `firebase_ui_auth` + OAuth provider packages (from forked repo ref)
 - `shared_preferences`
+- `cloud_functions` (backend score-submission path behind feature flag)
 
 ## Codebase Layout
 
 - `lib/main.dart`: app bootstrap, Firebase init, route registration, global theme.
-- `lib/screens/*`: UI flows (splash, entry choice, login, home, leaderboard, difficulty, quiz, results, profile, upgrade).
+- `lib/services/analytics_service.dart`: Firebase Analytics wiring and route-observer screen tracking.
+- `lib/services/crash_reporting_service.dart`: Crashlytics wiring and unhandled-error capture hooks.
+- `lib/config/brand_config.dart`: app branding tokens (app name, core colors, web/splash color values).
+- `test/unit/config/accessibility_contrast_test.dart`: WCAG AA contrast guardrails for core theme pairs.
+- `test/widget/screens/accessibility_text_scaling_test.dart`: dynamic type baseline coverage for key screens.
+- `lib/screens/*`: UI flows (splash, entry choice, login, legal docs, home, leaderboard, difficulty, quiz, results, profile, upgrade).
 - `lib/services/*`: auth, user creation checks, score persistence/retrieval, leaderboard reads, local profile helper.
 - `lib/data/*`: quiz content loaders (`flag_loader.dart`, `capital_loader.dart`) and sample data.
 - `lib/models/*`: domain models (`FlagQuestion`).
 - `lib/widgets/*`: shared UI wrappers (`AuthGuard`).
+- `docs/BLAZE_FEATURE_FLAGS.md`: operational guidance for Blaze-dependent feature flags.
+- `docs/RELEASE_OPS_RUNBOOK.md`: release safety runbook (rollback steps + kill-switch checklist).
+- `docs/ALERT_ROUTING_AND_KPI_THRESHOLDS.md`: release alert severity policy, routing matrix, and KPI trigger thresholds.
+- `docs/INCIDENT_POSTMORTEM_TEMPLATE.md`: standardized incident write-up template, ownership model, and follow-up cadence.
+- `docs/BRANDING_ASSETS.md`: branding pipeline (icon/splash source assets + generation/QA workflow).
+- `docs/ACCESSIBILITY_AUDIT.md`: baseline accessibility audit coverage, gaps, and prioritized improvements.
 
 ## Route Map
 
 - `/splash` -> `SplashScreen`
 - `/entry` -> `EntryChoiceScreen`
 - `/login` -> `LoginScreen`
+- `/legal/document` -> `LegalDocumentScreen` (opened from consent links on entry/login/upgrade flows)
 - `/home` -> `HomeScreen`
 - `/leaderboard` -> `LeaderboardScreen`
 - `/difficulty` -> `DifficultyScreen`
 - `/quiz` -> `QuizScreen`
 - `/result` -> `ResultScreen`
 - `/profile` -> `UserProfileScreen`
+- `/settings` -> `SettingsScreen`
+- `/about` -> `AboutScreen`
 - `/upgrade` -> guarded route; anonymous users see upgrade screen, authenticated non-anonymous users are redirected to home.
 
 ## Runtime Flow (Current)
 
 1. `main()` initializes Firebase.
-2. App starts on splash route.
-3. Splash checks auth state after delay and navigates to home (if user exists) or entry choice.
-4. If there is no session, entry-choice screen presents explicit user choice:
+2. Crash reporting service configures Crashlytics collection and unhandled-error hooks.
+3. Analytics service configures collection toggle and route observer screen-view logging.
+4. App starts on splash route.
+5. Splash checks auth state after delay and navigates to home (if user exists) or entry choice.
+6. If there is no session, entry-choice screen presents explicit user choice:
    - Continue as guest
    - Sign in / create account
-5. If user selects sign-in, app routes to provider login screen.
-6. On explicit auth choice, app ensures `users/{uid}` exists in Firestore.
-7. Auth-guarded routes only allow authenticated users (guest or signed-in) to access gameplay/profile screens.
-8. Home currently exposes two categories: `flag` and `capital`, shows a primary guest conversion CTA that routes anonymous users to `/upgrade`, and provides entry into global leaderboard.
-9. Difficulty selects question count and difficulty key.
-10. Difficulty also offers explicit "Change Quiz Type" action back to home category selection.
-11. Quiz loads assets, randomizes questions/options, tracks score.
-12. Results screen saves score, renders session summary, blocks back navigation via `PopScope`, and offers explicit "Change Quiz Type" back to category selection.
-13. Profile screen fetches stored user scores from Firestore.
+7. If user selects sign-in, app routes to provider login screen.
+8. Entry, login, and upgrade flows present legal consent copy with in-app links to Terms and Privacy documents.
+9. On explicit auth choice, app ensures `users/{uid}` exists in Firestore.
+10. Auth-guarded routes only allow authenticated users (guest or signed-in) to access gameplay/profile screens.
+11. Home currently exposes two categories: `flag` and `capital`, shows a primary guest conversion CTA that routes anonymous users to `/upgrade`, and provides entry into global leaderboard.
+12. Difficulty selects question count and difficulty key.
+13. Difficulty also offers explicit "Change Quiz Type" action back to home category selection.
+14. Quiz loads assets, randomizes questions/options, tracks score.
+15. Results screen saves score, renders session summary, blocks back navigation via `PopScope`, and offers explicit "Change Quiz Type" back to category selection.
+16. Profile screen fetches stored user scores from Firestore and exposes quick links to settings/about.
+17. Settings screen provides account controls, sign-out flow, legal links, and app preference toggles.
+18. About screen provides app metadata/support contact and legal links.
 
 ## Quiz Engine
 
@@ -76,6 +98,8 @@ It is intended to be source material for generated docs (including `README.md`).
   - easy: 15
   - intermediate: 30
   - expert: 50
+- Quiz UX provides non-color answer feedback (icon + text) after each selection.
+- Quiz progress and result summary are exposed via live semantic announcements.
 
 ## Data Model
 
@@ -83,11 +107,12 @@ Firestore collections in use:
 
 - `users/{uid}`
 - `users/{uid}/scores/{category_difficulty}`
+- `users/{uid}/attempts/{attemptId}`
 - `leaderboard/{category_difficulty}/entries/{uid}`
 
 Firestore config assets in repo:
 
-- `firestore.rules` (auth + ownership rules for `users`, nested `scores`, and `leaderboard/entries`)
+- `firestore.rules` (auth + ownership rules for `users`, nested `scores`/`attempts`, and `leaderboard/entries`)
 - `firestore.indexes.json` (composite index for leaderboard ranking query: `score desc`, `updatedAt asc`)
 - `firebase.json` maps Firestore deploy targets to these files
 
@@ -107,6 +132,17 @@ Current leaderboard entry fields:
 - `isAnonymous`
 - `displayName`
 - `updatedAt`
+
+Current score-attempt fields:
+
+- `attemptId`
+- `categoryKey`
+- `difficulty`
+- `correctCount`
+- `totalQuestions`
+- `status`
+- `source` (`guest` or `account`)
+- `createdAt`
 
 Anonymous user doc fields (created by `UserChecker`):
 
@@ -136,6 +172,17 @@ Anonymous user doc fields (created by `UserChecker`):
   - provider linking for Email/Google/Apple using FirebaseUI credential-link flows
   - guest UID continuity guard so upgraded account keeps the original guest identity
   - post-link best-effort pending-score sync
+- `SettingsScreen` provides:
+  - account/session details and sign-out action
+  - legal deep links and basic gameplay preference toggles
+- `AboutScreen` provides:
+  - app version/support metadata
+  - legal deep links (Terms and Privacy)
+- `LegalDocumentScreen` provides:
+  - in-app rendering for local Terms and Privacy text assets
+  - a fallback state when route args are missing
+- `LegalConsentNotice` widget provides:
+  - shared consent copy and deep links used by entry, login, and upgrade surfaces
 - `AuthGuard` supports:
   - unauthenticated -> entry choice
   - anonymous disallowed -> upgrade screen
@@ -146,6 +193,7 @@ Anonymous user doc fields (created by `UserChecker`):
 Current implementation uses a local-first repository:
 
 - `LocalFirstScoreRepository` (app-facing):
+  - validates score payload bounds before queueing/sync
   - saves score attempts locally first
   - stores local best-score projections per `category+difficulty`
   - attempts immediate Firestore sync for pending records
@@ -159,6 +207,11 @@ Current implementation uses a local-first repository:
 - `AuthService` and login flow:
   - trigger best-effort pending sync after anonymous sign-in, provider sign-in, and account-link success
 - `ScoreService` (remote adapter):
+  - validates category/difficulty/question-count/score bounds before remote write
+  - callable submit path (`submitScore`) is gated by `ENABLE_BACKEND_SUBMIT_SCORE` and defaults off on Spark
+  - uses direct Firestore write path when backend flag is disabled
+  - emits analytics events for score submission success/failure/fallback pathing
+  - records idempotent score attempts (`users/{uid}/attempts/{attemptId}`)
   - saves personal best docs (`users/{uid}/scores/{category_difficulty}`)
   - writes leaderboard docs only when best score improves (one row per uid/category+difficulty)
   - tags leaderboard entries with anonymous status and display name
@@ -214,9 +267,11 @@ Current implementation uses a local-first repository:
 
 - Keep:
   - `users/{uid}/scores/{category_difficulty}`
+  - `users/{uid}/attempts/{attemptId}`
   - `leaderboard/{category_difficulty}/entries/{uid}`
 - Add/standardize fields:
   - score docs: `bestScore`, `updatedAt`, `source` (`guest` or `account`)
+  - attempt docs: `attemptId`, `correctCount`, `totalQuestions`, `status`, `source`, `createdAt`
   - leaderboard docs: `score`, `updatedAt`, `isAnonymous`, `displayName`
 
 ### Leaderboard Semantics (Current)
@@ -289,6 +344,11 @@ Current implementation uses a local-first repository:
 ## Known Constraints / Cleanup Targets
 
 - Google sign-in requires environment-specific `--dart-define=GOOGLE_OAUTH_CLIENT_ID=...` in local/dev/CI builds.
+- Apple sign-in rollout is controlled by `--dart-define=ENABLE_APPLE_SIGN_IN=true|false` (default `false`).
+- Apple provider release setup requires Apple Developer + Firebase console configuration (runbook: `docs/APPLE_SIGN_IN_SETUP.md`).
+- Backend-authoritative score submission requires
+  `--dart-define=ENABLE_BACKEND_SUBMIT_SCORE=true` and Blaze prerequisites
+  documented in `docs/BLAZE_FEATURE_FLAGS.md`.
 - Logo quiz category is intentionally deferred until curated/licensed logo assets and answer metadata mapping are available.
 - `main.dart` still contains template `MyHomePage` counter code that is not used by app routing.
 - `firebase_options.dart` is configured for Android/iOS/Web; macOS/Linux/Windows throw unsupported errors unless configured.

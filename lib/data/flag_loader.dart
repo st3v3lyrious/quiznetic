@@ -6,6 +6,7 @@
 import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/services.dart' show rootBundle;
+import 'flag_description_loader.dart';
 import '../models/flag_question.dart';
 
 /// Loads every file under assets/flags/ and builds basic FlagQuestion objects.
@@ -15,20 +16,21 @@ Future<List<FlagQuestion>> loadAllFlags() async {
   // 1) Load the generated manifest
   final manifestJson = await rootBundle.loadString('AssetManifest.json');
   final Map<String, dynamic> manifestMap = json.decode(manifestJson);
+  final descriptions = await loadFlagDescriptions();
 
   // 2) Filter for your flags folder
-  final flagPaths =
-      manifestMap.keys
-          .where((path) => path.startsWith('assets/flags/'))
-          .toList();
+  final flagPaths = manifestMap.keys
+      .where((path) => path.startsWith('assets/flags/'))
+      .toList();
 
   // 3) Build your questions
   return flagPaths.map((path) {
     // Derive the “country name” from the file name:
     // e.g. assets/flags/united_states.png → United States
     final fileName = path.split('/').last.split('.').first;
+    final countryKey = _normalizeCountryKey(fileName);
     final correctAnswer = fileName
-        .split('_')
+        .split(RegExp(r'[_-]+'))
         .map((word) => word[0].toUpperCase() + word.substring(1))
         .join(' ');
 
@@ -37,6 +39,7 @@ Future<List<FlagQuestion>> loadAllFlags() async {
       imagePath: path,
       correctAnswer: correctAnswer,
       options: [], // you can randomize a few others from this list below
+      visualDescription: descriptions[countryKey],
     );
   }).toList();
 }
@@ -48,9 +51,8 @@ List<FlagQuestion> prepareQuiz(List<FlagQuestion> all) {
 
   return pool.map((q) {
     // pick 3 wrong answers
-    final wrongs =
-        all.where((f) => f.correctAnswer != q.correctAnswer).toList()
-          ..shuffle(rand);
+    final wrongs = all.where((f) => f.correctAnswer != q.correctAnswer).toList()
+      ..shuffle(rand);
 
     final opts = <String>[
       q.correctAnswer,
@@ -63,6 +65,15 @@ List<FlagQuestion> prepareQuiz(List<FlagQuestion> all) {
       imagePath: q.imagePath,
       correctAnswer: q.correctAnswer,
       options: opts,
+      visualDescription: q.visualDescription,
     );
   }).toList();
+}
+
+String _normalizeCountryKey(String raw) {
+  return raw
+      .toLowerCase()
+      .replaceAll(RegExp(r'[^a-z0-9]+'), ' ')
+      .trim()
+      .replaceAll(RegExp(r'\s+'), ' ');
 }

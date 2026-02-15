@@ -4,9 +4,11 @@
  Purpose: Shows quiz categories, guest upgrade CTA, and routes to difficulty selection.
 */
 import 'package:flutter/material.dart';
+import 'package:quiznetic_flutter/config/brand_config.dart';
 import 'package:quiznetic_flutter/services/auth_service.dart';
 import 'difficulty_screen.dart';
 import 'leaderboard_screen.dart';
+import 'settings_screen.dart';
 import 'upgrade_account_screen.dart';
 import 'user_profile_screen.dart';
 // Later, you’ll have other screens like 'logo_quiz_screen.dart'
@@ -64,6 +66,13 @@ class HomeScreen extends StatelessWidget {
               Navigator.pushNamed(context, UserProfileScreen.routeName);
             },
           ),
+          IconButton(
+            icon: const Icon(Icons.settings),
+            tooltip: 'Settings',
+            onPressed: () {
+              Navigator.pushNamed(context, SettingsScreen.routeName);
+            },
+          ),
         ],
       ),
       body: SafeArea(
@@ -81,6 +90,7 @@ class HomeScreen extends StatelessWidget {
                     child: Image.asset(
                       'assets/images/logo-no-background.png',
                       height: 120,
+                      semanticLabel: BrandConfig.logoSemanticLabel,
                     ),
                   ),
                   const SizedBox(height: 24),

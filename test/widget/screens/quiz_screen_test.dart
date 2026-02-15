@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:quiznetic_flutter/config/brand_config.dart';
 import 'package:quiznetic_flutter/models/flag_question.dart';
 import 'package:quiznetic_flutter/screens/quiz_screen.dart';
 import 'package:quiznetic_flutter/screens/result_screen.dart';
+import 'package:quiznetic_flutter/services/accessibility_preferences.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   final question = FlagQuestion(
     imagePath: 'assets/flags/France.png',
     correctAnswer: 'France',
     options: ['France', 'Italy', 'Spain', 'Germany'],
+    visualDescription:
+        'Three equal vertical bands with no emblem or central symbol.',
   );
 
   final capitalQuestion = FlagQuestion(
@@ -21,8 +26,12 @@ void main() {
     WidgetTester tester, {
     String categoryKey = 'flag',
     FlagQuestion? injectedQuestion,
+    bool showFlagDescriptions = false,
   }) async {
     final q = injectedQuestion ?? question;
+    SharedPreferences.setMockInitialValues({
+      AccessibilityPreferences.showFlagDescriptionsKey: showFlagDescriptions,
+    });
     tester.view.devicePixelRatio = 1.0;
     tester.view.physicalSize = const Size(1200, 2200);
     addTearDown(() {
@@ -66,6 +75,11 @@ void main() {
     expect(find.text('Italy'), findsOneWidget);
     expect(find.text('Spain'), findsOneWidget);
     expect(find.text('Germany'), findsOneWidget);
+    expect(find.byKey(const Key('quiz-progress-semantics')), findsOneWidget);
+    expect(
+      find.bySemanticsLabel(BrandConfig.quizQuestionImageSemanticLabel),
+      findsOneWidget,
+    );
   });
 
   testWidgets(
@@ -89,8 +103,42 @@ void main() {
     await tester.tap(find.text('France'));
     await tester.pumpAndSettle();
 
+    expect(find.byKey(const Key('quiz-answer-feedback-card')), findsOneWidget);
+    expect(find.text('Correct'), findsOneWidget);
+    expect(find.text('France is the right answer.'), findsOneWidget);
     expect(find.text('See Results'), findsOneWidget);
   });
+
+  testWidgets(
+    'shows describe-flag affordance when accessibility setting is on',
+    (tester) async {
+      await pumpQuiz(tester, showFlagDescriptions: true);
+
+      final buttonFinder = find.byKey(QuizScreen.describeFlagButtonKey);
+      expect(buttonFinder, findsOneWidget);
+      expect(find.byKey(QuizScreen.flagDescriptionCardKey), findsNothing);
+
+      await tester.tap(buttonFinder);
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(QuizScreen.flagDescriptionCardKey), findsOneWidget);
+      expect(
+        find.text(
+          'Three equal vertical bands with no emblem or central symbol.',
+        ),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
+    'hides describe-flag affordance when accessibility setting is off',
+    (tester) async {
+      await pumpQuiz(tester, showFlagDescriptions: false);
+
+      expect(find.byKey(QuizScreen.describeFlagButtonKey), findsNothing);
+    },
+  );
 
   testWidgets('navigates to results with expected arguments', (tester) async {
     await pumpQuiz(tester);

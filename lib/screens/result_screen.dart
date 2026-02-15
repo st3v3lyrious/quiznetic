@@ -3,9 +3,12 @@
  Title: Result Screen
  Purpose: Shows result summary and next actions after a quiz.
 */
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:quiznetic_flutter/screens/upgrade_account_screen.dart';
+import 'package:quiznetic_flutter/services/analytics_service.dart';
 import 'package:quiznetic_flutter/services/auth_service.dart';
 import 'package:quiznetic_flutter/services/leaderboard_band_service.dart';
 import 'package:quiznetic_flutter/services/score_repository.dart';
@@ -58,9 +61,12 @@ class ResultScreen extends StatefulWidget {
 }
 
 class _ResultScreenState extends State<ResultScreen> {
+  static const resultSummarySemanticsKey = Key('result-summary-semantics');
+
   late Future<_ResultData> _resultDataFuture;
   bool _didInit = false;
   bool _dismissGuestCta = false;
+  bool _hasLoggedQuizCompleted = false;
 
   /// Loads args once, saves score, and resolves the displayed high score.
   @override
@@ -75,6 +81,24 @@ class _ResultScreenState extends State<ResultScreen> {
       }
 
       final args = route.settings.arguments as ResultScreenArgs;
+      if (!_hasLoggedQuizCompleted) {
+        _hasLoggedQuizCompleted = true;
+        final accuracyPercent = args.total > 0
+            ? ((args.score / args.total) * 100).round()
+            : 0;
+        unawaited(
+          AnalyticsService.instance.logEvent(
+            'quiz_completed',
+            parameters: {
+              'category': args.categoryKey,
+              'difficulty': args.difficulty,
+              'score': args.score,
+              'total_questions': args.total,
+              'accuracy_percent': accuracyPercent,
+            },
+          ),
+        );
+      }
       final scoreRepository =
           widget.scoreRepository ?? LocalFirstScoreRepository();
       final saveScore =
@@ -257,6 +281,10 @@ class _ResultScreenState extends State<ResultScreen> {
             final highScore = resultData.highScore;
             final isNew = args.score >= highScore;
             final guestBand = _dismissGuestCta ? null : resultData.guestBand;
+            final resultSemanticsLabel =
+                'You scored ${args.score} out of ${args.total}. '
+                '$pct percent. '
+                '${isNew ? 'New high score: $highScore.' : 'High score: $highScore.'}';
 
             return LayoutBuilder(
               builder: (context, constraints) {
@@ -273,33 +301,43 @@ class _ResultScreenState extends State<ResultScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(
-                            'You scored ${args.score} out of ${args.total}',
-                            style: const TextStyle(fontSize: 24),
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            '$pct%',
-                            style: const TextStyle(
-                              fontSize: 48,
-                              fontWeight: FontWeight.bold,
+                          Semantics(
+                            key: resultSummarySemanticsKey,
+                            container: true,
+                            liveRegion: true,
+                            label: resultSemanticsLabel,
+                            child: Column(
+                              children: [
+                                Text(
+                                  'You scored ${args.score} out of ${args.total}',
+                                  style: const TextStyle(fontSize: 24),
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  '$pct%',
+                                  style: const TextStyle(
+                                    fontSize: 48,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 24),
+                                Text(
+                                  isNew
+                                      ? '🎉 New High Score: $highScore!'
+                                      : 'High Score: $highScore',
+                                  style: const TextStyle(fontSize: 20),
+                                ),
+                                if (isNew) ...[
+                                  const SizedBox(height: 8),
+                                  const Icon(
+                                    Icons.emoji_events,
+                                    color: Colors.amber,
+                                    size: 32,
+                                  ),
+                                ],
+                              ],
                             ),
                           ),
-                          const SizedBox(height: 24),
-                          Text(
-                            isNew
-                                ? '🎉 New High Score: $highScore!'
-                                : 'High Score: $highScore',
-                            style: const TextStyle(fontSize: 20),
-                          ),
-                          if (isNew) ...[
-                            const SizedBox(height: 8),
-                            const Icon(
-                              Icons.emoji_events,
-                              color: Colors.amber,
-                              size: 32,
-                            ),
-                          ],
                           if (guestBand != null) ...[
                             const SizedBox(height: 24),
                             Card(

@@ -11,6 +11,11 @@ Use this as an editable feature checklist.
 - [x] Randomized quiz generation from `assets/flags/`
 - [x] Per-session score tracking and progress indicator
 - [x] Results flow prevents back navigation and requires explicit follow-up action buttons
+- [x] Quiz answer feedback includes non-color states (icon + text)
+- [x] Quiz progress and result summary expose live semantic announcements
+- [x] Optional `Describe Flag` accessibility affordance (opt-in via Settings)
+- [x] Flag-description metadata quality gate (unit checks for description format + minimum asset coverage)
+- [x] Curated flag-description coverage for all bundled flag assets (`263/263`)
 - [x] Quiz-type switching action from difficulty/result screens back to category selection
 
 ## Accounts And Auth
@@ -35,6 +40,9 @@ Use this as an editable feature checklist.
 - [x] Save user best score per category+difficulty in Firestore
 - [x] Save global leaderboard entry in Firestore (best-score semantics, one row per uid)
 - [x] Leaderboard entries include anonymous tagging and normalized display names
+- [x] Score submission validator enforces category, difficulty, question-count, and score bounds
+- [x] Idempotent score-attempt records are persisted under users/{uid}/attempts/{attemptId}
+- [x] Firestore rules enforce monotonic best-score updates, scope/doc-id consistency, and server-managed projection/attempt timestamps (`updatedAt`, `createdAt`)
 - [x] Leaderboard band service for top 10/20/100 rank messaging
 - [x] Anonymous guest conversion CTA on result screen using leaderboard band messaging
 - [x] Anonymous guest conversion CTA on profile screen using best-band leaderboard messaging
@@ -46,30 +54,40 @@ Use this as an editable feature checklist.
 
 ## Planned Features
 
-- [ ] Add Guess the Celebrity quiz category
-- [ ] Add Guess the Song from Lyrics quiz category
+- [ ] Add Guess the Celebrity quiz category (Deferred outside MVP scope)
+- [ ] Add Guess the Song from Lyrics quiz category (Deferred outside MVP scope)
 - [ ] Add Guess the Anime quiz category
 - [ ] Add Apple sign-in as a production-ready auth option
+  - [x] Runtime provider gating + rollback flag (`ENABLE_APPLE_SIGN_IN`, default `false`)
+  - [x] iOS/macOS entitlement baseline committed for Sign in with Apple
+  - [ ] Apple Developer + Firebase provider credentials/setup still required per environment
 - [x] Implement a global leaderboard screen (with UX/design, category+difficulty filters, and ranking presentation)
 - [ ] Create branded app icons for all target platforms
 - [ ] Create branded splash screens for all target platforms
-- [ ] Create a Settings screen
-- [ ] Create an About screen
-- [ ] Add product analytics instrumentation
-- [ ] Add crash reporting
+- [x] Configure branding asset pipeline (launcher icons + native splash generation runbook)
+- [x] Create a Settings screen
+- [x] Create an About screen
+- [x] Add product analytics instrumentation (baseline auth + quiz + score funnel events)
+- [x] Add analytics event breadcrumbs for crash triage (screen views + critical actions)
+- [x] Add crash reporting (Crashlytics baseline with compile-time kill switch)
 - [ ] Integrate monetization via ads
 - [ ] Integrate monetization via in-app purchases (IAP)
 - [ ] Improve UI/UX polish (animations, progress bar behavior, answer feedback styling)
 - [ ] Add content licensing + attribution pipeline for celebrity/song/anime datasets
 - [x] Harden Firestore security rules with automated rule tests
 - [ ] Add leaderboard integrity protections (anti-cheat heuristics, abuse controls, write throttling)
-- [ ] Add CI/CD quality gates (analyze, unit/widget/integration/e2e, coverage threshold)
-- [ ] Add privacy and legal readiness artifacts (Privacy Policy, Terms, consent flow, age-rating metadata)
+- [x] Add CI/CD quality gates (analyze, unit/widget/integration/e2e, coverage threshold + branch protection required checks)
+- [x] Add privacy and legal readiness baseline (Privacy Policy, Terms, and consent links in entry/login/upgrade flows)
 - [ ] Add Remote Config feature flags for staged rollout
 - [ ] Implement localization by default (i18n-ready string resources + locale resolution)
 - [ ] Add language selection in Settings (persisted user preference + fallback locale)
-- [ ] Add accessibility baseline (screen-reader labels, contrast checks, text-scaling support)
+- [x] Add accessibility baseline (screen-reader labels, contrast checks, text-scaling support)
 - [ ] Add release operations readiness (crash alert routing, KPI dashboard, rollback playbook)
+  - [x] Baseline runbook + kill-switch checklist documented (`docs/RELEASE_OPS_RUNBOOK.md`)
+  - [x] Alert routing + KPI threshold policy documented (`docs/ALERT_ROUTING_AND_KPI_THRESHOLDS.md`)
+  - [x] CI failure webhook routing automation added (optional `ALERT_WEBHOOK_URL`)
+  - [x] Incident postmortem template + cadence documented (`docs/INCIDENT_POSTMORTEM_TEMPLATE.md`)
+  - [ ] Dedicated on-call paging + KPI dashboard automation pending
 - [ ] Add user feedback collection loop (in-app feedback form + categorization + roadmap review input)
 - [ ] Launch MVP
 - [ ] Add Logo quiz category (Deferred: blocked by logo asset dataset + answer metadata map)
