@@ -8,7 +8,7 @@ import {
   assertSucceeds,
   initializeTestEnvironment,
 } from '@firebase/rules-unit-testing';
-import { doc, getDoc, setDoc, Timestamp } from 'firebase/firestore';
+import { doc, getDoc, serverTimestamp, setDoc, Timestamp } from 'firebase/firestore';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -39,7 +39,7 @@ function scorePayload({ categoryKey = 'flag', difficulty = 'easy', bestScore = 1
     difficulty,
     bestScore,
     source: 'guest',
-    updatedAt: Timestamp.now(),
+    updatedAt: serverTimestamp(),
   };
 }
 
@@ -56,7 +56,7 @@ function leaderboardPayload({
     score,
     isAnonymous,
     displayName: `Guest-${uid.slice(0, 6)}`,
-    updatedAt: Timestamp.now(),
+    updatedAt: serverTimestamp(),
   };
 }
 
@@ -176,6 +176,18 @@ describe('Firestore security rules', () => {
     );
   });
 
+  test('score payload with client-provided updatedAt is rejected', async () => {
+    const db = testEnv.authenticatedContext('userA').firestore();
+    const scoreDoc = doc(db, 'users/userA/scores/flag_easy');
+
+    await assertFails(
+      setDoc(scoreDoc, {
+        ...scorePayload(),
+        updatedAt: Timestamp.fromDate(new Date('2000-01-01T00:00:00.000Z')),
+      }),
+    );
+  });
+
   test('owner can write own leaderboard entry and authenticated users can read', async () => {
     const ownerDb = testEnv.authenticatedContext('userA').firestore();
     const entryDoc = doc(ownerDb, 'leaderboard/flag_easy/entries/userA');
@@ -209,6 +221,18 @@ describe('Firestore security rules', () => {
     const entryDoc = doc(db, 'leaderboard/flag_easy/entries/userB');
 
     await assertFails(setDoc(entryDoc, leaderboardPayload({ uid: 'userB' })));
+  });
+
+  test('leaderboard payload with client-provided updatedAt is rejected', async () => {
+    const db = testEnv.authenticatedContext('userA').firestore();
+    const entryDoc = doc(db, 'leaderboard/flag_easy/entries/userA');
+
+    await assertFails(
+      setDoc(entryDoc, {
+        ...leaderboardPayload(),
+        updatedAt: Timestamp.fromDate(new Date('2000-01-01T00:00:00.000Z')),
+      }),
+    );
   });
 
   test('unauthenticated user cannot read leaderboard entry', async () => {

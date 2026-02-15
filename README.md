@@ -49,7 +49,7 @@ Use this as an editable feature checklist.
 - [x] Leaderboard entries include anonymous tagging and normalized display names
 - [x] Score submission validator enforces category, difficulty, question-count, and score bounds
 - [x] Idempotent score-attempt records are persisted under users/{uid}/attempts/{attemptId}
-- [x] Firestore rules enforce monotonic best-score updates and scope/doc-id consistency
+- [x] Firestore rules enforce monotonic best-score updates, scope/doc-id consistency, and server-managed `updatedAt` timestamps
 - [x] Leaderboard band service for top 10/20/100 rank messaging
 - [x] Anonymous guest conversion CTA on result screen using leaderboard band messaging
 - [x] Anonymous guest conversion CTA on profile screen using best-band leaderboard messaging

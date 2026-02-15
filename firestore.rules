@@ -43,6 +43,7 @@ service cloud.firestore {
           && request.resource.data.source is string
           && isAllowedSource(request.resource.data.source)
           && request.resource.data.updatedAt is timestamp
+          && request.resource.data.updatedAt == request.time
           && (resource == null || request.resource.data.bestScore > resource.data.bestScore);
     }
 
@@ -60,6 +61,7 @@ service cloud.firestore {
           && request.resource.data.displayName.size() > 0
           && request.resource.data.displayName.size() <= 120
           && request.resource.data.updatedAt is timestamp
+          && request.resource.data.updatedAt == request.time
           && (resource == null || request.resource.data.score > resource.data.score);
     }
 
