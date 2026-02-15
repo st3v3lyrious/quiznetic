@@ -108,7 +108,6 @@ jobs:
       - firestore_rules_tests
     if: >
       always() &&
-      secrets.ALERT_WEBHOOK_URL != '' &&
       (
         needs.analyze.result == 'failure' ||
         needs.tests_and_coverage.result == 'failure' ||
@@ -127,6 +126,10 @@ jobs:
           SERVER_URL: ${{ github.server_url }}
         run: |
           set -euo pipefail
+          if [ -z "${ALERT_WEBHOOK_URL}" ]; then
+            echo "ALERT_WEBHOOK_URL is not set; skipping alert webhook."
+            exit 0
+          fi
           short_sha="${SHA:0:7}"
           run_url="${SERVER_URL}/${REPO}/actions/runs/${RUN_ID}"
           message="Quiznetic CI alert: ${WORKFLOW_NAME} failed on ${REF_NAME} (${short_sha}). Run: ${run_url}"
