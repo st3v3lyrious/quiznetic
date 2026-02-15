@@ -81,7 +81,8 @@ service cloud.firestore {
           && request.resource.data.status in ['accepted', 'flagged']
           && request.resource.data.source is string
           && isAllowedSource(request.resource.data.source)
-          && request.resource.data.createdAt is timestamp;
+          && request.resource.data.createdAt is timestamp
+          && request.resource.data.createdAt == request.time;
     }
 
     match /users/{uid} {

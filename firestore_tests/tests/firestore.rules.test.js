@@ -76,7 +76,7 @@ function attemptPayload({
     totalQuestions,
     status,
     source: 'guest',
-    createdAt: Timestamp.now(),
+    createdAt: serverTimestamp(),
   };
 }
 
@@ -284,6 +284,19 @@ describe('Firestore security rules', () => {
       setDoc(
         doc(db, 'users/userA/attempts/attempt-1'),
         attemptPayload({ correctCount: 20 }),
+      ),
+    );
+  });
+
+  test('attempt payload with client-provided createdAt is rejected', async () => {
+    const db = testEnv.authenticatedContext('userA').firestore();
+    await assertFails(
+      setDoc(
+        doc(db, 'users/userA/attempts/attempt-1'),
+        {
+          ...attemptPayload(),
+          createdAt: Timestamp.fromDate(new Date('2000-01-01T00:00:00.000Z')),
+        },
       ),
     );
   });
