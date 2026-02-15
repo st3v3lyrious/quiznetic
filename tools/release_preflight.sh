@@ -28,6 +28,16 @@ assert_file_exists() {
   fi
 }
 
+contains_text() {
+  local needle="$1"
+  local file="$2"
+  if command -v rg >/dev/null 2>&1; then
+    rg -q --fixed-strings "${needle}" "${file}"
+    return
+  fi
+  grep -qF -- "${needle}" "${file}"
+}
+
 check_release_config() {
   echo "Validating release configuration and documentation prerequisites..."
 
@@ -40,12 +50,12 @@ check_release_config() {
   assert_file_exists "lib/config/app_config.dart"
   assert_file_exists "test/unit/config/app_config_test.dart"
 
-  if ! rg -q "Manual pre-deployment checklist" docs/ROADMAP.md; then
+  if ! contains_text "Manual pre-deployment checklist" docs/ROADMAP.md; then
     echo "Expected manual pre-deployment checklist section in docs/ROADMAP.md"
     exit 1
   fi
 
-  if ! rg -q "ENABLE_APPLE_SIGN_IN=false" docs/ROADMAP.md; then
+  if ! contains_text "ENABLE_APPLE_SIGN_IN=false" docs/ROADMAP.md; then
     echo "Expected MVP fallback note for ENABLE_APPLE_SIGN_IN=false in docs/ROADMAP.md"
     exit 1
   fi
