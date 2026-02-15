@@ -205,6 +205,7 @@ class _QuizScreenState extends State<QuizScreen> {
     }
 
     final q = _questions[_currentIndex];
+    final answerFeedback = _answered ? _answerFeedbackFor(q) : null;
     final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
@@ -315,7 +316,7 @@ class _QuizScreenState extends State<QuizScreen> {
                           const SizedBox(height: 12),
                           Semantics(
                             liveRegion: true,
-                            label: _answerFeedbackFor(q).semanticsLabel,
+                            label: answerFeedback!.semanticsLabel,
                             child: Card(
                               key: answerFeedbackCardKey,
                               child: Padding(
@@ -323,7 +324,7 @@ class _QuizScreenState extends State<QuizScreen> {
                                 child: Row(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Icon(_answerFeedbackFor(q).icon),
+                                    Icon(answerFeedback.icon),
                                     const SizedBox(width: 8),
                                     Expanded(
                                       child: Column(
@@ -331,13 +332,13 @@ class _QuizScreenState extends State<QuizScreen> {
                                             CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            _answerFeedbackFor(q).title,
+                                            answerFeedback.title,
                                             style: const TextStyle(
                                               fontWeight: FontWeight.w600,
                                             ),
                                           ),
                                           const SizedBox(height: 4),
-                                          Text(_answerFeedbackFor(q).detail),
+                                          Text(answerFeedback.detail),
                                         ],
                                       ),
                                     ),
