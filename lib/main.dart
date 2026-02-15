@@ -37,11 +37,13 @@ void main() async {
     () async {
       runApp(const QuizNetic());
     },
-    (error, stackTrace) async {
-      await crashReportingService.recordUnhandledError(
-        error,
-        stackTrace,
-        fatal: true,
+    (error, stackTrace) {
+      unawaited(
+        crashReportingService.recordUnhandledError(
+          error,
+          stackTrace,
+          fatal: true,
+        ),
       );
     },
   );
