@@ -67,6 +67,9 @@ Use this as a short, editable delivery plan.
   - Added WCAG AA contrast unit checks for primary theme color pairs.
   - Added large text-scaling widget coverage for entry, settings, about, difficulty, home, quiz, result, leaderboard, and profile flows.
   - Added non-color quiz answer feedback (icon + text states) and live semantic announcements for quiz progress/result summary.
+  - Added opt-in flag-description accessibility support (`Settings > Accessibility > Show flag descriptions` + in-quiz `Describe Flag` affordance backed by metadata).
+  - Expanded flag-description metadata baseline to `263` entries (`100%` current asset coverage) with unit QA guardrails for metadata quality + coverage floor (`>=70%`).
+  - Replaced all seeded placeholder templates with curated per-flag structural descriptions (`0` generic seed-template entries remaining).
   - Follow-up audit and prioritized backlog: `docs/ACCESSIBILITY_AUDIT.md`.
 - [ ] M27: Establish release operations readiness (alerts, KPI dashboard, rollback playbook, beta process).
   - [x] Baseline release ops runbook published: `docs/RELEASE_OPS_RUNBOOK.md`.

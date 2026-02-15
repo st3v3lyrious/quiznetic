@@ -5,9 +5,15 @@ import 'package:quiznetic_flutter/screens/about_screen.dart';
 import 'package:quiznetic_flutter/screens/entry_choice_screen.dart';
 import 'package:quiznetic_flutter/screens/legal_document_screen.dart';
 import 'package:quiznetic_flutter/screens/settings_screen.dart';
+import 'package:quiznetic_flutter/services/accessibility_preferences.dart';
 import 'package:quiznetic_flutter/services/auth_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+  });
+
   test('exposes the expected route name', () {
     expect(SettingsScreen.routeName, equals('/settings'));
   });
@@ -23,13 +29,23 @@ void main() {
         ),
       ),
     );
+    await tester.pumpAndSettle();
 
     expect(find.text('Account'), findsOneWidget);
     expect(find.text('Gameplay'), findsOneWidget);
-    expect(find.text('Legal'), findsOneWidget);
+    expect(find.text('Accessibility'), findsOneWidget);
     expect(find.byKey(const Key('settings-sign-out-button')), findsOneWidget);
     expect(find.byKey(const Key('settings-sound-toggle')), findsOneWidget);
     expect(find.byKey(const Key('settings-haptics-toggle')), findsOneWidget);
+    expect(
+      find.byKey(const Key('settings-flag-description-toggle')),
+      findsOneWidget,
+    );
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('settings-terms-link')),
+      150,
+    );
+    expect(find.text('Legal'), findsOneWidget);
     expect(find.byKey(const Key('settings-terms-link')), findsOneWidget);
     expect(find.byKey(const Key('settings-privacy-link')), findsOneWidget);
     await tester.scrollUntilVisible(
@@ -49,10 +65,33 @@ void main() {
       ),
     );
 
-    await tester.tap(find.byKey(const Key('settings-terms-link')));
+    final termsFinder = find.byKey(const Key('settings-terms-link'));
+    await tester.scrollUntilVisible(termsFinder, 150);
+    await tester.tap(termsFinder, warnIfMissed: false);
     await tester.pumpAndSettle();
 
     expect(find.text(LegalDocumentScreen.termsTitle), findsOneWidget);
+  });
+
+  testWidgets('persists show flag descriptions toggle state', (tester) async {
+    await tester.pumpWidget(const MaterialApp(home: SettingsScreen()));
+    await tester.pumpAndSettle();
+
+    final toggleFinder = find.byKey(
+      const Key('settings-flag-description-toggle'),
+    );
+    expect(toggleFinder, findsOneWidget);
+    expect(tester.widget<SwitchListTile>(toggleFinder).value, isFalse);
+
+    await tester.tap(toggleFinder);
+    await tester.pumpAndSettle();
+
+    expect(tester.widget<SwitchListTile>(toggleFinder).value, isTrue);
+    final prefs = await SharedPreferences.getInstance();
+    expect(
+      prefs.getBool(AccessibilityPreferences.showFlagDescriptionsKey),
+      isTrue,
+    );
   });
 
   testWidgets('privacy link opens the privacy document screen', (tester) async {

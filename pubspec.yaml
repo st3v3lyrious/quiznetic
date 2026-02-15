@@ -90,6 +90,7 @@ flutter:
     - assets/flags/
     - assets/images/
     - assets/legal/
+    - assets/metadata/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

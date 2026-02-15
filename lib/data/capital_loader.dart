@@ -8,6 +8,7 @@ import 'dart:math';
 
 import 'package:flutter/services.dart' show rootBundle;
 
+import 'flag_description_loader.dart';
 import '../models/flag_question.dart';
 
 const Map<String, String> _countryCapitalByNormalizedKey = {
@@ -179,6 +180,7 @@ const Map<String, String> _countryCapitalByNormalizedKey = {
 Future<List<FlagQuestion>> loadAllCapitals() async {
   final manifestJson = await rootBundle.loadString('AssetManifest.json');
   final Map<String, dynamic> manifestMap = json.decode(manifestJson);
+  final descriptions = await loadFlagDescriptions();
 
   final flagPaths = manifestMap.keys
       .where((path) => path.startsWith('assets/flags/'))
@@ -192,7 +194,12 @@ Future<List<FlagQuestion>> loadAllCapitals() async {
     if (capital == null) continue;
 
     questions.add(
-      FlagQuestion(imagePath: path, correctAnswer: capital, options: const []),
+      FlagQuestion(
+        imagePath: path,
+        correctAnswer: capital,
+        options: const [],
+        visualDescription: descriptions[countryKey],
+      ),
     );
   }
 
@@ -221,6 +228,7 @@ List<FlagQuestion> prepareCapitalQuiz(List<FlagQuestion> all) {
       imagePath: q.imagePath,
       correctAnswer: q.correctAnswer,
       options: options,
+      visualDescription: q.visualDescription,
     );
   }).toList();
 }

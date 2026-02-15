@@ -13,6 +13,9 @@ Use this as an editable feature checklist.
 - [x] Results flow prevents back navigation and requires explicit follow-up action buttons
 - [x] Quiz answer feedback includes non-color states (icon + text)
 - [x] Quiz progress and result summary expose live semantic announcements
+- [x] Optional `Describe Flag` accessibility affordance (opt-in via Settings)
+- [x] Flag-description metadata quality gate (unit checks for description format + minimum asset coverage)
+- [x] Curated flag-description coverage for all bundled flag assets (`263/263`)
 - [x] Quiz-type switching action from difficulty/result screens back to category selection
 
 ## Accounts And Auth

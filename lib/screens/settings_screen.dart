@@ -8,6 +8,7 @@ import 'package:quiznetic_flutter/config/brand_config.dart';
 import 'package:quiznetic_flutter/screens/about_screen.dart';
 import 'package:quiznetic_flutter/screens/entry_choice_screen.dart';
 import 'package:quiznetic_flutter/screens/legal_document_screen.dart';
+import 'package:quiznetic_flutter/services/accessibility_preferences.dart';
 import 'package:quiznetic_flutter/services/auth_service.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -25,7 +26,50 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _soundEnabled = true;
   bool _hapticsEnabled = true;
+  bool _showFlagDescriptions = false;
   bool _isSigningOut = false;
+
+  /// Loads persisted accessibility preferences.
+  @override
+  void initState() {
+    super.initState();
+    _loadAccessibilityPreferences();
+  }
+
+  Future<void> _loadAccessibilityPreferences() async {
+    try {
+      final enabled =
+          await AccessibilityPreferences.showFlagDescriptionsEnabled();
+      if (!mounted) return;
+      setState(() {
+        _showFlagDescriptions = enabled;
+      });
+    } catch (e, stackTrace) {
+      debugPrint('Settings accessibility preference load failed: $e');
+      debugPrintStack(stackTrace: stackTrace);
+    }
+  }
+
+  Future<void> _setShowFlagDescriptions(bool enabled) async {
+    setState(() {
+      _showFlagDescriptions = enabled;
+    });
+    try {
+      await AccessibilityPreferences.setShowFlagDescriptionsEnabled(enabled);
+    } catch (e, stackTrace) {
+      debugPrint('Settings accessibility preference save failed: $e');
+      debugPrintStack(stackTrace: stackTrace);
+      if (!mounted) return;
+      setState(() {
+        _showFlagDescriptions = !enabled;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Unable to save accessibility preference.'),
+        ),
+      );
+    }
+  }
 
   /// Returns account status text from the current auth session.
   String _accountStatus(AuthService authService) {
@@ -158,6 +202,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     },
                   ),
                 ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text('Accessibility', style: textTheme.titleMedium),
+            const SizedBox(height: 8),
+            Card(
+              child: SwitchListTile.adaptive(
+                key: const Key('settings-flag-description-toggle'),
+                title: const Text('Show flag descriptions'),
+                subtitle: const Text(
+                  'Enable a non-color flag description button during flag quizzes',
+                ),
+                value: _showFlagDescriptions,
+                onChanged: _setShowFlagDescriptions,
               ),
             ),
             const SizedBox(height: 20),

@@ -6,6 +6,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:quiznetic_flutter/config/brand_config.dart';
+import 'package:quiznetic_flutter/services/accessibility_preferences.dart';
 import '../data/capital_loader.dart';
 import '../data/flag_loader.dart';
 import '../models/flag_question.dart';
@@ -24,6 +25,11 @@ class QuizScreenArgs {
 
 class QuizScreen extends StatefulWidget {
   static const routeName = '/quiz';
+  static const describeFlagButtonKey = Key('quiz-describe-flag-button');
+  static const flagDescriptionCardKey = Key('quiz-flag-description-card');
+  static const flagDescriptionUnavailableKey = Key(
+    'quiz-flag-description-unavailable',
+  );
   final Future<List<FlagQuestion>> Function()? flagsLoader;
   final List<FlagQuestion> Function(List<FlagQuestion>)? quizPreparer;
 
@@ -41,6 +47,8 @@ class _QuizScreenState extends State<QuizScreen> {
   bool _answered = false;
   String? _selectedOption;
   int _score = 0;
+  bool _showFlagDescriptionsEnabled = false;
+  bool _showCurrentFlagDescription = false;
   late final QuizScreenArgs args;
   bool _argsLoaded = false;
 
@@ -51,6 +59,21 @@ class _QuizScreenState extends State<QuizScreen> {
   @override
   void initState() {
     super.initState();
+    _loadAccessibilityPreferences();
+  }
+
+  Future<void> _loadAccessibilityPreferences() async {
+    try {
+      final enabled =
+          await AccessibilityPreferences.showFlagDescriptionsEnabled();
+      if (!mounted) return;
+      setState(() {
+        _showFlagDescriptionsEnabled = enabled;
+      });
+    } catch (e, stackTrace) {
+      debugPrint('QuizScreen accessibility preference load failed: $e');
+      debugPrintStack(stackTrace: stackTrace);
+    }
   }
 
   /// Returns default question loader for the requested category.
@@ -145,6 +168,7 @@ class _QuizScreenState extends State<QuizScreen> {
         _currentIndex++;
         _answered = false;
         _selectedOption = null;
+        _showCurrentFlagDescription = false;
       });
     } else {
       // Instead of pushing ResultScreen(score: _score, total: _questions.length),
@@ -183,6 +207,14 @@ class _QuizScreenState extends State<QuizScreen> {
     );
   }
 
+  String? _flagDescriptionFor(FlagQuestion question) {
+    final description = question.visualDescription?.trim();
+    if (description == null || description.isEmpty) {
+      return null;
+    }
+    return description;
+  }
+
   /// Builds loading, empty, and active-quiz UI states.
   @override
   Widget build(BuildContext context) {
@@ -206,6 +238,7 @@ class _QuizScreenState extends State<QuizScreen> {
 
     final q = _questions[_currentIndex];
     final answerFeedback = _answered ? _answerFeedbackFor(q) : null;
+    final flagDescription = _flagDescriptionFor(q);
     final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
@@ -275,6 +308,53 @@ class _QuizScreenState extends State<QuizScreen> {
                           semanticLabel:
                               BrandConfig.quizQuestionImageSemanticLabel,
                         ),
+                        if (args.categoryKey == 'flag' &&
+                            _showFlagDescriptionsEnabled) ...[
+                          const SizedBox(height: 8),
+                          if (flagDescription == null)
+                            const Text(
+                              'Flag description is not available for this question yet.',
+                              key: QuizScreen.flagDescriptionUnavailableKey,
+                              textAlign: TextAlign.center,
+                            )
+                          else ...[
+                            TextButton.icon(
+                              key: QuizScreen.describeFlagButtonKey,
+                              onPressed: () {
+                                setState(() {
+                                  _showCurrentFlagDescription =
+                                      !_showCurrentFlagDescription;
+                                });
+                              },
+                              icon: Icon(
+                                _showCurrentFlagDescription
+                                    ? Icons.visibility_off_outlined
+                                    : Icons.visibility_outlined,
+                              ),
+                              label: Text(
+                                _showCurrentFlagDescription
+                                    ? 'Hide Flag Description'
+                                    : 'Describe Flag',
+                              ),
+                            ),
+                            if (_showCurrentFlagDescription)
+                              Semantics(
+                                container: true,
+                                liveRegion: true,
+                                label: 'Flag description: $flagDescription',
+                                child: Card(
+                                  key: QuizScreen.flagDescriptionCardKey,
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(12),
+                                    child: Text(
+                                      flagDescription,
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ],
                         const SizedBox(height: 24),
                         ...q.options.map((opt) {
                           final isCorrect = opt == q.correctAnswer;

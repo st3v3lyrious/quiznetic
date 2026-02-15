@@ -1,15 +1,15 @@
 # ACCESSIBILITY AUDIT
 
-Audit date: February 14, 2026  
+Audit date: February 15, 2026  
 Scope: Flutter app UI and automated tests in this repo.
 
 ## Executive Summary
 
 Current accessibility baseline is a solid start for MVP, but it is not full accessibility coverage yet.
 
-- Baseline readiness estimate: `~65%` of a practical "MVP-accessible" target.
+- Baseline readiness estimate: `~84%` of a practical "MVP-accessible" target.
 - Strengths: theme contrast checks, semantic labels on core visual assets, non-color quiz feedback, and expanded large-text coverage across critical screens.
-- Biggest gap: visual quiz content still lacks optional descriptive metadata for blind/low-vision support.
+- Biggest gap: description accuracy still needs manual visual QA despite complete metadata coverage.
 
 ## What The Baseline Currently Covers
 
@@ -72,13 +72,21 @@ Progress update:
 - Icon-only app bar actions include tooltips in multiple screens (helps discoverability and semantics).
 - Legal docs use `SelectableText` in:
   - `lib/screens/legal_document_screen.dart`
+- Opt-in flag descriptions are now supported with:
+  - metadata seed file: `assets/metadata/flag_descriptions.json`
+  - authoring guide: `docs/FLAG_DESCRIPTION_METADATA.md`
+  - setting toggle: `Settings > Accessibility > Show flag descriptions`
+  - in-quiz control: `Describe Flag`
+  - coverage baseline: `263/263` assets (`100%`) with quality checks in `test/unit/data/flag_description_metadata_test.dart`
+  - seed-template placeholders removed (`0` remaining); current entries are curated structural descriptions
+  - optional local audit command: `python3 tools/check_flag_description_coverage.py`
 
 ## Gaps And Risks
 
 ### High Priority
 
-- Quiz image semantics are generic, not descriptive.
-  - Current label is "Quiz question image", which does not help blind or low-vision users.
+- Verify and refine flag-description accuracy via manual QA pass.
+  - Coverage and baseline quality checks are complete, but textual descriptions should be spot-checked against rendered assets.
 - Large text is not yet covered across critical gameplay/result/ranking surfaces.
   - Remaining missing explicit tests: `login`, `upgrade`, `legal`, `splash`.
 
@@ -121,9 +129,13 @@ If desired later, add an "Accessibility Assist Mode" that marks attempts separat
 
 ### Phase B (core accessibility expansion, 2-4 days)
 
-- Ship opt-in flag description metadata and UI.
-- Add accessibility preferences section in Settings (description toggle at minimum).
-- Add semantics tests for high-value screens beyond image labels.
+- [x] Ship opt-in flag description metadata and UI.
+- [x] Add accessibility preferences section in Settings (description toggle at minimum).
+- [x] Add quiz widget coverage for the description affordance and behavior.
+- [x] Expand metadata coverage for additional flags and add QA pass for description quality.
+- [x] Continue metadata expansion toward broader long-tail flag coverage (>70% target).
+- [x] Curate long-tail descriptions for higher specificity (territories/regions first).
+- [ ] Execute manual visual QA sweep for description accuracy against top-traffic and long-tail flags.
 
 ### Phase C (hardening, post-MVP)
 
