@@ -121,6 +121,34 @@ void main() {
     expect(signOutCalled, isTrue);
     expect(find.text('entry-choice-screen'), findsOneWidget);
   });
+
+  testWidgets(
+    'sign out failure shows generic snackbar message without raw error details',
+    (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: SettingsScreen(
+            authService: AuthService(
+              currentUserProvider: () => _FakeUser(
+                uid: 'settings_account',
+                isAnonymous: false,
+                email: 'player@quiznetic.app',
+              ),
+              signOutProvider: () async {
+                throw Exception('sign-out-internal-detail');
+              },
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.byKey(const Key('settings-sign-out-button')));
+      await tester.pump();
+
+      expect(find.text('Sign out failed. Please try again.'), findsOneWidget);
+      expect(find.textContaining('sign-out-internal-detail'), findsNothing);
+    },
+  );
 }
 
 class _EntryProbe extends StatelessWidget {

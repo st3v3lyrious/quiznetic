@@ -54,10 +54,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
       Navigator.of(
         context,
       ).pushNamedAndRemoveUntil(EntryChoiceScreen.routeName, (_) => false);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint('Settings sign-out failed: $e');
+      debugPrintStack(stackTrace: stackTrace);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Sign out failed. Please try again. ($e)')),
+        const SnackBar(content: Text('Sign out failed. Please try again.')),
       );
     } finally {
       if (mounted) {
