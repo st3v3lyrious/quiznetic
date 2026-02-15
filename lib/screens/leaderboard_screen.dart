@@ -199,45 +199,59 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                         runSpacing: 16,
                         children: [
                           SizedBox(
-                            width: 220,
-                            child: DropdownButtonFormField<String>(
-                              key: const Key('leaderboard-category-filter'),
-                              // ignore: deprecated_member_use
-                              value: _selectedCategory,
-                              isExpanded: true,
+                            width: 260,
+                            child: InputDecorator(
                               decoration: const InputDecoration(
                                 labelText: 'Category',
                               ),
-                              items: _categoryLabels.entries
-                                  .map(
-                                    (entry) => DropdownMenuItem(
-                                      value: entry.key,
-                                      child: Text(entry.value),
-                                    ),
-                                  )
-                                  .toList(),
-                              onChanged: _onCategoryChanged,
+                              child: DropdownButtonHideUnderline(
+                                child: DropdownButton<String>(
+                                  key: const Key('leaderboard-category-filter'),
+                                  value: _selectedCategory,
+                                  isExpanded: true,
+                                  items: _categoryLabels.entries
+                                      .map(
+                                        (entry) => DropdownMenuItem(
+                                          value: entry.key,
+                                          child: Text(
+                                            entry.value,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      )
+                                      .toList(),
+                                  onChanged: _onCategoryChanged,
+                                ),
+                              ),
                             ),
                           ),
                           SizedBox(
-                            width: 220,
-                            child: DropdownButtonFormField<String>(
-                              key: const Key('leaderboard-difficulty-filter'),
-                              // ignore: deprecated_member_use
-                              value: _selectedDifficulty,
-                              isExpanded: true,
+                            width: 260,
+                            child: InputDecorator(
                               decoration: const InputDecoration(
                                 labelText: 'Difficulty',
                               ),
-                              items: _difficultyLabels.entries
-                                  .map(
-                                    (entry) => DropdownMenuItem(
-                                      value: entry.key,
-                                      child: Text(entry.value),
-                                    ),
-                                  )
-                                  .toList(),
-                              onChanged: _onDifficultyChanged,
+                              child: DropdownButtonHideUnderline(
+                                child: DropdownButton<String>(
+                                  key: const Key(
+                                    'leaderboard-difficulty-filter',
+                                  ),
+                                  value: _selectedDifficulty,
+                                  isExpanded: true,
+                                  items: _difficultyLabels.entries
+                                      .map(
+                                        (entry) => DropdownMenuItem(
+                                          value: entry.key,
+                                          child: Text(
+                                            entry.value,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      )
+                                      .toList(),
+                                  onChanged: _onDifficultyChanged,
+                                ),
+                              ),
                             ),
                           ),
                         ],

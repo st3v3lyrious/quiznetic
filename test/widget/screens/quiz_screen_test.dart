@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:quiznetic_flutter/config/brand_config.dart';
 import 'package:quiznetic_flutter/models/flag_question.dart';
 import 'package:quiznetic_flutter/screens/quiz_screen.dart';
 import 'package:quiznetic_flutter/screens/result_screen.dart';
@@ -66,6 +67,11 @@ void main() {
     expect(find.text('Italy'), findsOneWidget);
     expect(find.text('Spain'), findsOneWidget);
     expect(find.text('Germany'), findsOneWidget);
+    expect(find.byKey(const Key('quiz-progress-semantics')), findsOneWidget);
+    expect(
+      find.bySemanticsLabel(BrandConfig.quizQuestionImageSemanticLabel),
+      findsOneWidget,
+    );
   });
 
   testWidgets(
@@ -89,6 +95,9 @@ void main() {
     await tester.tap(find.text('France'));
     await tester.pumpAndSettle();
 
+    expect(find.byKey(const Key('quiz-answer-feedback-card')), findsOneWidget);
+    expect(find.text('Correct'), findsOneWidget);
+    expect(find.text('France is the right answer.'), findsOneWidget);
     expect(find.text('See Results'), findsOneWidget);
   });
 

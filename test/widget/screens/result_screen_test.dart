@@ -91,6 +91,7 @@ void main() {
     expect(find.text('You scored 7 out of 10'), findsOneWidget);
     expect(find.text('70%'), findsOneWidget);
     expect(find.textContaining('New High Score: 7!'), findsOneWidget);
+    expect(find.byKey(const Key('result-summary-semantics')), findsOneWidget);
     expect(saveScoreCalled, isTrue);
   });
 

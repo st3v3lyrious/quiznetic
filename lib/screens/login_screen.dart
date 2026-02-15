@@ -8,10 +8,12 @@ import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:firebase_ui_oauth_apple/firebase_ui_oauth_apple.dart';
 import 'package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart';
 import 'package:quiznetic_flutter/config/app_config.dart';
+import 'package:quiznetic_flutter/config/brand_config.dart';
 import 'package:quiznetic_flutter/services/auth_service.dart';
 import 'package:quiznetic_flutter/services/score_repository.dart';
 import 'package:quiznetic_flutter/services/user_checker.dart';
 import 'package:quiznetic_flutter/screens/home_screen.dart';
+import 'package:quiznetic_flutter/widgets/legal_consent_notice.dart';
 
 class LoginScreen extends StatelessWidget {
   static const routeName = '/login';
@@ -59,7 +61,10 @@ class LoginScreen extends StatelessWidget {
                 children: [
                   AspectRatio(
                     aspectRatio: 1,
-                    child: Image.asset(logoAssetPath),
+                    child: Image.asset(
+                      logoAssetPath,
+                      semanticLabel: BrandConfig.logoSemanticLabel,
+                    ),
                   ),
                   Text(
                     'QuizNetic',
@@ -97,6 +102,13 @@ class LoginScreen extends StatelessWidget {
                     ),
                 ],
               ),
+            );
+          },
+
+          // Footer
+          footerBuilder: (context, action) {
+            return const LegalConsentNotice(
+              padding: EdgeInsets.fromLTRB(16, 8, 16, 20),
             );
           },
 

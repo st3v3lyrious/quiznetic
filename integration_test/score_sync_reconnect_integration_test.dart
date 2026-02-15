@@ -29,6 +29,8 @@ void main() {
                 required categoryKey,
                 required difficulty,
                 required score,
+                required attemptId,
+                required totalQuestions,
               }) async {
                 remoteSaveCalls++;
                 if (!networkOnline) {
@@ -83,6 +85,8 @@ void main() {
                 required categoryKey,
                 required difficulty,
                 required score,
+                required attemptId,
+                required totalQuestions,
               }) async {
                 remoteSaveCalls++;
                 if (!networkOnline) {

@@ -58,6 +58,8 @@ class ResultScreen extends StatefulWidget {
 }
 
 class _ResultScreenState extends State<ResultScreen> {
+  static const resultSummarySemanticsKey = Key('result-summary-semantics');
+
   late Future<_ResultData> _resultDataFuture;
   bool _didInit = false;
   bool _dismissGuestCta = false;
@@ -257,6 +259,10 @@ class _ResultScreenState extends State<ResultScreen> {
             final highScore = resultData.highScore;
             final isNew = args.score >= highScore;
             final guestBand = _dismissGuestCta ? null : resultData.guestBand;
+            final resultSemanticsLabel =
+                'You scored ${args.score} out of ${args.total}. '
+                '$pct percent. '
+                '${isNew ? 'New high score: $highScore.' : 'High score: $highScore.'}';
 
             return LayoutBuilder(
               builder: (context, constraints) {
@@ -273,33 +279,43 @@ class _ResultScreenState extends State<ResultScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(
-                            'You scored ${args.score} out of ${args.total}',
-                            style: const TextStyle(fontSize: 24),
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            '$pct%',
-                            style: const TextStyle(
-                              fontSize: 48,
-                              fontWeight: FontWeight.bold,
+                          Semantics(
+                            key: resultSummarySemanticsKey,
+                            container: true,
+                            liveRegion: true,
+                            label: resultSemanticsLabel,
+                            child: Column(
+                              children: [
+                                Text(
+                                  'You scored ${args.score} out of ${args.total}',
+                                  style: const TextStyle(fontSize: 24),
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  '$pct%',
+                                  style: const TextStyle(
+                                    fontSize: 48,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 24),
+                                Text(
+                                  isNew
+                                      ? '🎉 New High Score: $highScore!'
+                                      : 'High Score: $highScore',
+                                  style: const TextStyle(fontSize: 20),
+                                ),
+                                if (isNew) ...[
+                                  const SizedBox(height: 8),
+                                  const Icon(
+                                    Icons.emoji_events,
+                                    color: Colors.amber,
+                                    size: 32,
+                                  ),
+                                ],
+                              ],
                             ),
                           ),
-                          const SizedBox(height: 24),
-                          Text(
-                            isNew
-                                ? '🎉 New High Score: $highScore!'
-                                : 'High Score: $highScore',
-                            style: const TextStyle(fontSize: 20),
-                          ),
-                          if (isNew) ...[
-                            const SizedBox(height: 8),
-                            const Icon(
-                              Icons.emoji_events,
-                              color: Colors.amber,
-                              size: 32,
-                            ),
-                          ],
                           if (guestBand != null) ...[
                             const SizedBox(height: 24),
                             Card(

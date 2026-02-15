@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:quiznetic_flutter/config/brand_config.dart';
 import 'package:quiznetic_flutter/screens/entry_choice_screen.dart';
 import 'package:quiznetic_flutter/screens/home_screen.dart';
 import 'package:quiznetic_flutter/screens/splash_screen.dart';
@@ -22,6 +23,10 @@ void main() {
     );
 
     expect(find.byType(Image), findsOneWidget);
+    expect(
+      find.bySemanticsLabel(BrandConfig.logoSemanticLabel),
+      findsOneWidget,
+    );
     await tester.pumpAndSettle();
   });
 

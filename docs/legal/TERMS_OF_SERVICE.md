@@ -1,0 +1,69 @@
+# Terms of Service
+Effective date: February 14, 2026
+
+These Terms of Service govern your use of Quiznetic.  
+By continuing to use Quiznetic, you agree to these Terms.
+
+## 1. Eligibility
+
+- You must comply with the laws that apply to you.
+- If you are under the age of majority in your region, use requires consent from a parent or legal guardian.
+
+## 2. Accounts
+
+- You may play as a guest (anonymous account) or with a linked account.
+- You are responsible for activity under your account.
+- You must provide accurate information when creating an account.
+
+## 3. Acceptable Use
+
+You agree not to:
+
+- attempt to cheat, exploit, reverse engineer, or abuse scoring systems
+- use bots, scripts, or automation to manipulate gameplay or leaderboards
+- interfere with app operation, security, or other users
+- violate applicable law while using Quiznetic
+
+## 4. Leaderboard And Score Integrity
+
+- Leaderboard ranking is based on best-score rules defined by the app.
+- We may reject, flag, or remove suspicious or invalid scores.
+- We may suspend or limit accounts for abuse or fraud prevention.
+
+## 5. Service Availability
+
+- Quiznetic is provided on an "as is" and "as available" basis.
+- We may modify, suspend, or discontinue features at any time.
+- We do not guarantee uninterrupted or error-free operation.
+
+## 6. Intellectual Property
+
+- Quiznetic app code, branding, and materials are protected by applicable intellectual property laws.
+- You may not copy, redistribute, or create derivative works except as permitted by law or written permission.
+
+## 7. Content And Data
+
+- You retain rights to information you provide, subject to rights needed for us to operate Quiznetic.
+- Our Privacy Policy explains how data is handled.
+
+## 8. Limitation of Liability
+
+- To the maximum extent permitted by law, Quiznetic and its operators are not liable for indirect, incidental, special, consequential, or punitive damages.
+
+## 9. Termination
+
+- We may suspend or terminate access for violations of these Terms or for security/legal reasons.
+- You may stop using Quiznetic at any time.
+
+## 10. Changes To Terms
+
+- We may update these Terms from time to time.
+- Continued use after changes means you accept the updated Terms.
+
+## 11. Governing Law
+
+- These Terms are governed by the applicable laws of the jurisdiction selected by the operator, unless otherwise required by law.
+
+## 12. Contact
+
+- Terms questions: `support@quiznetic.app`

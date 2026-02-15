@@ -10,12 +10,15 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'score_service.dart';
+import 'score_submission_validator.dart';
 
 typedef SaveRemoteScoreAction =
     Future<void> Function({
       required String categoryKey,
       required String difficulty,
       required int score,
+      required String attemptId,
+      required int totalQuestions,
     });
 typedef LoadRemoteScoresAction = Future<List<CategoryScore>> Function();
 typedef LoadRemoteBestScoreAction =
@@ -246,11 +249,15 @@ class LocalFirstScoreRepository implements ScoreRepository {
     required String categoryKey,
     required String difficulty,
     required int score,
+    required String attemptId,
+    required int totalQuestions,
   }) {
     return ScoreService().saveScore(
       categoryKey: categoryKey,
       difficulty: difficulty,
       score: score,
+      attemptId: attemptId,
+      totalQuestions: totalQuestions,
     );
   }
 
@@ -283,6 +290,18 @@ class LocalFirstScoreRepository implements ScoreRepository {
     final projections = _readProjections(prefs);
     final nowIso = _nowProvider().toIso8601String();
     final key = _projectionEntryKey(categoryKey, difficulty);
+    final validation = ScoreSubmissionValidator.validate(
+      categoryKey: categoryKey,
+      difficulty: difficulty,
+      score: score,
+      totalQuestions: totalQuestions,
+    );
+    if (!validation.isValid) {
+      throw ScoreSubmissionValidationException(
+        rejectionCode: validation.rejectionCode ?? 'invalid_submission',
+        message: validation.message ?? 'Invalid score submission.',
+      );
+    }
 
     final current =
         projections[key] ??
@@ -488,6 +507,20 @@ class LocalFirstScoreRepository implements ScoreRepository {
     var syncedCount = 0;
 
     for (final attempt in attempts) {
+      final validation = ScoreSubmissionValidator.validate(
+        categoryKey: attempt.categoryKey,
+        difficulty: attempt.difficulty,
+        score: attempt.score,
+        totalQuestions: attempt.totalQuestions,
+      );
+      if (!validation.isValid) {
+        debugPrint(
+          'ScoreRepository dropped invalid pending attempt '
+          '${attempt.id}: ${validation.rejectionCode}',
+        );
+        continue;
+      }
+
       if (!forceRetry && !_isRetryDue(attempt, now)) {
         updated.add(attempt);
         continue;
@@ -498,6 +531,8 @@ class LocalFirstScoreRepository implements ScoreRepository {
           categoryKey: attempt.categoryKey,
           difficulty: attempt.difficulty,
           score: attempt.score,
+          attemptId: attempt.id,
+          totalQuestions: attempt.totalQuestions,
         );
         final key = _projectionEntryKey(
           attempt.categoryKey,
