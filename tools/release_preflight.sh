@@ -28,18 +28,6 @@ assert_file_exists() {
   fi
 }
 
-assert_flag_default() {
-  local env_key="$1"
-  local expected_default="$2"
-  local source_file="lib/config/app_config.dart"
-  local pattern="'${env_key}'\\s*,\\s*defaultValue:\\s*${expected_default}"
-
-  if ! rg -q -U "${pattern}" "${source_file}"; then
-    echo "Expected ${env_key} defaultValue to be ${expected_default} in ${source_file}"
-    exit 1
-  fi
-}
-
 check_release_config() {
   echo "Validating release configuration and documentation prerequisites..."
 
@@ -50,11 +38,7 @@ check_release_config() {
   assert_file_exists "docs/APPLE_SIGN_IN_SETUP.md"
   assert_file_exists "docs/ROADMAP.md"
   assert_file_exists "lib/config/app_config.dart"
-
-  assert_flag_default "ENABLE_BACKEND_SUBMIT_SCORE" "false"
-  assert_flag_default "ENABLE_APPLE_SIGN_IN" "false"
-  assert_flag_default "ENABLE_CRASH_REPORTING" "true"
-  assert_flag_default "ENABLE_ANALYTICS" "true"
+  assert_file_exists "test/unit/config/app_config_test.dart"
 
   if ! rg -q "Manual pre-deployment checklist" docs/ROADMAP.md; then
     echo "Expected manual pre-deployment checklist section in docs/ROADMAP.md"
@@ -65,6 +49,10 @@ check_release_config() {
     echo "Expected MVP fallback note for ENABLE_APPLE_SIGN_IN=false in docs/ROADMAP.md"
     exit 1
   fi
+
+  run_step \
+    "Validate app config feature-flag defaults" \
+    flutter test test/unit/config/app_config_test.dart
 }
 
 run_step "Install Flutter dependencies" flutter pub get
