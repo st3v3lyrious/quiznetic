@@ -60,6 +60,7 @@ Use this as a short, editable delivery plan.
 - [ ] M15: Integrate monetization stack (ads + in-app purchases).
 - [ ] M16: Improve UI/UX polish (animations, progress indicators, feedback styling).
 - [ ] M17: Launch MVP (release checklist, store metadata, and production rollout).
+  - [x] Launch preflight automation shipped (`tools/release_preflight.sh` + `.github/workflows/release_preflight.yml`).
   - If Apple setup is not complete by launch date, keep `ENABLE_APPLE_SIGN_IN=false` for MVP and ship with Email/Google.
 - [ ] M18: Build content licensing + attribution pipeline for celebrity/song/anime datasets.
 - [x] M19: Harden Firestore security rules and add automated Firestore-rules tests in CI.

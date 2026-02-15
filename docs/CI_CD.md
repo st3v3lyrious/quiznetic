@@ -33,6 +33,14 @@ This document defines the repository quality gates and the intended merge flow.
   - `Flutter Integration Tests`: Linux desktop run of `integration_test/*_integration_test.dart`
   - `Playwright E2E`: web build + static server + `npm run test:e2e` in `playwright/`
   - `Notify Failure`: webhook alert when integration/e2e job fails (enabled only if `ALERT_WEBHOOK_URL` is set)
+- `.github/workflows/release_preflight.yml` (required on PRs, manual on demand, and release tags)
+  - `Release Preflight`: one-command launch-readiness gate (`./tools/release_preflight.sh`)
+    - release config assertions (legal docs + safe flag defaults)
+    - review-agent error gate
+    - `flutter analyze`
+    - `flutter test test/widget`
+    - unit coverage gate via `./tools/check_unit_coverage.sh`
+    - Firestore rules emulator test gate
 
 ## Integration CI Notes
 
@@ -89,6 +97,7 @@ This document defines the repository quality gates and the intended merge flow.
    - `Analyze`
    - `Tests And Coverage`
    - `Firestore Rules Tests`
+   - `Release Preflight`
 5. Enable `Require branches to be up to date before merging`.
 6. Enable `Require signed commits` (recommended).
 7. Enable `Restrict who can push to matching branches` (recommended).

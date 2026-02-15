@@ -1,0 +1,57 @@
+name: Release Preflight
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+concurrency:
+  group: release-preflight-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  release_preflight:
+    name: Release Preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: firestore_tests/package-lock.json
+
+      - name: Setup Java (for Firestore emulator)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Run release preflight
+        run: ./tools/release_preflight.sh
+        env:
+          MIN_UNIT_COVERAGE: "25"
+          RUN_FIRESTORE_RULES: "1"
+
+      - name: Upload coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-preflight-unit-coverage-lcov
+          path: coverage/lcov.info
+          if-no-files-found: ignore

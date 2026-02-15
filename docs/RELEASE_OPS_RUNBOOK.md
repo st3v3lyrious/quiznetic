@@ -65,18 +65,18 @@ Activation requirement:
 
 ## Pre-Release Checklist (MVP)
 
-1. `flutter analyze` passes.
-2. `flutter test test/widget` passes.
-3. `flutter test test/unit` passes.
-4. Firestore rules tests pass (`npm run test:emulator` in `firestore_tests`).
-5. Feature flags reviewed for target build:
+1. `Release Preflight` CI check passes (`.github/workflows/release_preflight.yml`).
+2. Optional local full preflight command:
+   - `RUN_FIRESTORE_RULES=1 ./tools/release_preflight.sh`
+3. Feature flags reviewed for target build:
    - `ENABLE_BACKEND_SUBMIT_SCORE=false` (Spark-safe baseline)
    - `ENABLE_CRASH_REPORTING=true` (unless actively debugging SDK issues)
-6. Manual smoke:
+   - `ENABLE_APPLE_SIGN_IN=false` unless Apple setup is complete and validated
+4. Manual smoke:
    - Guest path: splash -> entry -> guest -> quiz -> result
    - Account path: entry -> login -> home -> quiz -> result
    - Score save + leaderboard load + profile high-score visibility
-7. Store/build metadata verified (version, build number, privacy/legal links).
+5. Store/build metadata verified (version, build number, privacy/legal links).
 
 ## Post-Release Monitoring (First 24-72h)
 
