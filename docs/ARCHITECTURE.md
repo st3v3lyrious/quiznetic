@@ -16,6 +16,7 @@ It is intended to be source material for generated docs (including `README.md`).
 - `firebase_core`
 - `firebase_auth`
 - `cloud_firestore`
+- `firebase_analytics` (screen views + product funnel events)
 - `firebase_crashlytics` (runtime crash capture + release diagnostics)
 - `firebase_ui_auth` + OAuth provider packages (from forked repo ref)
 - `shared_preferences`
@@ -24,6 +25,7 @@ It is intended to be source material for generated docs (including `README.md`).
 ## Codebase Layout
 
 - `lib/main.dart`: app bootstrap, Firebase init, route registration, global theme.
+- `lib/services/analytics_service.dart`: Firebase Analytics wiring and route-observer screen tracking.
 - `lib/services/crash_reporting_service.dart`: Crashlytics wiring and unhandled-error capture hooks.
 - `lib/config/brand_config.dart`: app branding tokens (app name, core colors, web/splash color values).
 - `test/unit/config/accessibility_contrast_test.dart`: WCAG AA contrast guardrails for core theme pairs.
@@ -60,23 +62,24 @@ It is intended to be source material for generated docs (including `README.md`).
 
 1. `main()` initializes Firebase.
 2. Crash reporting service configures Crashlytics collection and unhandled-error hooks.
-3. App starts on splash route.
-4. Splash checks auth state after delay and navigates to home (if user exists) or entry choice.
-5. If there is no session, entry-choice screen presents explicit user choice:
+3. Analytics service configures collection toggle and route observer screen-view logging.
+4. App starts on splash route.
+5. Splash checks auth state after delay and navigates to home (if user exists) or entry choice.
+6. If there is no session, entry-choice screen presents explicit user choice:
    - Continue as guest
    - Sign in / create account
-6. If user selects sign-in, app routes to provider login screen.
-7. Entry, login, and upgrade flows present legal consent copy with in-app links to Terms and Privacy documents.
-8. On explicit auth choice, app ensures `users/{uid}` exists in Firestore.
-9. Auth-guarded routes only allow authenticated users (guest or signed-in) to access gameplay/profile screens.
-10. Home currently exposes two categories: `flag` and `capital`, shows a primary guest conversion CTA that routes anonymous users to `/upgrade`, and provides entry into global leaderboard.
-11. Difficulty selects question count and difficulty key.
-12. Difficulty also offers explicit "Change Quiz Type" action back to home category selection.
-13. Quiz loads assets, randomizes questions/options, tracks score.
-14. Results screen saves score, renders session summary, blocks back navigation via `PopScope`, and offers explicit "Change Quiz Type" back to category selection.
-15. Profile screen fetches stored user scores from Firestore and exposes quick links to settings/about.
-16. Settings screen provides account controls, sign-out flow, legal links, and app preference toggles.
-17. About screen provides app metadata/support contact and legal links.
+7. If user selects sign-in, app routes to provider login screen.
+8. Entry, login, and upgrade flows present legal consent copy with in-app links to Terms and Privacy documents.
+9. On explicit auth choice, app ensures `users/{uid}` exists in Firestore.
+10. Auth-guarded routes only allow authenticated users (guest or signed-in) to access gameplay/profile screens.
+11. Home currently exposes two categories: `flag` and `capital`, shows a primary guest conversion CTA that routes anonymous users to `/upgrade`, and provides entry into global leaderboard.
+12. Difficulty selects question count and difficulty key.
+13. Difficulty also offers explicit "Change Quiz Type" action back to home category selection.
+14. Quiz loads assets, randomizes questions/options, tracks score.
+15. Results screen saves score, renders session summary, blocks back navigation via `PopScope`, and offers explicit "Change Quiz Type" back to category selection.
+16. Profile screen fetches stored user scores from Firestore and exposes quick links to settings/about.
+17. Settings screen provides account controls, sign-out flow, legal links, and app preference toggles.
+18. About screen provides app metadata/support contact and legal links.
 
 ## Quiz Engine
 
@@ -207,6 +210,7 @@ Current implementation uses a local-first repository:
   - validates category/difficulty/question-count/score bounds before remote write
   - callable submit path (`submitScore`) is gated by `ENABLE_BACKEND_SUBMIT_SCORE` and defaults off on Spark
   - uses direct Firestore write path when backend flag is disabled
+  - emits analytics events for score submission success/failure/fallback pathing
   - records idempotent score attempts (`users/{uid}/attempts/{attemptId}`)
   - saves personal best docs (`users/{uid}/scores/{category_difficulty}`)
   - writes leaderboard docs only when best score improves (one row per uid/category+difficulty)

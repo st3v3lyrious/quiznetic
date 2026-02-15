@@ -36,6 +36,7 @@ dependencies:
   cloud_firestore: ^6.0.3     # if you need Firestore
   cloud_functions: ^6.0.0     # callable submitScore backend path
   firebase_crashlytics: ^5.0.3
+  firebase_analytics: ^12.0.3
   shared_preferences: ^2.5.3
   # Firebase UI packages (use your fork with the fixed imports)
   firebase_ui_auth:

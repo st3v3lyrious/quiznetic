@@ -3,6 +3,7 @@
  Title: Score Service
  Purpose: Persists and reads quiz scores and leaderboard data.
 */
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -11,6 +12,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 
 import '../config/app_config.dart';
+import 'analytics_service.dart';
 import 'score_submission_validator.dart';
 
 class CategoryScore {
@@ -29,17 +31,20 @@ class ScoreService {
   final FirebaseFirestore _db;
   final FirebaseFunctions _functions;
   final bool _enableBackendSubmitScore;
+  final AnalyticsService _analyticsService;
 
   ScoreService({
     FirebaseAuth? auth,
     FirebaseFirestore? firestore,
     FirebaseFunctions? functions,
     bool? enableBackendSubmitScore,
+    AnalyticsService? analyticsService,
   }) : _auth = auth ?? FirebaseAuth.instance,
        _db = firestore ?? FirebaseFirestore.instance,
        _functions = functions ?? FirebaseFunctions.instance,
        _enableBackendSubmitScore =
-           enableBackendSubmitScore ?? AppConfig.enableBackendSubmitScore;
+           enableBackendSubmitScore ?? AppConfig.enableBackendSubmitScore,
+       _analyticsService = analyticsService ?? AnalyticsService.instance;
 
   /// Call this after a quiz completes.
   Future<void> saveScore({
@@ -66,6 +71,14 @@ class ScoreService {
       totalQuestions: resolvedTotalQuestions,
     );
     if (!validation.isValid) {
+      _logScoreSubmitFailed(
+        path: 'validation',
+        categoryKey: categoryKey,
+        difficulty: difficulty,
+        score: score,
+        totalQuestions: resolvedTotalQuestions,
+        rejectionCode: validation.rejectionCode,
+      );
       throw ScoreSubmissionValidationException(
         rejectionCode: validation.rejectionCode ?? 'invalid_submission',
         message: validation.message ?? 'Invalid score submission.',
@@ -83,7 +96,7 @@ class ScoreService {
       );
 
       try {
-        await _saveScoreViaCallable(
+        final status = await _saveScoreViaCallable(
           categoryKey: categoryKey,
           difficulty: difficulty,
           score: score,
@@ -92,16 +105,59 @@ class ScoreService {
           startedAt: startedAt,
           finishedAt: finishedAt,
         );
+        _logScoreSubmitSuccess(
+          path: 'callable',
+          status: status,
+          categoryKey: categoryKey,
+          difficulty: difficulty,
+          score: score,
+          totalQuestions: resolvedTotalQuestions,
+        );
         return;
+      } on ScoreSubmissionValidationException catch (e) {
+        _logScoreSubmitFailed(
+          path: 'callable',
+          categoryKey: categoryKey,
+          difficulty: difficulty,
+          score: score,
+          totalQuestions: resolvedTotalQuestions,
+          rejectionCode: e.rejectionCode,
+        );
+        rethrow;
       } on FirebaseFunctionsException catch (e) {
         // Temporary migration fallback while backend submitScore is rolling out.
         if (!_shouldFallbackToDirectWrite(e)) {
+          _logScoreSubmitFailed(
+            path: 'callable',
+            categoryKey: categoryKey,
+            difficulty: difficulty,
+            score: score,
+            totalQuestions: resolvedTotalQuestions,
+            rejectionCode: e.code,
+          );
           rethrow;
         }
         debugPrint(
           'submitScore callable unavailable (${e.code}); '
           'falling back to direct client writes.',
         );
+        _logCallableFallback(
+          categoryKey: categoryKey,
+          difficulty: difficulty,
+          score: score,
+          totalQuestions: resolvedTotalQuestions,
+          fallbackCode: e.code,
+        );
+      } catch (e) {
+        _logScoreSubmitFailed(
+          path: 'callable',
+          categoryKey: categoryKey,
+          difficulty: difficulty,
+          score: score,
+          totalQuestions: resolvedTotalQuestions,
+          rejectionCode: e.runtimeType.toString(),
+        );
+        rethrow;
       }
     } else {
       debugPrint(
@@ -110,18 +166,48 @@ class ScoreService {
       );
     }
 
-    await _saveScoreDirect(
-      user: user,
-      categoryKey: categoryKey,
-      difficulty: difficulty,
-      score: score,
-      totalQuestions: resolvedTotalQuestions,
-      attemptId: normalizedAttemptId,
-    );
+    try {
+      await _saveScoreDirect(
+        user: user,
+        categoryKey: categoryKey,
+        difficulty: difficulty,
+        score: score,
+        totalQuestions: resolvedTotalQuestions,
+        attemptId: normalizedAttemptId,
+      );
+      _logScoreSubmitSuccess(
+        path: 'direct',
+        status: 'accepted',
+        categoryKey: categoryKey,
+        difficulty: difficulty,
+        score: score,
+        totalQuestions: resolvedTotalQuestions,
+      );
+    } on ScoreSubmissionValidationException catch (e) {
+      _logScoreSubmitFailed(
+        path: 'direct',
+        categoryKey: categoryKey,
+        difficulty: difficulty,
+        score: score,
+        totalQuestions: resolvedTotalQuestions,
+        rejectionCode: e.rejectionCode,
+      );
+      rethrow;
+    } catch (e) {
+      _logScoreSubmitFailed(
+        path: 'direct',
+        categoryKey: categoryKey,
+        difficulty: difficulty,
+        score: score,
+        totalQuestions: resolvedTotalQuestions,
+        rejectionCode: e.runtimeType.toString(),
+      );
+      rethrow;
+    }
   }
 
   /// Submits score through backend callable function (`submitScore`).
-  Future<void> _saveScoreViaCallable({
+  Future<String> _saveScoreViaCallable({
     required String categoryKey,
     required String difficulty,
     required int score,
@@ -151,7 +237,7 @@ class ScoreService {
       case 'accepted':
       case 'duplicate':
       case 'flagged':
-        return;
+        return status;
       case 'rate_limited':
       case 'rejected':
         throw ScoreSubmissionValidationException(
@@ -240,6 +326,75 @@ class ScoreService {
         'updatedAt': now,
       }, SetOptions(merge: true));
     });
+  }
+
+  void _logScoreSubmitSuccess({
+    required String path,
+    required String status,
+    required String categoryKey,
+    required String difficulty,
+    required int score,
+    required int totalQuestions,
+  }) {
+    unawaited(
+      _analyticsService.logEvent(
+        'score_submit_success',
+        parameters: {
+          'path': path,
+          'status': status,
+          'category': categoryKey,
+          'difficulty': difficulty,
+          'score': score,
+          'total_questions': totalQuestions,
+        },
+      ),
+    );
+  }
+
+  void _logScoreSubmitFailed({
+    required String path,
+    required String categoryKey,
+    required String difficulty,
+    required int score,
+    required int totalQuestions,
+    String? rejectionCode,
+  }) {
+    unawaited(
+      _analyticsService.logEvent(
+        'score_submit_failed',
+        parameters: {
+          'path': path,
+          'rejection_code': rejectionCode ?? 'unknown',
+          'category': categoryKey,
+          'difficulty': difficulty,
+          'score': score,
+          'total_questions': totalQuestions,
+        },
+      ),
+    );
+  }
+
+  void _logCallableFallback({
+    required String categoryKey,
+    required String difficulty,
+    required int score,
+    required int totalQuestions,
+    required String fallbackCode,
+  }) {
+    unawaited(
+      _analyticsService.logEvent(
+        'score_submit_fallback',
+        parameters: {
+          'from_path': 'callable',
+          'to_path': 'direct',
+          'fallback_code': fallbackCode,
+          'category': categoryKey,
+          'difficulty': difficulty,
+          'score': score,
+          'total_questions': totalQuestions,
+        },
+      ),
+    );
   }
 
   /// True when callable is not ready in the current environment.

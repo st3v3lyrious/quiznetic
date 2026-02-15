@@ -30,4 +30,13 @@ class AppConfig {
     'ENABLE_CRASH_REPORTING',
     defaultValue: true,
   );
+
+  /// Enables Firebase Analytics collection and event logging.
+  ///
+  /// Keep ON in release builds for baseline product telemetry and crash
+  /// breadcrumbs unless analytics behavior itself is under investigation.
+  static const enableAnalytics = bool.fromEnvironment(
+    'ENABLE_ANALYTICS',
+    defaultValue: true,
+  );
 }

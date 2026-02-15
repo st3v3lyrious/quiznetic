@@ -3,10 +3,12 @@
  Title: Quiz
  Purpose: Presents questions, records answers, and handles scoring.
 */
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:quiznetic_flutter/config/brand_config.dart';
 import 'package:quiznetic_flutter/services/accessibility_preferences.dart';
+import 'package:quiznetic_flutter/services/analytics_service.dart';
 import '../data/capital_loader.dart';
 import '../data/flag_loader.dart';
 import '../models/flag_question.dart';
@@ -51,6 +53,7 @@ class _QuizScreenState extends State<QuizScreen> {
   bool _showCurrentFlagDescription = false;
   late final QuizScreenArgs args;
   bool _argsLoaded = false;
+  bool _hasLoggedQuizStarted = false;
 
   static const quizProgressSemanticsKey = Key('quiz-progress-semantics');
   static const answerFeedbackCardKey = Key('quiz-answer-feedback-card');
@@ -140,6 +143,19 @@ class _QuizScreenState extends State<QuizScreen> {
             : allFlags.length;
         final subset = allFlags.sublist(0, count);
         final quiz = prepare(subset);
+        if (!_hasLoggedQuizStarted) {
+          _hasLoggedQuizStarted = true;
+          unawaited(
+            AnalyticsService.instance.logEvent(
+              'quiz_started',
+              parameters: {
+                'category': args.categoryKey,
+                'difficulty': args.difficulty,
+                'question_count': quiz.length,
+              },
+            ),
+          );
+        }
         setState(() {
           _questions = quiz;
           _isLoading = false;

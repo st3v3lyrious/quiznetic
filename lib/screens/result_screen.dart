@@ -3,9 +3,12 @@
  Title: Result Screen
  Purpose: Shows result summary and next actions after a quiz.
 */
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:quiznetic_flutter/screens/upgrade_account_screen.dart';
+import 'package:quiznetic_flutter/services/analytics_service.dart';
 import 'package:quiznetic_flutter/services/auth_service.dart';
 import 'package:quiznetic_flutter/services/leaderboard_band_service.dart';
 import 'package:quiznetic_flutter/services/score_repository.dart';
@@ -63,6 +66,7 @@ class _ResultScreenState extends State<ResultScreen> {
   late Future<_ResultData> _resultDataFuture;
   bool _didInit = false;
   bool _dismissGuestCta = false;
+  bool _hasLoggedQuizCompleted = false;
 
   /// Loads args once, saves score, and resolves the displayed high score.
   @override
@@ -77,6 +81,24 @@ class _ResultScreenState extends State<ResultScreen> {
       }
 
       final args = route.settings.arguments as ResultScreenArgs;
+      if (!_hasLoggedQuizCompleted) {
+        _hasLoggedQuizCompleted = true;
+        final accuracyPercent = args.total > 0
+            ? ((args.score / args.total) * 100).round()
+            : 0;
+        unawaited(
+          AnalyticsService.instance.logEvent(
+            'quiz_completed',
+            parameters: {
+              'category': args.categoryKey,
+              'difficulty': args.difficulty,
+              'score': args.score,
+              'total_questions': args.total,
+              'accuracy_percent': accuracyPercent,
+            },
+          ),
+        );
+      }
       final scoreRepository =
           widget.scoreRepository ?? LocalFirstScoreRepository();
       final saveScore =

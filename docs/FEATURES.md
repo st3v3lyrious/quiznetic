@@ -64,8 +64,8 @@ Use this as an editable feature checklist.
 - [x] Configure branding asset pipeline (launcher icons + native splash generation runbook)
 - [x] Create a Settings screen
 - [x] Create an About screen
-- [ ] Add product analytics instrumentation
-- [ ] Add analytics event breadcrumbs for crash triage (screen views + critical actions)
+- [x] Add product analytics instrumentation (baseline auth + quiz + score funnel events)
+- [x] Add analytics event breadcrumbs for crash triage (screen views + critical actions)
 - [x] Add crash reporting (Crashlytics baseline with compile-time kill switch)
 - [ ] Integrate monetization via ads
 - [ ] Integrate monetization via in-app purchases (IAP)

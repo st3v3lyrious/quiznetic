@@ -3,12 +3,15 @@
  Title: Upgrade Account Screen
  Purpose: Lets anonymous users link a permanent provider account while preserving guest identity.
 */
+import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart' as fba;
 import 'package:flutter/material.dart';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:firebase_ui_oauth_apple/firebase_ui_oauth_apple.dart';
 import 'package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart';
 import 'package:quiznetic_flutter/config/app_config.dart';
+import 'package:quiznetic_flutter/services/analytics_service.dart';
 import 'package:quiznetic_flutter/services/score_repository.dart';
 import 'package:quiznetic_flutter/services/user_checker.dart';
 import 'package:quiznetic_flutter/widgets/legal_consent_notice.dart';
@@ -77,6 +80,12 @@ class _UpgradeAccountScreenState extends State<UpgradeAccountScreen> {
   /// Handles successful credential-link events and closes upgrade flow.
   Future<void> _finalizeUpgrade(fba.User? user) async {
     if (_isProcessingUpgrade || user == null) return;
+    unawaited(
+      AnalyticsService.instance.logEvent(
+        'auth_upgrade_started',
+        parameters: {'flow': 'upgrade'},
+      ),
+    );
 
     setState(() {
       _isProcessingUpgrade = true;
@@ -87,6 +96,12 @@ class _UpgradeAccountScreenState extends State<UpgradeAccountScreen> {
         initialAnonymousUid: _initialAnonymousUid,
         user: user,
       )) {
+        unawaited(
+          AnalyticsService.instance.logEvent(
+            'auth_upgrade_failed',
+            parameters: {'flow': 'upgrade', 'reason': 'uid_mismatch'},
+          ),
+        );
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -101,6 +116,12 @@ class _UpgradeAccountScreenState extends State<UpgradeAccountScreen> {
 
       final ensured = await UserChecker.ensureUserDocument(user: user);
       if (!ensured) {
+        unawaited(
+          AnalyticsService.instance.logEvent(
+            'auth_upgrade_failed',
+            parameters: {'flow': 'upgrade', 'reason': 'profile_bootstrap'},
+          ),
+        );
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -117,11 +138,39 @@ class _UpgradeAccountScreenState extends State<UpgradeAccountScreen> {
         await LocalFirstScoreRepository().syncPendingScores(forceRetry: true);
       } catch (e) {
         debugPrint('⚠️ Deferred score sync after account upgrade failed: $e');
+        unawaited(
+          AnalyticsService.instance.logEvent(
+            'auth_upgrade_sync_failed',
+            parameters: {
+              'flow': 'upgrade',
+              'error_type': e.runtimeType.toString(),
+            },
+          ),
+        );
       }
 
+      unawaited(
+        AnalyticsService.instance.logEvent(
+          'auth_upgrade_completed',
+          parameters: {'flow': 'upgrade'},
+        ),
+      );
       if (mounted) {
         Navigator.of(context).pop();
       }
+    } catch (e, stackTrace) {
+      debugPrint('UpgradeAccountScreen finalize failed: $e');
+      debugPrintStack(stackTrace: stackTrace);
+      unawaited(
+        AnalyticsService.instance.logEvent(
+          'auth_upgrade_failed',
+          parameters: {
+            'flow': 'upgrade',
+            'reason': 'unexpected_error',
+            'error_type': e.runtimeType.toString(),
+          },
+        ),
+      );
     } finally {
       if (mounted) {
         setState(() {
@@ -177,7 +226,15 @@ class _UpgradeAccountScreenState extends State<UpgradeAccountScreen> {
         footerBuilder: (context, _) => Column(
           children: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () {
+                unawaited(
+                  AnalyticsService.instance.logEvent(
+                    'auth_upgrade_skipped',
+                    parameters: {'flow': 'upgrade'},
+                  ),
+                );
+                Navigator.of(context).pop();
+              },
               child: const Text('Maybe Later'),
             ),
             const LegalConsentNotice(

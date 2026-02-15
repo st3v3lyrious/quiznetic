@@ -3,10 +3,13 @@
  Title: Entry Choice Screen
  Purpose: Lets unauthenticated users choose between guest mode or provider sign-in.
 */
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:quiznetic_flutter/config/brand_config.dart';
 import 'package:quiznetic_flutter/screens/home_screen.dart';
 import 'package:quiznetic_flutter/screens/login_screen.dart';
+import 'package:quiznetic_flutter/services/analytics_service.dart';
 import 'package:quiznetic_flutter/services/auth_service.dart';
 import 'package:quiznetic_flutter/widgets/legal_consent_notice.dart';
 
@@ -75,15 +78,34 @@ class EntryChoiceScreen extends StatelessWidget {
                       const SizedBox(height: 28),
                       ElevatedButton(
                         onPressed: () async {
+                          unawaited(
+                            AnalyticsService.instance.logEvent(
+                              'entry_choice_selected',
+                              parameters: {'mode': 'guest'},
+                            ),
+                          );
                           final handler =
                               continueAsGuest ?? _defaultContinueAsGuest;
                           try {
                             await handler(context);
+                            unawaited(
+                              AnalyticsService.instance.logEvent(
+                                'auth_guest_continue_success',
+                              ),
+                            );
                           } catch (e, stackTrace) {
                             debugPrint(
                               'EntryChoiceScreen guest continuation failed: $e',
                             );
                             debugPrintStack(stackTrace: stackTrace);
+                            unawaited(
+                              AnalyticsService.instance.logEvent(
+                                'auth_guest_continue_failed',
+                                parameters: {
+                                  'error_type': e.runtimeType.toString(),
+                                },
+                              ),
+                            );
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
@@ -100,6 +122,12 @@ class EntryChoiceScreen extends StatelessWidget {
                       const SizedBox(height: 12),
                       OutlinedButton(
                         onPressed: () {
+                          unawaited(
+                            AnalyticsService.instance.logEvent(
+                              'entry_choice_selected',
+                              parameters: {'mode': 'account'},
+                            ),
+                          );
                           final handler =
                               onSignInChoice ?? _defaultSignInChoice;
                           handler(context);

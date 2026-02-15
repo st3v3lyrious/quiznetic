@@ -40,11 +40,12 @@ Use this as a short, editable delivery plan.
   - Activation/update runbook: `docs/BRANDING_ASSETS.md`
 - [x] M13: Build Settings and About screens.
   - Includes account/session controls, sign-out flow, legal links, and app metadata/support surface.
-- [ ] M14: Add analytics and crash reporting instrumentation.
+- [x] M14: Add analytics and crash reporting instrumentation.
   - [x] Crash reporting baseline shipped (Firebase Crashlytics init + Flutter/zone unhandled error capture).
   - [x] Crash reporting kill switch added: `ENABLE_CRASH_REPORTING` (default `true`).
-  - [ ] Add analytics event breadcrumbs for crash triage (screen views + critical flow actions).
-  - [ ] Product analytics instrumentation still pending.
+  - [x] Analytics event breadcrumbs shipped for crash triage (screen views + critical flow actions).
+  - [x] Product analytics baseline shipped for auth, quiz, and score-submission funnels.
+  - [x] Analytics kill switch added: `ENABLE_ANALYTICS` (default `true`).
 - [ ] M15: Integrate monetization stack (ads + in-app purchases).
 - [ ] M16: Improve UI/UX polish (animations, progress indicators, feedback styling).
 - [ ] M17: Launch MVP (release checklist, store metadata, and production rollout).
@@ -70,6 +71,7 @@ Use this as a short, editable delivery plan.
   - Added opt-in flag-description accessibility support (`Settings > Accessibility > Show flag descriptions` + in-quiz `Describe Flag` affordance backed by metadata).
   - Expanded flag-description metadata baseline to `263` entries (`100%` current asset coverage) with unit QA guardrails for metadata quality + coverage floor (`>=70%`).
   - Replaced all seeded placeholder templates with curated per-flag structural descriptions (`0` generic seed-template entries remaining).
+  - [ ] Manual visual QA sweep for flag-description accuracy (owner: user).
   - Follow-up audit and prioritized backlog: `docs/ACCESSIBILITY_AUDIT.md`.
 - [ ] M27: Establish release operations readiness (alerts, KPI dashboard, rollback playbook, beta process).
   - [x] Baseline release ops runbook published: `docs/RELEASE_OPS_RUNBOOK.md`.

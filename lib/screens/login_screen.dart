@@ -3,12 +3,15 @@
  Title: Login Screen
  Purpose: Handles provider-based sign-in and account creation.
 */
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:firebase_ui_oauth_apple/firebase_ui_oauth_apple.dart';
 import 'package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart';
 import 'package:quiznetic_flutter/config/app_config.dart';
 import 'package:quiznetic_flutter/config/brand_config.dart';
+import 'package:quiznetic_flutter/services/analytics_service.dart';
 import 'package:quiznetic_flutter/services/auth_service.dart';
 import 'package:quiznetic_flutter/services/score_repository.dart';
 import 'package:quiznetic_flutter/services/user_checker.dart';
@@ -119,9 +122,25 @@ class LoginScreen extends StatelessWidget {
               if (user == null) return;
 
               debugPrint('✅ ${user.uid} signed in');
+              unawaited(
+                AnalyticsService.instance.logEvent(
+                  'auth_signed_in',
+                  parameters: {
+                    'flow': 'login',
+                    'provider_count': user.providerData.length,
+                    'is_anonymous': user.isAnonymous,
+                  },
+                ),
+              );
 
               final created = await UserChecker.ensureUserDocument(user: user);
               if (!created) {
+                unawaited(
+                  AnalyticsService.instance.logEvent(
+                    'auth_profile_bootstrap_failed',
+                    parameters: {'flow': 'login'},
+                  ),
+                );
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
@@ -135,6 +154,12 @@ class LoginScreen extends StatelessWidget {
                   await AuthService().signOut();
                 } catch (_) {
                   // Keep user on login screen even if sign-out cleanup fails.
+                  unawaited(
+                    AnalyticsService.instance.logEvent(
+                      'auth_cleanup_failed',
+                      parameters: {'flow': 'login'},
+                    ),
+                  );
                 }
                 return;
               }
@@ -147,6 +172,15 @@ class LoginScreen extends StatelessWidget {
               } catch (e) {
                 debugPrint(
                   '⚠️ Deferred score sync after provider sign-in failed: $e',
+                );
+                unawaited(
+                  AnalyticsService.instance.logEvent(
+                    'auth_post_signin_sync_failed',
+                    parameters: {
+                      'flow': 'login',
+                      'error_type': e.runtimeType.toString(),
+                    },
+                  ),
                 );
               }
 

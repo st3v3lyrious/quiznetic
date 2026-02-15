@@ -7,6 +7,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:quiznetic_flutter/config/brand_config.dart';
+import 'package:quiznetic_flutter/services/analytics_service.dart';
 import 'package:quiznetic_flutter/services/crash_reporting_service.dart';
 import 'package:quiznetic_flutter/screens/difficulty_screen.dart';
 import 'package:quiznetic_flutter/screens/entry_choice_screen.dart';
@@ -31,7 +32,9 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   final crashReportingService = CrashReportingService();
+  final analyticsService = AnalyticsService.instance;
   await crashReportingService.initialize();
+  await analyticsService.initialize();
 
   await runZonedGuarded(
     () async {
@@ -77,6 +80,7 @@ class QuizNetic extends StatelessWidget {
       child: MaterialApp(
         title: BrandConfig.appName,
         initialRoute: SplashScreen.routeName,
+        navigatorObservers: [AnalyticsNavigationObserver()],
         routes: {
           SplashScreen.routeName: (_) => const SplashScreen(),
           HomeScreen.routeName: (_) => const AuthGuard(child: HomeScreen()),

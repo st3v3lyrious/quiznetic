@@ -10,5 +10,9 @@ void main() {
     test('crash reporting feature flag defaults to true', () {
       expect(AppConfig.enableCrashReporting, isTrue);
     });
+
+    test('analytics feature flag defaults to true', () {
+      expect(AppConfig.enableAnalytics, isTrue);
+    });
   });
 }

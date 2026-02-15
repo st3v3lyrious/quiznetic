@@ -110,4 +110,4 @@ Required repository secret:
 
 - No dedicated on-call scheduler/pager rotation yet.
 - KPI dashboard aggregation is still manual/lightweight.
-- Product analytics breadcrumbs are pending for richer auth/score funnel SLOs.
+- Product analytics breadcrumbs are now available for auth/quiz/score funnels; SLO dashboards still need automated aggregation.
