@@ -39,4 +39,14 @@ class AppConfig {
     'ENABLE_ANALYTICS',
     defaultValue: true,
   );
+
+  /// Enables Sign in with Apple provider surface in auth flows.
+  ///
+  /// Keep ON for production if Apple Auth is configured in Firebase + Apple
+  /// Developer portals. Defaults OFF so MVP can launch safely if Apple setup is
+  /// not completed yet.
+  static const enableAppleSignIn = bool.fromEnvironment(
+    'ENABLE_APPLE_SIGN_IN',
+    defaultValue: false,
+  );
 }

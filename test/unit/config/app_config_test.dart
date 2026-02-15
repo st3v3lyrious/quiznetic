@@ -14,5 +14,9 @@ void main() {
     test('analytics feature flag defaults to true', () {
       expect(AppConfig.enableAnalytics, isTrue);
     });
+
+    test('apple sign-in feature flag defaults to false', () {
+      expect(AppConfig.enableAppleSignIn, isFalse);
+    });
   });
 }

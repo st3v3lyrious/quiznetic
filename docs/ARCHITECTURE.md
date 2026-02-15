@@ -344,6 +344,8 @@ Current implementation uses a local-first repository:
 ## Known Constraints / Cleanup Targets
 
 - Google sign-in requires environment-specific `--dart-define=GOOGLE_OAUTH_CLIENT_ID=...` in local/dev/CI builds.
+- Apple sign-in rollout is controlled by `--dart-define=ENABLE_APPLE_SIGN_IN=true|false` (default `false`).
+- Apple provider release setup requires Apple Developer + Firebase console configuration (runbook: `docs/APPLE_SIGN_IN_SETUP.md`).
 - Backend-authoritative score submission requires
   `--dart-define=ENABLE_BACKEND_SUBMIT_SCORE=true` and Blaze prerequisites
   documented in `docs/BLAZE_FEATURE_FLAGS.md`.

@@ -32,6 +32,17 @@ Use this as a short, editable delivery plan.
 - [ ] M8: Add Guess the Song from Lyrics quiz category (deferred outside MVP scope; licensed lyric snippets + answer metadata + tests).
 - [ ] M9: Add Guess the Anime quiz category (content set + quiz loader + tests).
 - [ ] M10: Ship Apple sign-in as a production-ready provider across supported platforms.
+  - [x] App-side provider gating + rollback flag shipped (`ENABLE_APPLE_SIGN_IN`, default `false`).
+  - [x] iOS/macOS entitlement baseline committed for Sign in with Apple capability.
+  - [x] Login/upgrade auth failures now map to user-safe provider messages.
+  - [ ] Apple Developer + Firebase provider credentials/configuration per environment still pending.
+  - Manual pre-deployment checklist (required before enabling flag):
+    - [ ] Enable `Sign in with Apple` capability on Apple App ID(s).
+    - [ ] Create Apple sign-in key (`.p8`) and capture Team ID + Key ID.
+    - [ ] Create/configure Apple Service ID and callback URL (`https://<project-id>.firebaseapp.com/__/auth/handler`).
+    - [ ] Configure Firebase Auth Apple provider with Service ID/Team ID/Key ID/private key.
+    - [ ] Run iOS + macOS login/upgrade smoke tests with `ENABLE_APPLE_SIGN_IN=true`.
+  - Activation runbook: `docs/APPLE_SIGN_IN_SETUP.md`
 - [x] M11: Implement global leaderboard experience (data query strategy + screen design + filters).
 - [ ] M12: Add branded app icons and splash screens for all target platforms.
   - [x] Baseline asset pipeline configured (`flutter_launcher_icons`, `flutter_native_splash`, and `tools/refresh_branding_assets.sh`).
@@ -49,6 +60,7 @@ Use this as a short, editable delivery plan.
 - [ ] M15: Integrate monetization stack (ads + in-app purchases).
 - [ ] M16: Improve UI/UX polish (animations, progress indicators, feedback styling).
 - [ ] M17: Launch MVP (release checklist, store metadata, and production rollout).
+  - If Apple setup is not complete by launch date, keep `ENABLE_APPLE_SIGN_IN=false` for MVP and ship with Email/Google.
 - [ ] M18: Build content licensing + attribution pipeline for celebrity/song/anime datasets.
 - [x] M19: Harden Firestore security rules and add automated Firestore-rules tests in CI.
 - [ ] M20: Add leaderboard integrity protections (anti-cheat scoring checks, abuse controls, rate limits).

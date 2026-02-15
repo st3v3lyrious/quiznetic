@@ -6,6 +6,7 @@
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart' as fba;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:firebase_ui_oauth_apple/firebase_ui_oauth_apple.dart';
@@ -29,15 +30,59 @@ class UpgradeAccountScreen extends StatefulWidget {
     return clientId.trim().isNotEmpty;
   }
 
+  /// Returns true when Apple provider is available in current build/platform.
+  @visibleForTesting
+  static bool isAppleProviderEnabled({
+    bool? appleSignInEnabled,
+    bool isWeb = kIsWeb,
+    TargetPlatform? platform,
+  }) {
+    if (!(appleSignInEnabled ?? AppConfig.enableAppleSignIn)) {
+      return false;
+    }
+    if (isWeb) {
+      return true;
+    }
+
+    final resolvedPlatform = platform ?? defaultTargetPlatform;
+    return resolvedPlatform == TargetPlatform.android ||
+        resolvedPlatform == TargetPlatform.iOS ||
+        resolvedPlatform == TargetPlatform.macOS;
+  }
+
   /// Builds provider list for anonymous-account upgrade.
   @visibleForTesting
-  static List<AuthProvider> buildProviders({required String googleClientId}) {
+  static List<AuthProvider> buildProviders({
+    required String googleClientId,
+    bool? includeAppleProvider,
+  }) {
+    final appleEnabled = includeAppleProvider ?? isAppleProviderEnabled();
     return [
       EmailAuthProvider(),
       if (isGoogleProviderEnabled(googleClientId))
         GoogleProvider(clientId: googleClientId.trim()),
-      AppleProvider(),
+      if (appleEnabled) AppleProvider(scopes: const <String>{'email', 'name'}),
     ];
+  }
+
+  /// Maps Firebase Auth failures to user-safe sign-in messages.
+  @visibleForTesting
+  static String authFailureMessage(Exception exception) {
+    if (exception is fba.FirebaseAuthException) {
+      switch (exception.code) {
+        case 'operation-not-allowed':
+          return 'This sign-in method is currently unavailable. Please try another option.';
+        case 'web-context-cancelled':
+          return 'Sign-in was cancelled. Please try again.';
+        case 'web-context-already-presented':
+          return 'Another sign-in prompt is already open.';
+        case 'missing-or-invalid-nonce':
+          return 'Apple sign-in validation failed. Please try again.';
+        case 'network-request-failed':
+          return 'Network error while signing in. Check your connection and try again.';
+      }
+    }
+    return 'Sign-in failed. Please try again.';
   }
 
   /// Returns true when upgraded user keeps the same uid as guest identity.
@@ -188,6 +233,7 @@ class _UpgradeAccountScreenState extends State<UpgradeAccountScreen> {
     final googleConfigured = UpgradeAccountScreen.isGoogleProviderEnabled(
       resolvedGoogleClientId,
     );
+    final appleConfigured = UpgradeAccountScreen.isAppleProviderEnabled();
 
     // Offer the firebase_ui_auth sign-in screen to upgrade anonymous users.
     return Scaffold(
@@ -195,6 +241,7 @@ class _UpgradeAccountScreenState extends State<UpgradeAccountScreen> {
       body: SignInScreen(
         providers: UpgradeAccountScreen.buildProviders(
           googleClientId: resolvedGoogleClientId,
+          includeAppleProvider: appleConfigured,
         ),
         subtitleBuilder: (context, action) {
           return Column(
@@ -211,6 +258,14 @@ class _UpgradeAccountScreenState extends State<UpgradeAccountScreen> {
                     textAlign: TextAlign.center,
                   ),
                 ),
+              if (!appleConfigured)
+                const Padding(
+                  padding: EdgeInsets.only(top: 8),
+                  child: Text(
+                    'Apple sign-in is currently unavailable.',
+                    textAlign: TextAlign.center,
+                  ),
+                ),
             ],
           );
         },
@@ -221,6 +276,25 @@ class _UpgradeAccountScreenState extends State<UpgradeAccountScreen> {
           AuthStateChangeAction<SignedIn>((context, state) {
             // Fallback for providers that emit SignedIn after successful link.
             _finalizeUpgrade(state.user);
+          }),
+          AuthStateChangeAction<AuthFailed>((context, state) {
+            final exception = state.exception;
+            final errorCode = exception is fba.FirebaseAuthException
+                ? exception.code
+                : exception.runtimeType.toString();
+            unawaited(
+              AnalyticsService.instance.logEvent(
+                'auth_upgrade_failed',
+                parameters: {'flow': 'upgrade', 'error_code': errorCode},
+              ),
+            );
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  UpgradeAccountScreen.authFailureMessage(exception),
+                ),
+              ),
+            );
           }),
         ],
         footerBuilder: (context, _) => Column(

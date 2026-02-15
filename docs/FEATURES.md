@@ -58,6 +58,9 @@ Use this as an editable feature checklist.
 - [ ] Add Guess the Song from Lyrics quiz category (Deferred outside MVP scope)
 - [ ] Add Guess the Anime quiz category
 - [ ] Add Apple sign-in as a production-ready auth option
+  - [x] Runtime provider gating + rollback flag (`ENABLE_APPLE_SIGN_IN`, default `false`)
+  - [x] iOS/macOS entitlement baseline committed for Sign in with Apple
+  - [ ] Apple Developer + Firebase provider credentials/setup still required per environment
 - [x] Implement a global leaderboard screen (with UX/design, category+difficulty filters, and ranking presentation)
 - [ ] Create branded app icons for all target platforms
 - [ ] Create branded splash screens for all target platforms
