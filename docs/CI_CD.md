@@ -24,6 +24,7 @@ This document defines the repository quality gates and the intended merge flow.
 ## Workflows
 
 - `.github/workflows/flutter_quality_gates.yml` (required on PRs)
+  - `Review Agent`: repository review heuristics with line-level CI annotations (`tools/review_agent.py`)
   - `Analyze`: `flutter analyze`
   - `Tests And Coverage`: `flutter test test/widget` + `./tools/check_unit_coverage.sh`
   - `Firestore Rules Tests`: emulator-backed security-rules tests in `firestore_tests/`
@@ -56,6 +57,18 @@ This document defines the repository quality gates and the intended merge flow.
 - Script: `tools/check_unit_coverage.sh`
 - Default threshold: `25%` (override via `MIN_UNIT_COVERAGE`)
 
+## Review Agent
+
+- Script: `tools/review_agent.py`
+- Purpose:
+  - Detect common regression patterns and implementation risks.
+  - Emit line-level CI annotations (`warning`/`error`) on matching files.
+- Current CI mode:
+  - `--fail-on error` (warnings annotate but do not fail the job).
+  - Summary + JSON artifacts are uploaded from `flutter_quality_gates.yml`.
+- Local run:
+  - `python3 tools/review_agent.py --emit-annotations --fail-on error`
+
 ## Firestore Rules Gate
 
 - Rules source: `firestore.rules`
@@ -72,6 +85,7 @@ This document defines the repository quality gates and the intended merge flow.
 2. Enable `Require a pull request before merging`.
 3. Enable `Require status checks to pass before merging`.
 4. Mark as required:
+   - `Review Agent`
    - `Analyze`
    - `Tests And Coverage`
    - `Firestore Rules Tests`
