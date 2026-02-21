@@ -120,46 +120,54 @@ class HintMonetizationService implements HintMonetizationGateway {
     }
 
     if (hasRewardedHintsRemaining) {
-      if (!_adsService.isRewardedHintsEnabled) {
+      final adUnitId = _adsService.rewardedHintAdUnitId;
+      final rewardedConfigured =
+          _adsService.isRewardedHintsEnabled &&
+          adUnitId != null &&
+          adUnitId.isNotEmpty;
+      if (!rewardedConfigured) {
+        if (_paidHintsEnabled) {
+          await _safeLogEvent('hint_rewarded_unavailable_fallback_paid');
+        } else {
+          return const HintRequestResult(
+            status: HintRequestStatus.unavailable,
+            message: 'Rewarded hints are not configured right now.',
+          );
+        }
+      } else {
+        await _safeLogEvent(
+          'hint_rewarded_requested',
+          parameters: {'remaining_before': rewardedHintsRemaining},
+        );
+
+        final unlocked = await _presentRewardedHintAd(adUnitId);
+        if (!unlocked) {
+          await _safeLogEvent('hint_rewarded_not_granted');
+          return const HintRequestResult(
+            status: HintRequestStatus.failed,
+            message: 'Hint was not unlocked. Please try again.',
+          );
+        }
+
+        _rewardedHintsUsed++;
+        await _safeLogEvent(
+          'hint_rewarded_granted',
+          parameters: {'remaining_after': rewardedHintsRemaining},
+        );
+        return HintRequestResult(
+          status: HintRequestStatus.granted,
+          source: HintGrantSource.rewardedAd,
+          message: 'Hint unlocked by rewarded ad.',
+          rewardedHintsRemaining: rewardedHintsRemaining,
+        );
+      }
+
+      if (!_paidHintsEnabled) {
         return const HintRequestResult(
           status: HintRequestStatus.unavailable,
           message: 'Rewarded hints are not configured right now.',
         );
       }
-
-      final adUnitId = _adsService.rewardedHintAdUnitId;
-      if (adUnitId == null || adUnitId.isEmpty) {
-        return const HintRequestResult(
-          status: HintRequestStatus.unavailable,
-          message: 'Rewarded hint ad unit is missing.',
-        );
-      }
-
-      await _safeLogEvent(
-        'hint_rewarded_requested',
-        parameters: {'remaining_before': rewardedHintsRemaining},
-      );
-
-      final unlocked = await _presentRewardedHintAd(adUnitId);
-      if (!unlocked) {
-        await _safeLogEvent('hint_rewarded_not_granted');
-        return const HintRequestResult(
-          status: HintRequestStatus.failed,
-          message: 'Hint was not unlocked. Please try again.',
-        );
-      }
-
-      _rewardedHintsUsed++;
-      await _safeLogEvent(
-        'hint_rewarded_granted',
-        parameters: {'remaining_after': rewardedHintsRemaining},
-      );
-      return HintRequestResult(
-        status: HintRequestStatus.granted,
-        source: HintGrantSource.rewardedAd,
-        message: 'Hint unlocked by rewarded ad.',
-        rewardedHintsRemaining: rewardedHintsRemaining,
-      );
     }
 
     if (_paidHintsEnabled) {

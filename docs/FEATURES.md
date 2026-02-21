@@ -74,6 +74,7 @@ Use this as an editable feature checklist.
   - [x] Banner ad placements on home and result screens
   - [x] Placement-aware ad-unit mapping (Android+iOS home/result ids, with shared fallback ids)
   - [x] Runtime gating via `ENABLE_ADS` plus entitlement check (`remove_ads`)
+  - [x] Non-release compliance guard blocks live `ca-app-pub-*` units unless explicitly allowed (`ALLOW_LIVE_AD_UNITS_IN_DEBUG=true`)
 - [x] Integrate monetization baseline via in-app purchases (IAP)
   - [x] Runtime gating via `ENABLE_IAP` (default `false`)
   - [x] Lifetime `Remove Ads` catalog + purchase/restore plumbing

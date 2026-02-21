@@ -59,6 +59,15 @@ class AppConfig {
     defaultValue: false,
   );
 
+  /// Allows non-test AdMob units in non-release builds.
+  ///
+  /// Keep OFF by default so debug/profile QA builds do not accidentally serve
+  /// live ads when `ENABLE_ADS=true` unless explicitly intended.
+  static const allowLiveAdUnitsInDebug = bool.fromEnvironment(
+    'ALLOW_LIVE_AD_UNITS_IN_DEBUG',
+    defaultValue: false,
+  );
+
   /// Enables in-app purchase flows for monetization entitlements.
   ///
   /// Keep OFF until store products are configured and purchase/restore flows

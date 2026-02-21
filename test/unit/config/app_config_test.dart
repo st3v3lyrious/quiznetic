@@ -23,6 +23,10 @@ void main() {
       expect(AppConfig.enableAds, isFalse);
     });
 
+    test('live ad debug override defaults to false', () {
+      expect(AppConfig.allowLiveAdUnitsInDebug, isFalse);
+    });
+
     test('iap feature flag defaults to false', () {
       expect(AppConfig.enableIap, isFalse);
     });

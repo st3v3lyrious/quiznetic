@@ -26,6 +26,9 @@ Current compile-time kill switches:
 - `ENABLE_ADS` (default: `false`)
   - Purpose: enable/disable in-app banner ad surfaces.
   - Source: `lib/config/app_config.dart`
+- `ALLOW_LIVE_AD_UNITS_IN_DEBUG` (default: `false`)
+  - Purpose: blocks accidental live-ad traffic in non-release builds unless explicitly overridden for controlled internal validation.
+  - Source: `lib/config/app_config.dart`
 - `ENABLE_IAP` (default: `false`)
   - Purpose: enable/disable in-app purchase purchase/restore flows.
   - Source: `lib/config/app_config.dart`

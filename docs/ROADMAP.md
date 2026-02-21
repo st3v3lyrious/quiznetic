@@ -61,6 +61,16 @@ Use this as a short, editable delivery plan.
   - Revenue priority: complete ads + IAP launch gate in `docs/MVP_LAUNCH_TEST_CHECKLIST.md` before public rollout.
   - [x] App baseline shipped: remove-ads entitlement persistence, IAP purchase/restore plumbing, and banner placements (home/result) behind feature flags with Android+iOS placement-specific ad-unit support.
   - [ ] Store-side setup still required (ad network approval, ad unit IDs, store product creation, and sandbox purchase QA).
+  - [ ] Ad launch readiness (remaining implementation + platform setup):
+    - [x] Add non-release ad policy guard: block live AdMob `ca-app-pub-*` units unless `ALLOW_LIVE_AD_UNITS_IN_DEBUG=true` is explicitly set.
+    - [ ] Add Android AdMob app id metadata (`com.google.android.gms.ads.APPLICATION_ID`) in `android/app/src/main/AndroidManifest.xml`.
+    - [ ] Add iOS AdMob app id (`GADApplicationIdentifier`) in `ios/Runner/Info.plist`.
+    - [ ] Implement result-screen interstitial runtime flow (load/show/lifecycle + failure fallback) behind a dedicated feature flag.
+    - [ ] Decide and document result placement strategy (banner-only vs interstitial-only vs hybrid) and ensure unit-id wiring matches chosen format.
+    - [ ] Add iOS ATT/consent handling path and validate ad behavior when tracking is denied.
+    - [ ] Publish and verify `app-ads.txt` for production domains/store metadata.
+    - [ ] Validate release define matrix (`ENABLE_ADS`, `ENABLE_REWARDED_HINTS`, `ENABLE_PAID_HINTS`) and keep defaults OFF for safe rollback builds.
+    - [ ] Complete end-to-end monetization QA on physical Android+iOS devices (test ads, rewarded completion path, paid fallback, remove-ads entitlement, restore flow).
   - [ ] Add hint monetization flow:
     - [x] App-side baseline shipped: remove-2-wrong-answers hint action in `QuizScreen` with per-session cap and paid fallback flow.
     - [x] Session cap default: `REWARDED_HINTS_PER_SESSION=3`.
