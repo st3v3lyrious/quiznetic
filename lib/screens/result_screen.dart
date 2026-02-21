@@ -12,6 +12,7 @@ import 'package:quiznetic_flutter/services/analytics_service.dart';
 import 'package:quiznetic_flutter/services/auth_service.dart';
 import 'package:quiznetic_flutter/services/leaderboard_band_service.dart';
 import 'package:quiznetic_flutter/services/score_repository.dart';
+import 'package:quiznetic_flutter/widgets/monetized_banner_ad.dart';
 import 'quiz_screen.dart';
 import 'difficulty_screen.dart';
 import 'home_screen.dart';
@@ -414,6 +415,10 @@ class _ResultScreenState extends State<ResultScreen> {
                                   );
                                 },
                                 child: const Text('Change Quiz Type'),
+                              ),
+                              const SizedBox(height: 16),
+                              const Center(
+                                child: MonetizedBannerAd(placement: 'result'),
                               ),
                             ],
                           ),

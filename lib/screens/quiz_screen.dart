@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:quiznetic_flutter/config/brand_config.dart';
 import 'package:quiznetic_flutter/services/accessibility_preferences.dart';
 import 'package:quiznetic_flutter/services/analytics_service.dart';
+import 'package:quiznetic_flutter/services/hint_monetization_service.dart';
 import '../data/capital_loader.dart';
 import '../data/flag_loader.dart';
 import '../models/flag_question.dart';
@@ -32,10 +33,18 @@ class QuizScreen extends StatefulWidget {
   static const flagDescriptionUnavailableKey = Key(
     'quiz-flag-description-unavailable',
   );
+  static const hintActionButtonKey = Key('quiz-hint-action-button');
+  static const hintSummaryKey = Key('quiz-hint-summary');
   final Future<List<FlagQuestion>> Function()? flagsLoader;
   final List<FlagQuestion> Function(List<FlagQuestion>)? quizPreparer;
+  final HintMonetizationGateway? hintMonetizationService;
 
-  const QuizScreen({super.key, this.flagsLoader, this.quizPreparer});
+  const QuizScreen({
+    super.key,
+    this.flagsLoader,
+    this.quizPreparer,
+    this.hintMonetizationService,
+  });
 
   /// Creates state for the quiz session screen.
   @override
@@ -51,7 +60,10 @@ class _QuizScreenState extends State<QuizScreen> {
   int _score = 0;
   bool _showFlagDescriptionsEnabled = false;
   bool _showCurrentFlagDescription = false;
+  bool _isUnlockingHint = false;
+  final Set<String> _eliminatedOptions = <String>{};
   late final QuizScreenArgs args;
+  late final HintMonetizationGateway _hintMonetizationService;
   bool _argsLoaded = false;
   bool _hasLoggedQuizStarted = false;
 
@@ -62,6 +74,8 @@ class _QuizScreenState extends State<QuizScreen> {
   @override
   void initState() {
     super.initState();
+    _hintMonetizationService =
+        widget.hintMonetizationService ?? HintMonetizationService.instance;
     _loadAccessibilityPreferences();
   }
 
@@ -130,6 +144,7 @@ class _QuizScreenState extends State<QuizScreen> {
     if (!_argsLoaded) {
       args = ModalRoute.of(context)!.settings.arguments as QuizScreenArgs;
       _argsLoaded = true;
+      _hintMonetizationService.resetSession();
       final loadQuestions =
           widget.flagsLoader ?? _defaultLoaderForCategory(args.categoryKey);
       final prepare =
@@ -185,6 +200,7 @@ class _QuizScreenState extends State<QuizScreen> {
         _answered = false;
         _selectedOption = null;
         _showCurrentFlagDescription = false;
+        _eliminatedOptions.clear();
       });
     } else {
       // Instead of pushing ResultScreen(score: _score, total: _questions.length),
@@ -199,6 +215,85 @@ class _QuizScreenState extends State<QuizScreen> {
           total: _questions.length,
         ),
       );
+    }
+  }
+
+  bool _canApplyHint(FlagQuestion question) {
+    if (_answered) return false;
+    final remainingWrongOptions = question.options
+        .where(
+          (option) =>
+              option != question.correctAnswer &&
+              !_eliminatedOptions.contains(option),
+        )
+        .length;
+    return remainingWrongOptions >= 2;
+  }
+
+  String _paidHintLabel() {
+    final dollars = (_hintMonetizationService.paidHintPriceUsdCents / 100)
+        .toStringAsFixed(2);
+    return 'Buy Hint (\$$dollars)';
+  }
+
+  Future<void> _requestHint(FlagQuestion question) async {
+    if (_isUnlockingHint || !_canApplyHint(question)) return;
+
+    setState(() {
+      _isUnlockingHint = true;
+    });
+
+    final result = await _hintMonetizationService.requestHint();
+    if (!mounted) return;
+
+    if (result.status == HintRequestStatus.granted) {
+      final optionsToEliminate = question.options
+          .where(
+            (option) =>
+                option != question.correctAnswer &&
+                !_eliminatedOptions.contains(option),
+          )
+          .take(2)
+          .toList(growable: false);
+
+      setState(() {
+        _eliminatedOptions.addAll(optionsToEliminate);
+      });
+
+      final sourceName = switch (result.source) {
+        HintGrantSource.rewardedAd => 'rewarded_ad',
+        HintGrantSource.paidHint => 'paid_hint',
+        null => 'unknown',
+      };
+      unawaited(
+        AnalyticsService.instance.logEvent(
+          'quiz_hint_applied',
+          parameters: {
+            'category': args.categoryKey,
+            'difficulty': args.difficulty,
+            'question_index': _currentIndex + 1,
+            'source': sourceName,
+            'remaining_rewarded_hints':
+                result.rewardedHintsRemaining ??
+                _hintMonetizationService.rewardedHintsRemaining,
+          },
+        ),
+      );
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Hint applied. Two wrong answers removed.'),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(result.message)));
+    }
+
+    if (mounted) {
+      setState(() {
+        _isUnlockingHint = false;
+      });
     }
   }
 
@@ -255,6 +350,9 @@ class _QuizScreenState extends State<QuizScreen> {
     final q = _questions[_currentIndex];
     final answerFeedback = _answered ? _answerFeedbackFor(q) : null;
     final flagDescription = _flagDescriptionFor(q);
+    final visibleOptions = q.options
+        .where((option) => !_eliminatedOptions.contains(option))
+        .toList(growable: false);
     final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
@@ -372,7 +470,60 @@ class _QuizScreenState extends State<QuizScreen> {
                           ],
                         ],
                         const SizedBox(height: 24),
-                        ...q.options.map((opt) {
+                        if (_hintMonetizationService.isEnabled) ...[
+                          Card(
+                            child: Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Text(
+                                    key: QuizScreen.hintSummaryKey,
+                                    _hintMonetizationService
+                                            .hasRewardedHintsRemaining
+                                        ? 'Free hints left: ${_hintMonetizationService.rewardedHintsRemaining}'
+                                        : _hintMonetizationService
+                                              .canOfferPaidHint
+                                        ? 'Free hints used for this session.'
+                                        : 'No hints left this session.',
+                                  ),
+                                  const SizedBox(height: 8),
+                                  const Text(
+                                    'Hint removes 2 wrong answers for this question.',
+                                  ),
+                                  const SizedBox(height: 8),
+                                  ElevatedButton.icon(
+                                    key: QuizScreen.hintActionButtonKey,
+                                    onPressed:
+                                        (_isUnlockingHint || !_canApplyHint(q))
+                                        ? null
+                                        : _hintMonetizationService
+                                              .hasRewardedHintsRemaining
+                                        ? () => _requestHint(q)
+                                        : _hintMonetizationService
+                                              .canOfferPaidHint
+                                        ? () => _requestHint(q)
+                                        : null,
+                                    icon: const Icon(Icons.lightbulb_outline),
+                                    label: Text(
+                                      _isUnlockingHint
+                                          ? 'Processing hint...'
+                                          : _hintMonetizationService
+                                                .hasRewardedHintsRemaining
+                                          ? 'Watch Ad for Hint'
+                                          : _hintMonetizationService
+                                                .canOfferPaidHint
+                                          ? _paidHintLabel()
+                                          : 'Hints Unavailable',
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                        ],
+                        ...visibleOptions.map((opt) {
                           final isCorrect = opt == q.correctAnswer;
                           final isSelected = opt == _selectedOption;
                           Color bg;

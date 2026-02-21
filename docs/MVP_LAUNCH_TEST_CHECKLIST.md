@@ -12,6 +12,8 @@ Use this checklist on the release-candidate commit you plan to ship.
   - [ ] `ENABLE_APPLE_SIGN_IN=false` (until provider setup is complete)
   - [ ] `ENABLE_CRASH_REPORTING=true`
   - [ ] `ENABLE_ANALYTICS=true`
+  - [ ] `ENABLE_ADS=false` and `ENABLE_IAP=false` unless section 3 is fully green
+  - [ ] `ENABLE_REWARDED_HINTS=false` and `ENABLE_PAID_HINTS=false` unless hint flow QA is complete
 
 ## 2) Manual Core Flow Smoke (Must Pass)
 

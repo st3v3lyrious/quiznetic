@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quiznetic_flutter/config/brand_config.dart';
@@ -5,6 +7,7 @@ import 'package:quiznetic_flutter/models/flag_question.dart';
 import 'package:quiznetic_flutter/screens/quiz_screen.dart';
 import 'package:quiznetic_flutter/screens/result_screen.dart';
 import 'package:quiznetic_flutter/services/accessibility_preferences.dart';
+import 'package:quiznetic_flutter/services/hint_monetization_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -27,6 +30,7 @@ void main() {
     String categoryKey = 'flag',
     FlagQuestion? injectedQuestion,
     bool showFlagDescriptions = false,
+    HintMonetizationGateway? hintMonetizationService,
   }) async {
     final q = injectedQuestion ?? question;
     SharedPreferences.setMockInitialValues({
@@ -54,6 +58,7 @@ void main() {
             builder: (_) => QuizScreen(
               flagsLoader: () async => [q],
               quizPreparer: (_) => [q],
+              hintMonetizationService: hintMonetizationService,
             ),
           ),
         ],
@@ -151,6 +156,53 @@ void main() {
 
     expect(find.text('result:flag:easy:1:1'), findsOneWidget);
   });
+
+  testWidgets('hint action removes two wrong options when granted', (
+    tester,
+  ) async {
+    final hintService = _FakeHintMonetizationService(
+      rewardedHintsRemainingValue: 1,
+      canOfferPaidHintValue: false,
+      queuedResults: Queue<HintRequestResult>.from([
+        const HintRequestResult(
+          status: HintRequestStatus.granted,
+          source: HintGrantSource.rewardedAd,
+          message: 'granted',
+          rewardedHintsRemaining: 0,
+        ),
+      ]),
+    );
+
+    await pumpQuiz(tester, hintMonetizationService: hintService);
+
+    expect(find.byKey(QuizScreen.hintActionButtonKey), findsOneWidget);
+    expect(find.text('Watch Ad for Hint'), findsOneWidget);
+
+    await tester.tap(find.byKey(QuizScreen.hintActionButtonKey));
+    await tester.pumpAndSettle();
+
+    expect(find.text('France'), findsOneWidget);
+    expect(find.text('Germany'), findsOneWidget);
+    expect(find.text('Italy'), findsNothing);
+    expect(find.text('Spain'), findsNothing);
+  });
+
+  testWidgets(
+    'hint action label switches to paid price when free quota is exhausted',
+    (tester) async {
+      final hintService = _FakeHintMonetizationService(
+        rewardedHintsRemainingValue: 0,
+        canOfferPaidHintValue: true,
+        paidHintPriceUsdCentsValue: 50,
+        queuedResults: Queue<HintRequestResult>(),
+      );
+
+      await pumpQuiz(tester, hintMonetizationService: hintService);
+
+      expect(find.byKey(QuizScreen.hintActionButtonKey), findsOneWidget);
+      expect(find.text('Buy Hint (\$0.50)'), findsOneWidget);
+    },
+  );
 }
 
 class _ResultArgsProbe extends StatelessWidget {
@@ -163,6 +215,52 @@ class _ResultArgsProbe extends StatelessWidget {
       body: Text(
         'result:${args.categoryKey}:${args.difficulty}:${args.score}:${args.total}',
       ),
+    );
+  }
+}
+
+class _FakeHintMonetizationService implements HintMonetizationGateway {
+  _FakeHintMonetizationService({
+    required this.rewardedHintsRemainingValue,
+    required this.canOfferPaidHintValue,
+    required this.queuedResults,
+    this.paidHintPriceUsdCentsValue = 50,
+  });
+
+  int rewardedHintsRemainingValue;
+  final bool canOfferPaidHintValue;
+  final int paidHintPriceUsdCentsValue;
+  final Queue<HintRequestResult> queuedResults;
+  int resetSessionCalls = 0;
+
+  @override
+  bool get isEnabled => true;
+
+  @override
+  bool get hasRewardedHintsRemaining => rewardedHintsRemainingValue > 0;
+
+  @override
+  bool get canOfferPaidHint => canOfferPaidHintValue;
+
+  @override
+  int get rewardedHintsRemaining => rewardedHintsRemainingValue;
+
+  @override
+  int get paidHintPriceUsdCents => paidHintPriceUsdCentsValue;
+
+  @override
+  void resetSession() {
+    resetSessionCalls++;
+  }
+
+  @override
+  Future<HintRequestResult> requestHint() async {
+    if (queuedResults.isNotEmpty) {
+      return queuedResults.removeFirst();
+    }
+    return const HintRequestResult(
+      status: HintRequestStatus.failed,
+      message: 'No queued hint result',
     );
   }
 }

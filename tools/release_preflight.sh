@@ -45,6 +45,7 @@ check_release_config() {
   assert_file_exists "docs/legal/TERMS_OF_SERVICE.md"
   assert_file_exists "docs/RELEASE_OPS_RUNBOOK.md"
   assert_file_exists "docs/BLAZE_FEATURE_FLAGS.md"
+  assert_file_exists "docs/MONETIZATION_SETUP.md"
   assert_file_exists "docs/APPLE_SIGN_IN_SETUP.md"
   assert_file_exists "docs/ROADMAP.md"
   assert_file_exists "lib/config/app_config.dart"

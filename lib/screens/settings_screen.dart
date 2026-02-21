@@ -10,13 +10,22 @@ import 'package:quiznetic_flutter/screens/entry_choice_screen.dart';
 import 'package:quiznetic_flutter/screens/legal_document_screen.dart';
 import 'package:quiznetic_flutter/services/accessibility_preferences.dart';
 import 'package:quiznetic_flutter/services/auth_service.dart';
+import 'package:quiznetic_flutter/services/entitlement_service.dart';
+import 'package:quiznetic_flutter/services/iap_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   static const routeName = '/settings';
 
   final AuthService? authService;
+  final IapService? iapService;
+  final EntitlementService? entitlementService;
 
-  const SettingsScreen({super.key, this.authService});
+  const SettingsScreen({
+    super.key,
+    this.authService,
+    this.iapService,
+    this.entitlementService,
+  });
 
   /// Creates state for settings controls and sign-out flow.
   @override
@@ -28,12 +37,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _hapticsEnabled = true;
   bool _showFlagDescriptions = false;
   bool _isSigningOut = false;
+  bool _isLoadingRemoveAdsOffer = false;
+  bool _isPurchasingRemoveAds = false;
+  bool _isRestoringPurchases = false;
+  RemoveAdsOffer? _removeAdsOffer;
+  String? _monetizationStatusMessage;
+
+  late final IapService _iapService;
+  late final EntitlementService _entitlementService;
 
   /// Loads persisted accessibility preferences.
   @override
   void initState() {
     super.initState();
+    _iapService = widget.iapService ?? IapService.instance;
+    _entitlementService =
+        widget.entitlementService ?? EntitlementService.instance;
     _loadAccessibilityPreferences();
+    _loadMonetizationState();
   }
 
   Future<void> _loadAccessibilityPreferences() async {
@@ -69,6 +90,174 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
       );
     }
+  }
+
+  Future<void> _loadMonetizationState() async {
+    if (!_iapService.isEnabled) return;
+
+    setState(() {
+      _isLoadingRemoveAdsOffer = true;
+    });
+
+    try {
+      await _iapService.initialize();
+      final offer = await _iapService.loadRemoveAdsOffer();
+      if (!mounted) return;
+      setState(() {
+        _removeAdsOffer = offer;
+        _monetizationStatusMessage = null;
+      });
+    } catch (e, stackTrace) {
+      debugPrint('Settings monetization load failed: $e');
+      debugPrintStack(stackTrace: stackTrace);
+      if (!mounted) return;
+      setState(() {
+        _monetizationStatusMessage =
+            'Monetization options are currently unavailable.';
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingRemoveAdsOffer = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _buyRemoveAds() async {
+    if (_isPurchasingRemoveAds) return;
+
+    setState(() {
+      _isPurchasingRemoveAds = true;
+    });
+
+    final result = await _iapService.buyRemoveAds();
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(result.message)));
+
+    setState(() {
+      _isPurchasingRemoveAds = false;
+    });
+  }
+
+  Future<void> _restorePurchases() async {
+    if (_isRestoringPurchases) return;
+
+    setState(() {
+      _isRestoringPurchases = true;
+    });
+
+    final result = await _iapService.restorePurchases();
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(result.message)));
+
+    setState(() {
+      _isRestoringPurchases = false;
+    });
+  }
+
+  Widget _buildMonetizationSection(TextTheme textTheme) {
+    if (!_iapService.isEnabled) {
+      return const SizedBox.shrink();
+    }
+
+    return ValueListenableBuilder<bool>(
+      valueListenable: _entitlementService.hasRemoveAdsListenable,
+      builder: (context, hasRemoveAds, _) {
+        final offer = _removeAdsOffer;
+        final offerSubtitle = offer != null && offer.canPurchase
+            ? '${offer.title ?? 'Remove Ads'} - ${offer.price ?? ''}'
+            : 'Purchase currently unavailable';
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 20),
+            Text('Support Quiznetic', style: textTheme.titleMedium),
+            const SizedBox(height: 8),
+            Card(
+              child: Column(
+                children: [
+                  ListTile(
+                    key: const Key('settings-remove-ads-status'),
+                    leading: Icon(
+                      hasRemoveAds
+                          ? Icons.verified_outlined
+                          : Icons.workspace_premium_outlined,
+                    ),
+                    title: const Text('Remove Ads (Lifetime)'),
+                    subtitle: Text(
+                      hasRemoveAds
+                          ? 'Active on this device/account.'
+                          : offerSubtitle,
+                    ),
+                  ),
+                  if (_isLoadingRemoveAdsOffer)
+                    const Padding(
+                      padding: EdgeInsets.only(bottom: 12),
+                      child: SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    ),
+                  if (!hasRemoveAds && !_isLoadingRemoveAdsOffer)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          key: const Key('settings-buy-remove-ads-button'),
+                          onPressed:
+                              (_isPurchasingRemoveAds ||
+                                  offer == null ||
+                                  !offer.canPurchase)
+                              ? null
+                              : _buyRemoveAds,
+                          child: Text(
+                            _isPurchasingRemoveAds
+                                ? 'Starting purchase...'
+                                : 'Buy Remove Ads',
+                          ),
+                        ),
+                      ),
+                    ),
+                  const Divider(height: 1),
+                  ListTile(
+                    key: const Key('settings-restore-purchases-button'),
+                    enabled: !_isRestoringPurchases,
+                    leading: _isRestoringPurchases
+                        ? const SizedBox(
+                            height: 24,
+                            width: 24,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.restore),
+                    title: const Text('Restore Purchases'),
+                    subtitle: const Text('Recover previous purchases'),
+                    onTap: _restorePurchases,
+                  ),
+                  if (_monetizationStatusMessage != null) ...[
+                    const Divider(height: 1),
+                    Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Text(
+                        _monetizationStatusMessage!,
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   /// Returns account status text from the current auth session.
@@ -218,6 +407,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onChanged: _setShowFlagDescriptions,
               ),
             ),
+            _buildMonetizationSection(textTheme),
             const SizedBox(height: 20),
             Text('Legal', style: textTheme.titleMedium),
             const SizedBox(height: 8),

@@ -38,6 +38,8 @@ dependencies:
   firebase_crashlytics: ^5.0.3
   firebase_analytics: ^12.0.3
   shared_preferences: ^2.5.3
+  in_app_purchase: ^3.2.3
+  google_mobile_ads: ^6.0.0
   # Firebase UI packages (use your fork with the fixed imports)
   firebase_ui_auth:
     git:
