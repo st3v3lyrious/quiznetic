@@ -92,6 +92,36 @@ void main() {
       expect(storeClient.buyConsumableCalls, 1);
       storeClient.dispose();
     });
+
+    test(
+      'falls back to paid hint when rewarded is enabled but not configured',
+      () async {
+        final storeClient = _HintFakeStoreClient(autoCompleteConsumable: true);
+        final hintService = HintMonetizationService(
+          rewardedHintsEnabled: true,
+          paidHintsEnabled: true,
+          rewardedHintsPerSession: 1,
+          paidHintPriceUsdCents: 50,
+          adsService: AdsService(
+            rewardedHintsEnabled: true,
+            androidRewardedHintUnitId: '',
+            iosRewardedHintUnitId: '',
+            supportsAds: () => true,
+            initializeAdsSdk: () async => null,
+          ),
+          iapService: _buildIapService(storeClient: storeClient),
+          presentRewardedHintAd: (_) async => true,
+          logEvent: _noopLogEvent,
+        );
+
+        final result = await hintService.requestHint();
+
+        expect(result.status, HintRequestStatus.granted);
+        expect(result.source, HintGrantSource.paidHint);
+        expect(storeClient.buyConsumableCalls, 1);
+        storeClient.dispose();
+      },
+    );
   });
 }
 
