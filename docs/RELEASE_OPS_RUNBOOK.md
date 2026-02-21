@@ -26,6 +26,9 @@ Current compile-time kill switches:
 - `ENABLE_ADS` (default: `false`)
   - Purpose: enable/disable in-app banner ad surfaces.
   - Source: `lib/config/app_config.dart`
+- `ENABLE_RESULT_INTERSTITIAL_ADS` (default: `false`)
+  - Purpose: enable/disable result-screen interstitial attempts (hybrid flow).
+  - Source: `lib/config/app_config.dart`
 - `ALLOW_LIVE_AD_UNITS_IN_DEBUG` (default: `false`)
   - Purpose: blocks accidental live-ad traffic in non-release builds unless explicitly overridden for controlled internal validation.
   - Source: `lib/config/app_config.dart`
@@ -88,6 +91,7 @@ Activation requirement:
    - `ENABLE_CRASH_REPORTING=true` (unless actively debugging SDK issues)
    - `ENABLE_APPLE_SIGN_IN=false` unless Apple setup is complete and validated
    - `ENABLE_ADS=false` and `ENABLE_IAP=false` unless monetization launch gate is green
+   - `ENABLE_RESULT_INTERSTITIAL_ADS=false` unless hybrid result-ad QA is green
    - `ENABLE_REWARDED_HINTS=false` and `ENABLE_PAID_HINTS=false` unless hint monetization QA is green
 4. Execute launch test checklist:
    - `docs/MVP_LAUNCH_TEST_CHECKLIST.md` (core flow + monetization go/no-go).
@@ -132,6 +136,7 @@ Escalate immediately when:
    - exclude provider config in build (e.g., remove/blank Google client id for temporary disable)
 4. Monetization regression/policy risk:
    - set `ENABLE_ADS=false`
+   - set `ENABLE_RESULT_INTERSTITIAL_ADS=false`
    - set `ENABLE_IAP=false`
    - set `ENABLE_REWARDED_HINTS=false`
    - set `ENABLE_PAID_HINTS=false`

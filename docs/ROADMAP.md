@@ -63,13 +63,24 @@ Use this as a short, editable delivery plan.
   - [ ] Store-side setup still required (ad network approval, ad unit IDs, store product creation, and sandbox purchase QA).
   - [ ] Ad launch readiness (remaining implementation + platform setup):
     - [x] Add non-release ad policy guard: block live AdMob `ca-app-pub-*` units unless `ALLOW_LIVE_AD_UNITS_IN_DEBUG=true` is explicitly set.
-    - [ ] Add Android AdMob app id metadata (`com.google.android.gms.ads.APPLICATION_ID`) in `android/app/src/main/AndroidManifest.xml`.
-    - [ ] Add iOS AdMob app id (`GADApplicationIdentifier`) in `ios/Runner/Info.plist`.
-    - [ ] Implement result-screen interstitial runtime flow (load/show/lifecycle + failure fallback) behind a dedicated feature flag.
-    - [ ] Decide and document result placement strategy (banner-only vs interstitial-only vs hybrid) and ensure unit-id wiring matches chosen format.
+    - [x] Add Android AdMob app id metadata (`com.google.android.gms.ads.APPLICATION_ID`) in `android/app/src/main/AndroidManifest.xml`.
+    - [x] Add iOS AdMob app id (`GADApplicationIdentifier`) in `ios/Runner/Info.plist`.
+    - [x] Implement result-screen interstitial runtime flow (load/show/lifecycle + failure fallback) behind a dedicated feature flag (`ENABLE_RESULT_INTERSTITIAL_ADS`, default `false`).
+    - [x] Decide and document result placement strategy (hybrid: interstitial-first with banner fallback on failure) and ensure unit-id wiring matches chosen format.
     - [ ] Add iOS ATT/consent handling path and validate ad behavior when tracking is denied.
+      - [ ] Owner assigned: `____________`
+      - [ ] Target date: `____________`
+      - ATT runtime implementation rule: implement prompt flow only if we enable IDFA usage, personalized ads, or advanced attribution.
+      - [x] MVP metadata baseline shipped (`NSUserTrackingUsageDescription` + `SKAdNetworkItems` key presence in `ios/Runner/Info.plist`).
+      - [ ] Runtime ATT prompt/consent flow + denied-path QA pending (deferred for MVP default no-forced-prompt build).
     - [ ] Publish and verify `app-ads.txt` for production domains/store metadata.
-    - [ ] Validate release define matrix (`ENABLE_ADS`, `ENABLE_REWARDED_HINTS`, `ENABLE_PAID_HINTS`) and keep defaults OFF for safe rollback builds.
+      - [ ] Owner assigned: `____________`
+      - [ ] Target date: `____________`
+      - [x] Template file added: `docs/app-ads.txt.example`.
+      - [ ] Buy/select production domain for hosting `app-ads.txt` (examples: `quiznetic.com`, `quizneticapp.com`).
+      - [ ] Publish `https://<domain>/app-ads.txt` and verify public access.
+      - [ ] Add the exact `app-ads.txt` URL/domain in Google Play Console and App Store Connect metadata.
+    - [x] Validate release define matrix (`ENABLE_ADS`, `ENABLE_RESULT_INTERSTITIAL_ADS`, `ENABLE_REWARDED_HINTS`, `ENABLE_PAID_HINTS`) and keep defaults OFF for safe rollback builds.
     - [ ] Complete end-to-end monetization QA on physical Android+iOS devices (test ads, rewarded completion path, paid fallback, remove-ads entitlement, restore flow).
   - [ ] Add hint monetization flow:
     - [x] App-side baseline shipped: remove-2-wrong-answers hint action in `QuizScreen` with per-session cap and paid fallback flow.

@@ -13,6 +13,7 @@ Use this checklist on the release-candidate commit you plan to ship.
   - [ ] `ENABLE_CRASH_REPORTING=true`
   - [ ] `ENABLE_ANALYTICS=true`
   - [ ] `ENABLE_ADS=false` and `ENABLE_IAP=false` unless section 3 is fully green
+  - [ ] `ENABLE_RESULT_INTERSTITIAL_ADS=false` unless hybrid result-ad QA is complete
   - [ ] `ENABLE_REWARDED_HINTS=false` and `ENABLE_PAID_HINTS=false` unless hint flow QA is complete
 
 ## 2) Manual Core Flow Smoke (Must Pass)
@@ -60,7 +61,7 @@ If revenue is required for launch, treat this entire section as `NO-GO` blocking
 - [ ] Dashboard/queries exist to review monetization conversion and failures.
 - [ ] Privacy policy copy includes ads/IAP data handling.
 - [ ] Store listing metadata includes pricing/IAP disclosures.
-- [ ] Platform permissions/prompts are reviewed (for example ATT on iOS if needed).
+- [ ] Platform permissions/prompts are reviewed (ATT runtime prompt required only if using IDFA, personalized ads, or advanced attribution).
 
 ## 4) Launch Decision
 

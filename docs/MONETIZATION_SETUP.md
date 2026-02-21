@@ -43,8 +43,12 @@ This runbook documents how to activate monetization safely for MVP.
   - Managed by hint monetization flow (`HintMonetizationService`) via `AdsService`.
   - Uses `ADS_ANDROID_REWARDED_HINT_UNIT_ID` / `ADS_IOS_REWARDED_HINT_UNIT_ID`.
 - Result interstitial status:
-  - Android interstitial unit id is configured via `ADS_ANDROID_RESULT_INTERSTITIAL_UNIT_ID`.
-  - UI rendering flow for result interstitial is not yet enabled in-app; current result placement remains banner-based.
+  - Result interstitial runtime flow is implemented behind `ENABLE_RESULT_INTERSTITIAL_ADS` (default `false`).
+  - Hybrid strategy is active when enabled: attempt result interstitial first, then fall back to result banner if load/show fails.
+  - Interstitial telemetry emits:
+    - `result_interstitial_requested`
+    - `result_interstitial_shown`
+    - `result_interstitial_fallback_banner`
 
 ## Platform Setup (Required)
 
@@ -58,7 +62,7 @@ Add AdMob app id metadata inside `<application>`:
 ```xml
 <meta-data
     android:name="com.google.android.gms.ads.APPLICATION_ID"
-    android:value="ca-app-pub-xxxxxxxxxxxxxxxx~yyyyyyyyyy" />
+    android:value="ca-app-pub-9485263915698875~7236935415" />
 ```
 
 - Use your AdMob **app id** (`~` separator), not an ad unit id (`/` separator).
@@ -69,7 +73,7 @@ Add AdMob app id:
 
 ```xml
 <key>GADApplicationIdentifier</key>
-<string>ca-app-pub-xxxxxxxxxxxxxxxx~yyyyyyyyyy</string>
+<string>ca-app-pub-9485263915698875~4795109481</string>
 ```
 
 Add required SKAdNetwork IDs:
@@ -89,11 +93,21 @@ Add required SKAdNetwork IDs:
 - If ATT is used for personalized ads, also ensure `NSUserTrackingUsageDescription`
   and your ATT flow are configured.
 
+### iOS ATT MVP default
+
+- `NSUserTrackingUsageDescription` is configured in `ios/Runner/Info.plist`.
+- MVP default behavior does not force ATT prompt before showing ads.
+- ATT runtime prompt/consent flow should be implemented only when monetization
+  scope includes IDFA usage, personalized ads, or advanced attribution.
+- If you later enable ATT prompt flow, validate behavior for both
+  `authorized` and `denied/restricted` states during monetization QA.
+
 ## Feature Flags
 
 Defined in `lib/config/app_config.dart`:
 
 - `ENABLE_ADS` (default: `false`)
+- `ENABLE_RESULT_INTERSTITIAL_ADS` (default: `false`)
 - `ALLOW_LIVE_AD_UNITS_IN_DEBUG` (default: `false`)
 - `ENABLE_IAP` (default: `false`)
 - `IAP_REMOVE_ADS_PRODUCT_ID` (default: `quiznetic.remove_ads_lifetime`)
@@ -125,6 +139,7 @@ Enable monetization only when all are true:
 6. Privacy policy/store metadata disclose ads + IAP behavior.
 7. Hint flow QA passes when enabled (rewarded hint -> session cap -> paid fallback).
 8. Non-release QA builds use Google test ids (or explicitly set `ALLOW_LIVE_AD_UNITS_IN_DEBUG=true` for tightly controlled internal validation only).
+9. `ENABLE_RESULT_INTERSTITIAL_ADS` is enabled only after result flow QA passes (show + failure fallback + no-regression checks).
 
 ## Build Examples
 
@@ -141,6 +156,7 @@ flutter run \
 ```bash
 flutter run \
   --dart-define=ENABLE_ADS=true \
+  --dart-define=ENABLE_RESULT_INTERSTITIAL_ADS=false \
   --dart-define=ALLOW_LIVE_AD_UNITS_IN_DEBUG=false \
   --dart-define=ENABLE_IAP=true \
   --dart-define=ENABLE_REWARDED_HINTS=false \
@@ -159,6 +175,7 @@ flutter run \
 ```bash
 flutter run \
   --dart-define=ENABLE_ADS=true \
+  --dart-define=ENABLE_RESULT_INTERSTITIAL_ADS=false \
   --dart-define=ALLOW_LIVE_AD_UNITS_IN_DEBUG=false \
   --dart-define=ENABLE_IAP=true \
   --dart-define=ENABLE_REWARDED_HINTS=true \
@@ -169,6 +186,29 @@ flutter run \
   --dart-define=ADS_ANDROID_REWARDED_HINT_UNIT_ID=ca-app-pub-3940256099942544/5224354917 \
   --dart-define=ADS_IOS_REWARDED_HINT_UNIT_ID=ca-app-pub-3940256099942544/1712485313
 ```
+
+### Result hybrid ad QA build (interstitial-first + banner fallback)
+
+```bash
+flutter run \
+  --dart-define=ENABLE_ADS=true \
+  --dart-define=ENABLE_RESULT_INTERSTITIAL_ADS=true \
+  --dart-define=ALLOW_LIVE_AD_UNITS_IN_DEBUG=false \
+  --dart-define=ADS_ANDROID_RESULT_INTERSTITIAL_UNIT_ID=ca-app-pub-3940256099942544/1033173712 \
+  --dart-define=ADS_IOS_RESULT_INTERSTITIAL_UNIT_ID=ca-app-pub-3940256099942544/4411468910 \
+  --dart-define=ADS_ANDROID_RESULT_BANNER_UNIT_ID=ca-app-pub-3940256099942544/6300978111 \
+  --dart-define=ADS_IOS_RESULT_BANNER_UNIT_ID=ca-app-pub-3940256099942544/2934735716
+```
+
+## app-ads.txt Baseline
+
+- Template file is provided at `docs/app-ads.txt.example`.
+- Choose a production domain for hosting (for example `quiznetic.com` or
+  `quizneticapp.com`).
+- Publish this content as `https://<your-domain>/app-ads.txt` on the domain
+  linked from your store listing before enabling live ads in production.
+- Add the exact `app-ads.txt` URL/domain in Google Play Console and
+  App Store Connect metadata.
 
 ## Rollback
 
