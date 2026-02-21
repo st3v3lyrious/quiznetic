@@ -94,6 +94,8 @@ Use this as a short, editable delivery plan.
 - [ ] M17: Launch MVP (release checklist, store metadata, and production rollout).
   - [x] Launch preflight automation shipped (`tools/release_preflight.sh` + `.github/workflows/release_preflight.yml`).
   - [x] Manual launch test checklist published: `docs/MVP_LAUNCH_TEST_CHECKLIST.md`.
+  - [x] Bug tracking split out from roadmap into dedicated issue log: `docs/ISSUES.md`.
+  - [ ] Close all open MVP blockers in `docs/ISSUES.md` before public launch.
   - If Apple setup is not complete by launch date, keep `ENABLE_APPLE_SIGN_IN=false` for MVP and ship with Email/Google.
 - [ ] M18: Build content licensing + attribution pipeline for celebrity/song/anime datasets.
 - [x] M19: Harden Firestore security rules and add automated Firestore-rules tests in CI.
@@ -118,6 +120,7 @@ Use this as a short, editable delivery plan.
   - Expanded flag-description metadata baseline to `263` entries (`100%` current asset coverage) with unit QA guardrails for metadata quality + coverage floor (`>=70%`).
   - Replaced all seeded placeholder templates with curated per-flag structural descriptions (`0` generic seed-template entries remaining).
   - [ ] Manual visual QA sweep for flag-description accuracy (owner: user).
+  - [ ] MVP+1 accessibility enhancements tracked in `docs/ISSUES.md` (for example `ISS-005` audio description mode).
   - Follow-up audit and prioritized backlog: `docs/ACCESSIBILITY_AUDIT.md`.
 - [ ] M27: Establish release operations readiness (alerts, KPI dashboard, rollback playbook, beta process).
   - [x] Baseline release ops runbook published: `docs/RELEASE_OPS_RUNBOOK.md`.
