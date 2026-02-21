@@ -6,6 +6,7 @@
 import 'package:flutter/material.dart';
 import 'package:quiznetic_flutter/config/brand_config.dart';
 import 'package:quiznetic_flutter/services/auth_service.dart';
+import 'package:quiznetic_flutter/widgets/monetized_banner_ad.dart';
 import 'difficulty_screen.dart';
 import 'leaderboard_screen.dart';
 import 'settings_screen.dart';
@@ -183,6 +184,8 @@ class HomeScreen extends StatelessWidget {
                       },
                     ),
                   ),
+                  const SizedBox(height: 12),
+                  const Center(child: MonetizedBannerAd(placement: 'home')),
                 ],
               ),
             ),

@@ -283,6 +283,91 @@ def scan_workflow_job_if_secrets(root: Path, findings: list[Finding]) -> None:
       )
 
 
+def scan_banner_double_dispose(root: Path, findings: list[Finding]) -> None:
+  banner_path = root / "lib" / "widgets" / "monetized_banner_ad.dart"
+  if not banner_path.exists():
+    return
+
+  text = read_text(banner_path)
+  pattern = re.compile(
+    r"onAdFailedToLoad\s*:\s*\(\s*ad\s*,\s*error\s*\)\s*\{([\s\S]*?)\}",
+    re.MULTILINE,
+  )
+
+  for match in pattern.finditer(text):
+    body = match.group(1)
+    if "ad.dispose()" in body and "_disposeBannerAd(" in body:
+      add_finding(
+        findings,
+        level="warning",
+        rule_id="banner-double-dispose",
+        path=banner_path,
+        line=line_for_index(text, match.start()),
+        message=(
+          "`onAdFailedToLoad` disposes `ad` directly and also calls "
+          "`_disposeBannerAd(...)`, which can double-dispose the same instance."
+        ),
+        suggestion=(
+          "Use one disposal path (for example `_disposeBannerAd(ad)`) and avoid "
+          "an extra direct `ad.dispose()` call."
+        ),
+        root=root,
+      )
+
+
+def scan_ads_policy_guard(root: Path, findings: list[Finding]) -> None:
+  app_config_path = root / "lib" / "config" / "app_config.dart"
+  ads_service_path = root / "lib" / "services" / "ads_service.dart"
+  if not app_config_path.exists() or not ads_service_path.exists():
+    return
+
+  app_config_text = read_text(app_config_path)
+  if "ALLOW_LIVE_AD_UNITS_IN_DEBUG" not in app_config_text:
+    add_finding(
+      findings,
+      level="warning",
+      rule_id="ads-policy-guard-missing-flag",
+      path=app_config_path,
+      line=1,
+      message=(
+        "Missing `ALLOW_LIVE_AD_UNITS_IN_DEBUG` compile-time override for ad "
+        "policy controls."
+      ),
+      suggestion=(
+        "Keep an explicit non-release override flag so live ad serving requires "
+        "deliberate opt-in during internal validation."
+      ),
+      root=root,
+    )
+
+  ads_service_text = read_text(ads_service_path)
+  required_tokens = [
+    "_allowLiveAdUnitsInDebug",
+    "kReleaseMode",
+    "_looksLikeAdMobUnitId",
+    "_isOfficialGoogleTestAdUnit",
+  ]
+  for token in required_tokens:
+    if token in ads_service_text:
+      continue
+    add_finding(
+      findings,
+      level="warning",
+      rule_id="ads-policy-guard-missing-enforcement",
+      path=ads_service_path,
+      line=1,
+      message=(
+        "Ads policy/compliance guard appears incomplete for non-release ad unit "
+        f"validation (missing `{token}`)."
+      ),
+      suggestion=(
+        "Preserve guard logic that blocks live `ca-app-pub-*` units in "
+        "non-release builds unless explicitly overridden."
+      ),
+      root=root,
+    )
+
+
 def escape_annotation(text: str) -> str:
   return text.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
 
@@ -345,6 +430,8 @@ def run(root: Path) -> list[Finding]:
   scan_repeated_quiz_feedback_calls(root, findings)
   scan_xcode_asset_symbol_setting(root, findings)
   scan_workflow_job_if_secrets(root, findings)
+  scan_banner_double_dispose(root, findings)
+  scan_ads_policy_guard(root, findings)
 
   level_rank = {"error": 0, "warning": 1, "notice": 2}
   findings.sort(

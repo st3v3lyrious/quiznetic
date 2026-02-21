@@ -21,12 +21,17 @@ It is intended to be source material for generated docs (including `README.md`).
 - `firebase_ui_auth` + OAuth provider packages (from forked repo ref)
 - `shared_preferences`
 - `cloud_functions` (backend score-submission path behind feature flag)
+- `in_app_purchase` (store-backed Remove Ads purchase + restore path)
+- `google_mobile_ads` (banner placements, runtime gated)
 
 ## Codebase Layout
 
 - `lib/main.dart`: app bootstrap, Firebase init, route registration, global theme.
 - `lib/services/analytics_service.dart`: Firebase Analytics wiring and route-observer screen tracking.
 - `lib/services/crash_reporting_service.dart`: Crashlytics wiring and unhandled-error capture hooks.
+- `lib/services/entitlement_service.dart`: persisted runtime entitlements (currently `remove_ads`).
+- `lib/services/iap_service.dart`: store purchase/restore orchestration for lifetime Remove Ads unlock.
+- `lib/services/ads_service.dart`: ad SDK gating/initialization and placement eligibility checks.
 - `lib/config/brand_config.dart`: app branding tokens (app name, core colors, web/splash color values).
 - `test/unit/config/accessibility_contrast_test.dart`: WCAG AA contrast guardrails for core theme pairs.
 - `test/widget/screens/accessibility_text_scaling_test.dart`: dynamic type baseline coverage for key screens.
@@ -35,6 +40,7 @@ It is intended to be source material for generated docs (including `README.md`).
 - `lib/data/*`: quiz content loaders (`flag_loader.dart`, `capital_loader.dart`) and sample data.
 - `lib/models/*`: domain models (`FlagQuestion`).
 - `lib/widgets/*`: shared UI wrappers (`AuthGuard`).
+- `lib/widgets/monetized_banner_ad.dart`: shared banner-ad widget with entitlement-aware visibility.
 - `docs/BLAZE_FEATURE_FLAGS.md`: operational guidance for Blaze-dependent feature flags.
 - `docs/RELEASE_OPS_RUNBOOK.md`: release safety runbook (rollback steps + kill-switch checklist).
 - `docs/ALERT_ROUTING_AND_KPI_THRESHOLDS.md`: release alert severity policy, routing matrix, and KPI trigger thresholds.
@@ -78,7 +84,7 @@ It is intended to be source material for generated docs (including `README.md`).
 14. Quiz loads assets, randomizes questions/options, tracks score.
 15. Results screen saves score, renders session summary, blocks back navigation via `PopScope`, and offers explicit "Change Quiz Type" back to category selection.
 16. Profile screen fetches stored user scores from Firestore and exposes quick links to settings/about.
-17. Settings screen provides account controls, sign-out flow, legal links, and app preference toggles.
+17. Settings screen provides account controls, sign-out flow, legal links, app preference toggles, and monetization controls (`Buy Remove Ads`, `Restore Purchases`) when enabled.
 18. About screen provides app metadata/support contact and legal links.
 
 ## Quiz Engine

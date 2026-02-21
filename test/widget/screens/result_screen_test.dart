@@ -6,8 +6,11 @@ import 'package:quiznetic_flutter/screens/quiz_screen.dart';
 import 'package:quiznetic_flutter/screens/result_screen.dart';
 import 'package:quiznetic_flutter/screens/upgrade_account_screen.dart';
 import 'package:quiznetic_flutter/screens/user_profile_screen.dart';
+import 'package:quiznetic_flutter/services/ads_service.dart';
 import 'package:quiznetic_flutter/services/auth_service.dart';
+import 'package:quiznetic_flutter/services/entitlement_service.dart';
 import 'package:quiznetic_flutter/services/leaderboard_band_service.dart';
+import 'package:quiznetic_flutter/widgets/monetized_banner_ad.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 void main() {
@@ -26,6 +29,9 @@ void main() {
     AuthService? authService,
     LeaderboardBandService? leaderboardBandService,
     WidgetBuilder? upgradeRouteBuilder,
+    AdsService? adsService,
+    EntitlementService? entitlementService,
+    ResultInterstitialPresenter? presentResultInterstitialAd,
   }) async {
     await tester.pumpWidget(
       MaterialApp(
@@ -40,6 +46,9 @@ void main() {
               getHighScore: getHighScore,
               authService: authService,
               leaderboardBandService: leaderboardBandService,
+              adsService: adsService,
+              entitlementService: entitlementService,
+              presentResultInterstitialAd: presentResultInterstitialAd,
             ),
           ),
         ],
@@ -389,6 +398,89 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('guest-conversion-cta')), findsNothing);
+  });
+
+  testWidgets(
+    'keeps result banner hidden when result interstitial shows successfully',
+    (tester) async {
+      await pumpResult(
+        tester,
+        args: ResultScreenArgs(
+          categoryKey: 'flag',
+          score: 6,
+          total: 10,
+          difficulty: 'easy',
+        ),
+        saveScore:
+            ({
+              required categoryKey,
+              required difficulty,
+              required score,
+              required totalQuestions,
+            }) async => score,
+        getHighScore: (categoryKey, difficulty) async => 9,
+        adsService: AdsService(
+          enabled: true,
+          resultInterstitialEnabled: true,
+          androidBannerUnitId: '',
+          iosBannerUnitId: '',
+          androidHomeBannerUnitId: '',
+          iosHomeBannerUnitId: '',
+          androidResultBannerUnitId: 'android-result-banner',
+          iosResultBannerUnitId: '',
+          androidResultInterstitialUnitId:
+              'ca-app-pub-3940256099942544/1033173712',
+          iosResultInterstitialUnitId: '',
+          supportsAds: () => true,
+          initializeAdsSdk: () async => null,
+        ),
+        entitlementService: EntitlementService(initialRemoveAds: false),
+        presentResultInterstitialAd: (_) async => true,
+      );
+
+      expect(find.byType(MonetizedBannerAd), findsNothing);
+    },
+  );
+
+  testWidgets('falls back to result banner when result interstitial fails', (
+    tester,
+  ) async {
+    await pumpResult(
+      tester,
+      args: ResultScreenArgs(
+        categoryKey: 'flag',
+        score: 6,
+        total: 10,
+        difficulty: 'easy',
+      ),
+      saveScore:
+          ({
+            required categoryKey,
+            required difficulty,
+            required score,
+            required totalQuestions,
+          }) async => score,
+      getHighScore: (categoryKey, difficulty) async => 9,
+      adsService: AdsService(
+        enabled: true,
+        resultInterstitialEnabled: true,
+        androidBannerUnitId: '',
+        iosBannerUnitId: '',
+        androidHomeBannerUnitId: '',
+        iosHomeBannerUnitId: '',
+        androidResultBannerUnitId: 'android-result-banner',
+        iosResultBannerUnitId: '',
+        androidResultInterstitialUnitId:
+            'ca-app-pub-3940256099942544/1033173712',
+        iosResultInterstitialUnitId: '',
+        supportsAds: () => true,
+        initializeAdsSdk: () async => null,
+      ),
+      entitlementService: EntitlementService(initialRemoveAds: false),
+      presentResultInterstitialAd: (_) async => false,
+    );
+
+    expect(find.byType(MonetizedBannerAd), findsOneWidget);
   });
 }
 

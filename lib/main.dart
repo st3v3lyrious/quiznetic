@@ -7,8 +7,11 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:quiznetic_flutter/config/brand_config.dart';
+import 'package:quiznetic_flutter/services/ads_service.dart';
 import 'package:quiznetic_flutter/services/analytics_service.dart';
 import 'package:quiznetic_flutter/services/crash_reporting_service.dart';
+import 'package:quiznetic_flutter/services/entitlement_service.dart';
+import 'package:quiznetic_flutter/services/iap_service.dart';
 import 'package:quiznetic_flutter/screens/difficulty_screen.dart';
 import 'package:quiznetic_flutter/screens/entry_choice_screen.dart';
 import 'package:quiznetic_flutter/screens/home_screen.dart';
@@ -33,8 +36,14 @@ void main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   final crashReportingService = CrashReportingService();
   final analyticsService = AnalyticsService.instance;
+  final entitlementService = EntitlementService.instance;
+  final iapService = IapService.instance;
+  final adsService = AdsService.instance;
   await crashReportingService.initialize();
   await analyticsService.initialize();
+  await entitlementService.initialize();
+  await iapService.initialize();
+  await adsService.initialize();
 
   await runZonedGuarded(
     () async {

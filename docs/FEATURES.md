@@ -70,8 +70,20 @@ Use this as an editable feature checklist.
 - [x] Add product analytics instrumentation (baseline auth + quiz + score funnel events)
 - [x] Add analytics event breadcrumbs for crash triage (screen views + critical actions)
 - [x] Add crash reporting (Crashlytics baseline with compile-time kill switch)
-- [ ] Integrate monetization via ads
-- [ ] Integrate monetization via in-app purchases (IAP)
+- [x] Integrate monetization baseline via ads
+  - [x] Banner ad placements on home and result screens
+  - [x] Placement-aware ad-unit mapping (Android+iOS home/result ids, with shared fallback ids)
+  - [x] Runtime gating via `ENABLE_ADS` plus entitlement check (`remove_ads`)
+  - [x] Non-release compliance guard blocks live `ca-app-pub-*` units unless explicitly allowed (`ALLOW_LIVE_AD_UNITS_IN_DEBUG=true`)
+  - [x] Result-screen hybrid ad strategy behind dedicated flag (`ENABLE_RESULT_INTERSTITIAL_ADS`, default `false`): interstitial-first with banner fallback on failure
+  - [x] Native AdMob app-id baseline configured (`com.google.android.gms.ads.APPLICATION_ID` / `GADApplicationIdentifier`)
+- [x] Integrate monetization baseline via in-app purchases (IAP)
+  - [x] Runtime gating via `ENABLE_IAP` (default `false`)
+  - [x] Lifetime `Remove Ads` catalog + purchase/restore plumbing
+  - [x] Persisted entitlement state (`entitlement_remove_ads`) to suppress ads post-purchase
+  - [x] Hint monetization baseline in quiz flow (rewarded remove-2-wrong + paid fallback after session cap)
+  - [x] Hint feature flags and defaults: `ENABLE_REWARDED_HINTS=false`, `ENABLE_PAID_HINTS=false`, `REWARDED_HINTS_PER_SESSION=3`
+  - [ ] Store-side product/ad unit setup and sandbox QA still required before rollout
 - [ ] Improve UI/UX polish (animations, progress bar behavior, answer feedback styling)
 - [ ] Add content licensing + attribution pipeline for celebrity/song/anime datasets
 - [x] Harden Firestore security rules with automated rule tests

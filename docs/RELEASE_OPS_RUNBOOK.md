@@ -23,6 +23,24 @@ Current compile-time kill switches:
 - `ENABLE_CRASH_REPORTING` (default: `true`)
   - Purpose: enable/disable Crashlytics collection quickly for emergency rollback builds.
   - Source: `lib/config/app_config.dart`
+- `ENABLE_ADS` (default: `false`)
+  - Purpose: enable/disable in-app banner ad surfaces.
+  - Source: `lib/config/app_config.dart`
+- `ENABLE_RESULT_INTERSTITIAL_ADS` (default: `false`)
+  - Purpose: enable/disable result-screen interstitial attempts (hybrid flow).
+  - Source: `lib/config/app_config.dart`
+- `ALLOW_LIVE_AD_UNITS_IN_DEBUG` (default: `false`)
+  - Purpose: blocks accidental live-ad traffic in non-release builds unless explicitly overridden for controlled internal validation.
+  - Source: `lib/config/app_config.dart`
+- `ENABLE_IAP` (default: `false`)
+  - Purpose: enable/disable in-app purchase purchase/restore flows.
+  - Source: `lib/config/app_config.dart`
+- `ENABLE_REWARDED_HINTS` (default: `false`)
+  - Purpose: enable/disable rewarded "remove 2 wrong answers" hints.
+  - Source: `lib/config/app_config.dart`
+- `ENABLE_PAID_HINTS` (default: `false`)
+  - Purpose: enable/disable paid hint fallback once session quota is exhausted.
+  - Source: `lib/config/app_config.dart`
 
 ## Crash Reporting Baseline
 
@@ -72,8 +90,12 @@ Activation requirement:
    - `ENABLE_BACKEND_SUBMIT_SCORE=false` (Spark-safe baseline)
    - `ENABLE_CRASH_REPORTING=true` (unless actively debugging SDK issues)
    - `ENABLE_APPLE_SIGN_IN=false` unless Apple setup is complete and validated
+   - `ENABLE_ADS=false` and `ENABLE_IAP=false` unless monetization launch gate is green
+   - `ENABLE_RESULT_INTERSTITIAL_ADS=false` unless hybrid result-ad QA is green
+   - `ENABLE_REWARDED_HINTS=false` and `ENABLE_PAID_HINTS=false` unless hint monetization QA is green
 4. Execute launch test checklist:
    - `docs/MVP_LAUNCH_TEST_CHECKLIST.md` (core flow + monetization go/no-go).
+   - Monetization activation details: `docs/MONETIZATION_SETUP.md`.
 5. Store/build metadata verified (version, build number, privacy/legal links).
 
 ## Post-Release Monitoring (First 24-72h)
@@ -112,6 +134,12 @@ Escalate immediately when:
    - set `ENABLE_CRASH_REPORTING=false`
 3. OAuth instability in one provider:
    - exclude provider config in build (e.g., remove/blank Google client id for temporary disable)
+4. Monetization regression/policy risk:
+   - set `ENABLE_ADS=false`
+   - set `ENABLE_RESULT_INTERSTITIAL_ADS=false`
+   - set `ENABLE_IAP=false`
+   - set `ENABLE_REWARDED_HINTS=false`
+   - set `ENABLE_PAID_HINTS=false`
 
 ## Beta Progression (Low-Cost)
 
