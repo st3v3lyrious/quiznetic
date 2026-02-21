@@ -241,7 +241,7 @@ class IapService {
   StreamSubscription<List<StorePurchaseUpdate>>? _purchaseSubscription;
 
   bool get isEnabled {
-    return _enabled && _removeAdsProductId.isNotEmpty && _supportsStore();
+    return _enabled && _supportsStore();
   }
 
   bool get hasRemoveAds => _entitlementService.hasRemoveAds;
@@ -276,7 +276,7 @@ class IapService {
   Future<RemoveAdsOffer> loadRemoveAdsOffer() async {
     await initialize();
 
-    if (!isEnabled) {
+    if (!isEnabled || _removeAdsProductId.isEmpty) {
       return RemoveAdsOffer(
         featureEnabled: false,
         storeAvailable: false,
@@ -479,7 +479,7 @@ class IapService {
   Future<IapActionResult> restorePurchases() async {
     await initialize();
 
-    if (!isEnabled) {
+    if (!isEnabled || _removeAdsProductId.isEmpty) {
       return const IapActionResult(
         status: IapActionStatus.disabled,
         message: 'Purchases are disabled in this build.',

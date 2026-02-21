@@ -19,6 +19,22 @@ void main() {
       expect(service.isEnabled, isFalse);
     });
 
+    test('isEnabled remains true when remove ads product id is blank', () {
+      final storeClient = _FakeStoreClient();
+      final service = IapService(
+        enabled: true,
+        supportsStore: () => true,
+        removeAdsProductId: '',
+        hintConsumableProductId: 'quiznetic.hint_single',
+        storeClient: storeClient,
+        entitlementService: _memoryEntitlementService(),
+        logEvent: _noopLogEvent,
+      );
+
+      expect(service.isEnabled, isTrue);
+      storeClient.dispose();
+    });
+
     test(
       'loadRemoveAdsOffer returns unavailable when store is offline',
       () async {
@@ -203,6 +219,96 @@ void main() {
         expect(storeClient.buyConsumableCalls, 1);
         expect(storeClient.completePurchaseCalls, 1);
         expect(analyticsEvents, contains('iap_hint_success'));
+        await service.dispose();
+        storeClient.dispose();
+      },
+    );
+
+    test(
+      'buySingleHint still works when remove ads product id is blank',
+      () async {
+        final storeClient = _FakeStoreClient(
+          isAvailableResult: true,
+          queryResponse: const StoreProductResponse(
+            productDetails: [
+              StoreProductDetails(
+                id: 'quiznetic.hint_single',
+                title: 'Hint',
+                description: 'One hint',
+                price: '\$0.50',
+              ),
+            ],
+            notFoundIds: [],
+          ),
+        );
+        final service = IapService(
+          enabled: true,
+          supportsStore: () => true,
+          removeAdsProductId: '',
+          hintConsumableProductId: 'quiznetic.hint_single',
+          storeClient: storeClient,
+          entitlementService: _memoryEntitlementService(),
+          logEvent: _noopLogEvent,
+        );
+
+        final purchaseFuture = service.buySingleHint(
+          timeout: const Duration(seconds: 1),
+        );
+        await Future<void>.delayed(Duration.zero);
+        storeClient.emitPurchaseUpdates([
+          const StorePurchaseUpdate(
+            productId: 'quiznetic.hint_single',
+            status: StorePurchaseStatus.purchased,
+            pendingCompletePurchase: true,
+          ),
+        ]);
+
+        final result = await purchaseFuture;
+        expect(result.status, IapActionStatus.success);
+        await service.dispose();
+        storeClient.dispose();
+      },
+    );
+
+    test(
+      'loadRemoveAdsOffer is disabled when remove ads product id is blank',
+      () async {
+        final storeClient = _FakeStoreClient(isAvailableResult: true);
+        final service = IapService(
+          enabled: true,
+          supportsStore: () => true,
+          removeAdsProductId: '',
+          hintConsumableProductId: 'quiznetic.hint_single',
+          storeClient: storeClient,
+          entitlementService: _memoryEntitlementService(),
+          logEvent: _noopLogEvent,
+        );
+
+        final offer = await service.loadRemoveAdsOffer();
+        expect(offer.featureEnabled, isFalse);
+        expect(offer.productId, isEmpty);
+        await service.dispose();
+        storeClient.dispose();
+      },
+    );
+
+    test(
+      'restorePurchases is disabled when remove ads product id is blank',
+      () async {
+        final storeClient = _FakeStoreClient(isAvailableResult: true);
+        final service = IapService(
+          enabled: true,
+          supportsStore: () => true,
+          removeAdsProductId: '',
+          hintConsumableProductId: 'quiznetic.hint_single',
+          storeClient: storeClient,
+          entitlementService: _memoryEntitlementService(),
+          logEvent: _noopLogEvent,
+        );
+
+        final result = await service.restorePurchases();
+        expect(result.status, IapActionStatus.disabled);
+        expect(storeClient.restoreCalls, 0);
         await service.dispose();
         storeClient.dispose();
       },
