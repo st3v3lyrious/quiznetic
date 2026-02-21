@@ -87,12 +87,11 @@ class _MonetizedBannerAdState extends State<MonetizedBannerAd> {
           });
         },
         onAdFailedToLoad: (ad, error) {
-          ad.dispose();
+          _disposeBannerAd(ad);
           if (!mounted) return;
           setState(() {
             _loaded = false;
           });
-          _disposeBannerAd();
           debugPrint('Banner ad failed for ${widget.placement}: $error');
         },
         onAdImpression: (ad) {
@@ -118,9 +117,14 @@ class _MonetizedBannerAdState extends State<MonetizedBannerAd> {
     await bannerAd.load();
   }
 
-  void _disposeBannerAd() {
-    _bannerAd?.dispose();
-    _bannerAd = null;
+  void _disposeBannerAd([Ad? ad]) {
+    final adToDispose = ad ?? _bannerAd;
+    if (adToDispose == null) return;
+
+    if (identical(_bannerAd, adToDispose)) {
+      _bannerAd = null;
+    }
+    adToDispose.dispose();
   }
 
   @override
