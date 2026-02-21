@@ -59,6 +59,15 @@ class AppConfig {
     defaultValue: false,
   );
 
+  /// Enables result-screen interstitial attempts.
+  ///
+  /// Keep OFF by default for safe MVP rollback and enable only after QA passes
+  /// for load/show/fallback behavior.
+  static const enableResultInterstitialAds = bool.fromEnvironment(
+    'ENABLE_RESULT_INTERSTITIAL_ADS',
+    defaultValue: false,
+  );
+
   /// Allows non-test AdMob units in non-release builds.
   ///
   /// Keep OFF by default so debug/profile QA builds do not accidentally serve

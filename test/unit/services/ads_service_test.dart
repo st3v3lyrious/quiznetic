@@ -203,6 +203,23 @@ void main() {
       },
     );
 
+    test(
+      'isResultInterstitialEnabled requires global ads + feature flag + unit id',
+      () {
+        final service = AdsService(
+          enabled: true,
+          resultInterstitialEnabled: true,
+          androidResultInterstitialUnitId:
+              'ca-app-pub-3940256099942544/1033173712',
+          iosResultInterstitialUnitId: '',
+          supportsAds: () => true,
+          initializeAdsSdk: () async => throw UnimplementedError(),
+        );
+
+        expect(service.isResultInterstitialEnabled, isTrue);
+      },
+    );
+
     test('initialize runs SDK initialization once when enabled', () async {
       var initializeCalls = 0;
       final service = AdsService(
@@ -247,5 +264,32 @@ void main() {
         expect(initializeCalls, 1);
       },
     );
+
+    test('initialize runs when result interstitials are enabled', () async {
+      var initializeCalls = 0;
+      final service = AdsService(
+        enabled: true,
+        resultInterstitialEnabled: true,
+        androidBannerUnitId: '',
+        iosBannerUnitId: '',
+        androidHomeBannerUnitId: '',
+        iosHomeBannerUnitId: '',
+        androidResultBannerUnitId: '',
+        iosResultBannerUnitId: '',
+        androidResultInterstitialUnitId:
+            'ca-app-pub-3940256099942544/1033173712',
+        iosResultInterstitialUnitId: '',
+        supportsAds: () => true,
+        initializeAdsSdk: () async {
+          initializeCalls++;
+          return null;
+        },
+      );
+
+      await service.initialize();
+
+      expect(service.isResultInterstitialEnabled, isTrue);
+      expect(initializeCalls, 1);
+    });
   });
 }

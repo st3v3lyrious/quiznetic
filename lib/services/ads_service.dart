@@ -30,6 +30,7 @@ class AdsService {
 
   AdsService({
     bool? enabled,
+    bool? resultInterstitialEnabled,
     bool? allowLiveAdUnitsInDebug,
     bool? rewardedHintsEnabled,
     String? androidBannerUnitId,
@@ -45,6 +46,8 @@ class AdsService {
     AdsSupportResolver? supportsAds,
     AdsSdkInitializer? initializeAdsSdk,
   }) : _enabled = enabled ?? AppConfig.enableAds,
+       _resultInterstitialEnabled =
+           resultInterstitialEnabled ?? AppConfig.enableResultInterstitialAds,
        _allowLiveAdUnitsInDebug =
            allowLiveAdUnitsInDebug ?? AppConfig.allowLiveAdUnitsInDebug,
        _rewardedHintsEnabled =
@@ -83,6 +86,7 @@ class AdsService {
   static final AdsService instance = AdsService();
 
   final bool _enabled;
+  final bool _resultInterstitialEnabled;
   final bool _allowLiveAdUnitsInDebug;
   final bool _rewardedHintsEnabled;
   final String _androidBannerUnitId;
@@ -111,6 +115,13 @@ class AdsService {
     return _rewardedHintsEnabled &&
         _supportsAds() &&
         rewardedHintAdUnitId != null;
+  }
+
+  bool get isResultInterstitialEnabled {
+    return _enabled &&
+        _resultInterstitialEnabled &&
+        _supportsAds() &&
+        resultInterstitialAdUnitId != null;
   }
 
   static bool _defaultSupportsAds() {
@@ -273,7 +284,12 @@ class AdsService {
 
   /// Initializes Google Mobile Ads SDK once for current runtime.
   Future<void> initialize() async {
-    if (_initialized || (!isEnabled && !isRewardedHintsEnabled)) return;
+    if (_initialized ||
+        (!isEnabled &&
+            !isRewardedHintsEnabled &&
+            !isResultInterstitialEnabled)) {
+      return;
+    }
     _initialized = true;
     try {
       await _initializeAdsSdk();

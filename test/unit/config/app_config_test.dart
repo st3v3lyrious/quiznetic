@@ -23,6 +23,10 @@ void main() {
       expect(AppConfig.enableAds, isFalse);
     });
 
+    test('result interstitial ads feature flag defaults to false', () {
+      expect(AppConfig.enableResultInterstitialAds, isFalse);
+    });
+
     test('live ad debug override defaults to false', () {
       expect(AppConfig.allowLiveAdUnitsInDebug, isFalse);
     });

@@ -7,9 +7,12 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:quiznetic_flutter/screens/upgrade_account_screen.dart';
+import 'package:quiznetic_flutter/services/ads_service.dart';
 import 'package:quiznetic_flutter/services/analytics_service.dart';
 import 'package:quiznetic_flutter/services/auth_service.dart';
+import 'package:quiznetic_flutter/services/entitlement_service.dart';
 import 'package:quiznetic_flutter/services/leaderboard_band_service.dart';
 import 'package:quiznetic_flutter/services/score_repository.dart';
 import 'package:quiznetic_flutter/widgets/monetized_banner_ad.dart';
@@ -17,6 +20,8 @@ import 'quiz_screen.dart';
 import 'difficulty_screen.dart';
 import 'home_screen.dart';
 import 'user_profile_screen.dart';
+
+typedef ResultInterstitialPresenter = Future<bool> Function(String adUnitId);
 
 class ResultScreenArgs {
   final String categoryKey;
@@ -46,6 +51,9 @@ class ResultScreen extends StatefulWidget {
   final ScoreRepository? scoreRepository;
   final AuthService? authService;
   final LeaderboardBandService? leaderboardBandService;
+  final AdsService? adsService;
+  final EntitlementService? entitlementService;
+  final ResultInterstitialPresenter? presentResultInterstitialAd;
 
   const ResultScreen({
     super.key,
@@ -54,6 +62,9 @@ class ResultScreen extends StatefulWidget {
     this.scoreRepository,
     this.authService,
     this.leaderboardBandService,
+    this.adsService,
+    this.entitlementService,
+    this.presentResultInterstitialAd,
   });
 
   /// Creates state for the quiz results screen.
@@ -68,6 +79,23 @@ class _ResultScreenState extends State<ResultScreen> {
   bool _didInit = false;
   bool _dismissGuestCta = false;
   bool _hasLoggedQuizCompleted = false;
+  bool _shouldShowResultBanner = true;
+  bool _didResolveResultAdFlow = false;
+
+  late final AdsService _adsService;
+  late final EntitlementService _entitlementService;
+  late final ResultInterstitialPresenter _presentResultInterstitialAd;
+
+  @override
+  void initState() {
+    super.initState();
+    _adsService = widget.adsService ?? AdsService.instance;
+    _entitlementService =
+        widget.entitlementService ?? EntitlementService.instance;
+    _presentResultInterstitialAd =
+        widget.presentResultInterstitialAd ??
+        _defaultPresentResultInterstitialAd;
+  }
 
   /// Loads args once, saves score, and resolves the displayed high score.
   @override
@@ -82,6 +110,7 @@ class _ResultScreenState extends State<ResultScreen> {
       }
 
       final args = route.settings.arguments as ResultScreenArgs;
+      _configureResultAdFlow();
       if (!_hasLoggedQuizCompleted) {
         _hasLoggedQuizCompleted = true;
         final accuracyPercent = args.total > 0
@@ -223,6 +252,95 @@ class _ResultScreenState extends State<ResultScreen> {
       setState(() {
         _dismissGuestCta = true;
       });
+    }
+  }
+
+  void _configureResultAdFlow() {
+    if (_didResolveResultAdFlow) return;
+    _didResolveResultAdFlow = true;
+
+    final adUnitId = _adsService.resultInterstitialAdUnitId;
+    final shouldAttemptInterstitial =
+        _adsService.isResultInterstitialEnabled &&
+        !_entitlementService.hasRemoveAds &&
+        adUnitId != null &&
+        adUnitId.isNotEmpty;
+
+    if (!shouldAttemptInterstitial) {
+      _shouldShowResultBanner = true;
+      return;
+    }
+
+    // Hybrid strategy: interstitial-first, banner fallback only on failure.
+    _shouldShowResultBanner = false;
+    unawaited(_attemptResultInterstitial(adUnitId));
+  }
+
+  Future<void> _attemptResultInterstitial(String adUnitId) async {
+    await _safeLogEvent('result_interstitial_requested');
+    final shown = await _presentResultInterstitialAd(adUnitId);
+    if (!mounted) return;
+
+    if (shown) {
+      await _safeLogEvent('result_interstitial_shown');
+      return;
+    }
+
+    await _safeLogEvent('result_interstitial_fallback_banner');
+    setState(() {
+      _shouldShowResultBanner = true;
+    });
+  }
+
+  static Future<bool> _defaultPresentResultInterstitialAd(
+    String adUnitId,
+  ) async {
+    final completer = Completer<bool>();
+    InterstitialAd.load(
+      adUnitId: adUnitId,
+      request: const AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (ad) {
+          var shown = false;
+          ad.fullScreenContentCallback = FullScreenContentCallback(
+            onAdShowedFullScreenContent: (ad) {
+              shown = true;
+            },
+            onAdDismissedFullScreenContent: (ad) {
+              ad.dispose();
+              if (!completer.isCompleted) {
+                completer.complete(shown);
+              }
+            },
+            onAdFailedToShowFullScreenContent: (ad, error) {
+              ad.dispose();
+              if (!completer.isCompleted) {
+                completer.complete(false);
+              }
+            },
+          );
+          ad.show();
+        },
+        onAdFailedToLoad: (error) {
+          if (!completer.isCompleted) {
+            completer.complete(false);
+          }
+        },
+      ),
+    );
+
+    return completer.future.timeout(
+      const Duration(seconds: 20),
+      onTimeout: () => false,
+    );
+  }
+
+  Future<void> _safeLogEvent(String name) async {
+    try {
+      await AnalyticsService.instance.logEvent(name);
+    } catch (e, stackTrace) {
+      debugPrint('ResultScreen logEvent failed for "$name": $e');
+      debugPrintStack(stackTrace: stackTrace);
     }
   }
 
@@ -416,10 +534,12 @@ class _ResultScreenState extends State<ResultScreen> {
                                 },
                                 child: const Text('Change Quiz Type'),
                               ),
-                              const SizedBox(height: 16),
-                              const Center(
-                                child: MonetizedBannerAd(placement: 'result'),
-                              ),
+                              if (_shouldShowResultBanner) ...[
+                                const SizedBox(height: 16),
+                                const Center(
+                                  child: MonetizedBannerAd(placement: 'result'),
+                                ),
+                              ],
                             ],
                           ),
                         ],
