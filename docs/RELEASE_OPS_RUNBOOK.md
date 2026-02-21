@@ -72,10 +72,8 @@ Activation requirement:
    - `ENABLE_BACKEND_SUBMIT_SCORE=false` (Spark-safe baseline)
    - `ENABLE_CRASH_REPORTING=true` (unless actively debugging SDK issues)
    - `ENABLE_APPLE_SIGN_IN=false` unless Apple setup is complete and validated
-4. Manual smoke:
-   - Guest path: splash -> entry -> guest -> quiz -> result
-   - Account path: entry -> login -> home -> quiz -> result
-   - Score save + leaderboard load + profile high-score visibility
+4. Execute launch test checklist:
+   - `docs/MVP_LAUNCH_TEST_CHECKLIST.md` (core flow + monetization go/no-go).
 5. Store/build metadata verified (version, build number, privacy/legal links).
 
 ## Post-Release Monitoring (First 24-72h)

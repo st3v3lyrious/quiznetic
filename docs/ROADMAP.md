@@ -58,9 +58,11 @@ Use this as a short, editable delivery plan.
   - [x] Product analytics baseline shipped for auth, quiz, and score-submission funnels.
   - [x] Analytics kill switch added: `ENABLE_ANALYTICS` (default `true`).
 - [ ] M15: Integrate monetization stack (ads + in-app purchases).
+  - Revenue priority: complete ads + IAP launch gate in `docs/MVP_LAUNCH_TEST_CHECKLIST.md` before public rollout.
 - [ ] M16: Improve UI/UX polish (animations, progress indicators, feedback styling).
 - [ ] M17: Launch MVP (release checklist, store metadata, and production rollout).
   - [x] Launch preflight automation shipped (`tools/release_preflight.sh` + `.github/workflows/release_preflight.yml`).
+  - [x] Manual launch test checklist published: `docs/MVP_LAUNCH_TEST_CHECKLIST.md`.
   - If Apple setup is not complete by launch date, keep `ENABLE_APPLE_SIGN_IN=false` for MVP and ship with Email/Google.
 - [ ] M18: Build content licensing + attribution pipeline for celebrity/song/anime datasets.
 - [x] M19: Harden Firestore security rules and add automated Firestore-rules tests in CI.
