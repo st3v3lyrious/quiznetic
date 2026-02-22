@@ -30,10 +30,13 @@ void main() {
     WidgetTester tester, {
     String categoryKey = 'flag',
     FlagQuestion? injectedQuestion,
+    List<FlagQuestion>? injectedQuestions,
+    int? flagsPerSession,
     bool showFlagDescriptions = false,
     HintMonetizationGateway? hintMonetizationService,
   }) async {
-    final q = injectedQuestion ?? question;
+    final questions = injectedQuestions ?? [injectedQuestion ?? question];
+    final sessionQuestionCount = flagsPerSession ?? questions.length;
     SharedPreferences.setMockInitialValues({
       AccessibilityPreferences.showFlagDescriptionsKey: showFlagDescriptions,
     });
@@ -52,13 +55,13 @@ void main() {
               name: QuizScreen.routeName,
               arguments: QuizScreenArgs(
                 categoryKey: categoryKey,
-                flagsPerSession: 1,
+                flagsPerSession: sessionQuestionCount,
                 difficulty: 'easy',
               ),
             ),
             builder: (_) => QuizScreen(
-              flagsLoader: () async => [q],
-              quizPreparer: (_) => [q],
+              flagsLoader: () async => List<FlagQuestion>.from(questions),
+              quizPreparer: (subset) => subset,
               hintMonetizationService: hintMonetizationService,
             ),
           ),
@@ -146,6 +149,42 @@ void main() {
       await pumpQuiz(tester, showFlagDescriptions: false);
 
       expect(find.byKey(QuizScreen.describeFlagButtonKey), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'describe-flag visibility persists across questions until user hides it',
+    (tester) async {
+      await pumpQuiz(
+        tester,
+        showFlagDescriptions: true,
+        injectedQuestions: [question, question, question],
+        flagsPerSession: 3,
+      );
+
+      // Enable description on Q1.
+      await tester.tap(find.byKey(QuizScreen.describeFlagButtonKey));
+      await tester.pumpAndSettle();
+      expect(find.byKey(QuizScreen.flagDescriptionCardKey), findsOneWidget);
+
+      // Advance to Q2 and verify description remains visible.
+      await tester.tap(find.text('France'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Next'));
+      await tester.pumpAndSettle();
+      expect(find.byKey(QuizScreen.flagDescriptionCardKey), findsOneWidget);
+
+      // Hide on Q2.
+      await tester.tap(find.byKey(QuizScreen.describeFlagButtonKey));
+      await tester.pumpAndSettle();
+      expect(find.byKey(QuizScreen.flagDescriptionCardKey), findsNothing);
+
+      // Advance to Q3 and verify hidden state persists.
+      await tester.tap(find.text('France'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Next'));
+      await tester.pumpAndSettle();
+      expect(find.byKey(QuizScreen.flagDescriptionCardKey), findsNothing);
     },
   );
 

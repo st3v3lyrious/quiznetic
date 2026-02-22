@@ -212,7 +212,6 @@ class _QuizScreenState extends State<QuizScreen> {
         _currentIndex++;
         _answered = false;
         _selectedOption = null;
-        _showCurrentFlagDescription = false;
         _eliminatedOptions.clear();
       });
     } else {
