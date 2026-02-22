@@ -51,6 +51,18 @@ dart run flutter_launcher_icons
 dart run flutter_native_splash:create
 ```
 
+## iOS Post-Generation Sanity Check
+
+After running branding generation, verify `ios/Runner.xcodeproj/project.pbxproj`
+still has valid iOS build settings:
+
+- `ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES`
+  for project `Debug` and `Release` configurations.
+- `IPHONEOS_DEPLOYMENT_TARGET = 15.0` for Runner target
+  `Debug`/`Release`/`Profile` configurations (matches `ios/Podfile`).
+
+Invalid values here can trigger `ASSETCATALOG` and Xcode compiler failures in CI.
+
 ## MVP Completion Conditions For M12
 
 Mark M12 complete after all are true:
