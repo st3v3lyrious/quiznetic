@@ -29,6 +29,12 @@ Update brand colors in:
 - `pubspec.yaml` `flutter_native_splash` colors
 - `pubspec.yaml` `flutter_launcher_icons.web.theme_color`
 
+Current EIRENYA baseline tokens:
+
+- Primary: `#4A596D`
+- Surface/background: `#F3F4F5`
+- Neutral surface container: `#DBDEE2`
+
 ## Generate Icons And Splash
 
 Run:
@@ -44,6 +50,18 @@ flutter pub get
 dart run flutter_launcher_icons
 dart run flutter_native_splash:create
 ```
+
+## iOS Post-Generation Sanity Check
+
+After running branding generation, verify `ios/Runner.xcodeproj/project.pbxproj`
+still has valid iOS build settings:
+
+- `ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES`
+  for project `Debug` and `Release` configurations.
+- `IPHONEOS_DEPLOYMENT_TARGET = 15.0` for Runner target
+  `Debug`/`Release`/`Profile` configurations (matches `ios/Podfile`).
+
+Invalid values here can trigger `ASSETCATALOG` and Xcode compiler failures in CI.
 
 ## MVP Completion Conditions For M12
 

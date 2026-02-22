@@ -149,11 +149,20 @@ class _MonetizedBannerAdState extends State<MonetizedBannerAd> {
         }
 
         final bannerAd = _bannerAd!;
-        return SizedBox(
-          key: Key('banner-ad-${widget.placement}'),
-          width: bannerAd.size.width.toDouble(),
-          height: bannerAd.size.height.toDouble(),
-          child: AdWidget(ad: bannerAd),
+        return DecoratedBox(
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: SizedBox(
+            key: Key('banner-ad-${widget.placement}'),
+            width: bannerAd.size.width.toDouble(),
+            height: bannerAd.size.height.toDouble(),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: AdWidget(ad: bannerAd),
+            ),
+          ),
         );
       },
     );

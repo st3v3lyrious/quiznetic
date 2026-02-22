@@ -2,36 +2,36 @@
 
 Use this as a short, editable delivery plan.
 
-- [x] M1: Stabilize entry auth flow (dedicated entry-choice screen, provider login on second step, no startup auto-guest auth).
-- [x] M1: Implement local-first score repository (persist locally first for guest and signed-in users).
-- [x] M1: Add pending score sync queue with retry for Firestore/network failures.
-- [x] M1: Sync pending local scores on reconnect and on account-link/sign-in.
-- [x] M1: Add connectivity-aware retry backoff with forced retry bypass on explicit sync triggers.
-- [x] M1: Fix login setup issues (logo asset path and Google OAuth client ID via config).
-- [x] M2: Clarify leaderboard semantics (best score per user per `category+difficulty`, tie-breakers by `score desc`, `updatedAt asc`, `uid asc`).
-- [x] M2: Define anonymous leaderboard policy (included in global leaderboard and explicitly tagged).
-- [x] M2: Implement leaderboard band service (`top 10/20/100` + outside) for conversion UX.
-- [x] M2: Add guest conversion messaging from leaderboard bands (e.g., top 10/20/100) on results.
-- [x] M2: Extend "Create account to compete globally" CTA to guest profile surface.
-- [x] M2: Add guest CTA action flow to `/upgrade` from results/profile and preserve post-upgrade continuity.
-- [x] M2: Upgrade screen performs anonymous-account linking (Email/Google/Apple) with guest UID continuity checks.
-- [x] M2: Harden profile display (difficulty labels, ordering, empty/error states).
-- [x] M2: Apply `AuthGuard` strategy consistently to protected routes.
-- [x] M2: Replace deprecated result-screen back handling (`WillPopScope`) with `PopScope` and cover it with widget tests.
-- [x] M3: Implement a second quiz category (Capitals) using current category-key pattern.
-- [x] M3: Enable quiz-type switching in navigation/results flow.
-- [x] M3: Expose anonymous-to-account upgrade in primary home UX flow.
-- [x] M4: Replace template widget test with app-specific flow tests in `test/unit` and `test/widget`.
-- [x] M4: Add non-scaffold integration assertions in `integration_test`.
-- [x] M4: Add Playwright e2e assertions in `playwright/tests`.
-- [x] M4: Auto-generate Playwright smoke + per-screen e2e scaffolds as screens are added.
-- [x] M4: Regenerate README from docs (`FEATURES`, `ROADMAP`, `ARCHITECTURE`).
-- [x] M5: Bump macOS deployment target to 10.15+ so FlutterFire integration tests can run on macOS.
-- [ ] M6: Add Logo quiz category (deferred until curated/licensed logo asset set + mapping metadata are available).
-- [ ] M7: Add Guess the Celebrity quiz category (deferred outside MVP scope; content set + quiz loader + tests).
-- [ ] M8: Add Guess the Song from Lyrics quiz category (deferred outside MVP scope; licensed lyric snippets + answer metadata + tests).
-- [ ] M9: Add Guess the Anime quiz category (content set + quiz loader + tests).
-- [ ] M10: Ship Apple sign-in as a production-ready provider across supported platforms.
+- [x] M1: Stabilize entry auth flow (dedicated entry-choice screen, provider login on second step, no startup auto-guest auth). <!--gh:issue=15-->
+- [x] M1: Implement local-first score repository (persist locally first for guest and signed-in users). <!--gh:issue=16-->
+- [x] M1: Add pending score sync queue with retry for Firestore/network failures. <!--gh:issue=17-->
+- [x] M1: Sync pending local scores on reconnect and on account-link/sign-in. <!--gh:issue=18-->
+- [x] M1: Add connectivity-aware retry backoff with forced retry bypass on explicit sync triggers. <!--gh:issue=19-->
+- [x] M1: Fix login setup issues (logo asset path and Google OAuth client ID via config). <!--gh:issue=20-->
+- [x] M2: Clarify leaderboard semantics (best score per user per `category+difficulty`, tie-breakers by `score desc`, `updatedAt asc`, `uid asc`). <!--gh:issue=21-->
+- [x] M2: Define anonymous leaderboard policy (included in global leaderboard and explicitly tagged). <!--gh:issue=22-->
+- [x] M2: Implement leaderboard band service (`top 10/20/100` + outside) for conversion UX. <!--gh:issue=23-->
+- [x] M2: Add guest conversion messaging from leaderboard bands (e.g., top 10/20/100) on results. <!--gh:issue=24-->
+- [x] M2: Extend "Create account to compete globally" CTA to guest profile surface. <!--gh:issue=25-->
+- [x] M2: Add guest CTA action flow to `/upgrade` from results/profile and preserve post-upgrade continuity. <!--gh:issue=26-->
+- [x] M2: Upgrade screen performs anonymous-account linking (Email/Google/Apple) with guest UID continuity checks. <!--gh:issue=27-->
+- [x] M2: Harden profile display (difficulty labels, ordering, empty/error states). <!--gh:issue=28-->
+- [x] M2: Apply `AuthGuard` strategy consistently to protected routes. <!--gh:issue=29-->
+- [x] M2: Replace deprecated result-screen back handling (`WillPopScope`) with `PopScope` and cover it with widget tests. <!--gh:issue=30-->
+- [x] M3: Implement a second quiz category (Capitals) using current category-key pattern. <!--gh:issue=31-->
+- [x] M3: Enable quiz-type switching in navigation/results flow. <!--gh:issue=32-->
+- [x] M3: Expose anonymous-to-account upgrade in primary home UX flow. <!--gh:issue=33-->
+- [x] M4: Replace template widget test with app-specific flow tests in `test/unit` and `test/widget`. <!--gh:issue=34-->
+- [x] M4: Add non-scaffold integration assertions in `integration_test`. <!--gh:issue=35-->
+- [x] M4: Add Playwright e2e assertions in `playwright/tests`. <!--gh:issue=36-->
+- [x] M4: Auto-generate Playwright smoke + per-screen e2e scaffolds as screens are added. <!--gh:issue=37-->
+- [x] M4: Regenerate README from docs (`FEATURES`, `ROADMAP`, `ARCHITECTURE`). <!--gh:issue=38-->
+- [x] M5: Bump macOS deployment target to 10.15+ so FlutterFire integration tests can run on macOS. <!--gh:issue=39-->
+- [ ] M6: Add Logo quiz category (deferred until curated/licensed logo asset set + mapping metadata are available). <!--gh:issue=40-->
+- [ ] M7: Add Guess the Celebrity quiz category (deferred outside MVP scope; content set + quiz loader + tests). <!--gh:issue=41-->
+- [ ] M8: Add Guess the Song from Lyrics quiz category (deferred outside MVP scope; licensed lyric snippets + answer metadata + tests). <!--gh:issue=42-->
+- [ ] M9: Add Guess the Anime quiz category (content set + quiz loader + tests). <!--gh:issue=43-->
+- [ ] M10: Ship Apple sign-in as a production-ready provider across supported platforms. <!--gh:issue=44-->
   - [x] App-side provider gating + rollback flag shipped (`ENABLE_APPLE_SIGN_IN`, default `false`).
   - [x] iOS/macOS entitlement baseline committed for Sign in with Apple capability.
   - [x] Login/upgrade auth failures now map to user-safe provider messages.
@@ -43,21 +43,23 @@ Use this as a short, editable delivery plan.
     - [ ] Configure Firebase Auth Apple provider with Service ID/Team ID/Key ID/private key.
     - [ ] Run iOS + macOS login/upgrade smoke tests with `ENABLE_APPLE_SIGN_IN=true`.
   - Activation runbook: `docs/APPLE_SIGN_IN_SETUP.md`
-- [x] M11: Implement global leaderboard experience (data query strategy + screen design + filters).
-- [ ] M12: Add branded app icons and splash screens for all target platforms.
+- [x] M11: Implement global leaderboard experience (data query strategy + screen design + filters). <!--gh:issue=45-->
+- [ ] M12: Add branded app icons and splash screens for all target platforms. <!--gh:issue=46-->
   - [x] Baseline asset pipeline configured (`flutter_launcher_icons`, `flutter_native_splash`, and `tools/refresh_branding_assets.sh`).
   - [x] Brand color tokens centralized in `lib/config/brand_config.dart`.
+  - [ ] Apply EIRENYA color scheme consistently across logo, banners, backgrounds, and buttons.
+  - [x] Update support-contact email references to the current QuizNetic inbox across app UI and legal docs.
   - [ ] Final artwork export + multi-platform visual QA pending.
   - Activation/update runbook: `docs/BRANDING_ASSETS.md`
-- [x] M13: Build Settings and About screens.
+- [x] M13: Build Settings and About screens. <!--gh:issue=47-->
   - Includes account/session controls, sign-out flow, legal links, and app metadata/support surface.
-- [x] M14: Add analytics and crash reporting instrumentation.
+- [x] M14: Add analytics and crash reporting instrumentation. <!--gh:issue=48-->
   - [x] Crash reporting baseline shipped (Firebase Crashlytics init + Flutter/zone unhandled error capture).
   - [x] Crash reporting kill switch added: `ENABLE_CRASH_REPORTING` (default `true`).
   - [x] Analytics event breadcrumbs shipped for crash triage (screen views + critical flow actions).
   - [x] Product analytics baseline shipped for auth, quiz, and score-submission funnels.
   - [x] Analytics kill switch added: `ENABLE_ANALYTICS` (default `true`).
-- [ ] M15: Integrate monetization stack (ads + in-app purchases).
+- [ ] M15: Integrate monetization stack (ads + in-app purchases). <!--gh:issue=49-->
   - Revenue priority: complete ads + IAP launch gate in `docs/MVP_LAUNCH_TEST_CHECKLIST.md` before public rollout.
   - [x] App baseline shipped: remove-ads entitlement persistence, IAP purchase/restore plumbing, and banner placements (home/result) behind feature flags with Android+iOS placement-specific ad-unit support.
   - [ ] Store-side setup still required (ad network approval, ad unit IDs, store product creation, and sandbox purchase QA).
@@ -90,26 +92,28 @@ Use this as a short, editable delivery plan.
     - [x] Feature flags (default OFF): `ENABLE_REWARDED_HINTS`, `ENABLE_PAID_HINTS`.
     - [ ] Store setup/QA pending: rewarded ad units + consumable product approval + sandbox validation.
   - Activation runbook: `docs/MONETIZATION_SETUP.md`.
-- [ ] M16: Improve UI/UX polish (animations, progress indicators, feedback styling).
-- [ ] M17: Launch MVP (release checklist, store metadata, and production rollout).
+- [ ] M16: Improve UI/UX polish (animations, progress indicators, feedback styling). <!--gh:issue=50-->
+- [ ] M17: Launch MVP (release checklist, store metadata, and production rollout). <!--gh:issue=51-->
   - [x] Launch preflight automation shipped (`tools/release_preflight.sh` + `.github/workflows/release_preflight.yml`).
   - [x] Manual launch test checklist published: `docs/MVP_LAUNCH_TEST_CHECKLIST.md`.
+  - [x] Bug tracking split out from roadmap into dedicated issue log: `docs/ISSUES.md`.
+  - [ ] Close all open MVP blockers in `docs/ISSUES.md` before public launch.
   - If Apple setup is not complete by launch date, keep `ENABLE_APPLE_SIGN_IN=false` for MVP and ship with Email/Google.
-- [ ] M18: Build content licensing + attribution pipeline for celebrity/song/anime datasets.
-- [x] M19: Harden Firestore security rules and add automated Firestore-rules tests in CI.
-- [ ] M20: Add leaderboard integrity protections (anti-cheat scoring checks, abuse controls, rate limits).
+- [ ] M18: Build content licensing + attribution pipeline for celebrity/song/anime datasets. <!--gh:issue=52-->
+- [x] M19: Harden Firestore security rules and add automated Firestore-rules tests in CI. <!--gh:issue=53-->
+- [ ] M20: Add leaderboard integrity protections (anti-cheat scoring checks, abuse controls, rate limits). <!--gh:issue=54-->
   - Contract reference: docs/ANTI_CHEAT_CONTRACT.md
   - [x] Phase 1 baseline shipped: validator, idempotent attempt records, stricter Firestore score bounds/scope checks.
   - [ ] Phase 2 pending: backend-authoritative submitScore path + direct projection write lock for clients.
   - Blaze-gated partial implementation shipped: callable `submitScore` + app flag (`ENABLE_BACKEND_SUBMIT_SCORE`) default-off on Spark.
   - Activation/rollback conditions: docs/BLAZE_FEATURE_FLAGS.md
-- [x] M21: Enforce CI/CD quality gates (GitHub Actions + branch protection required checks are active on `main`).
-- [x] M22: Complete privacy/legal baseline (Privacy Policy, Terms, consent copy, and in-app legal links).
+- [x] M21: Enforce CI/CD quality gates (GitHub Actions + branch protection required checks are active on `main`). <!--gh:issue=55-->
+- [x] M22: Complete privacy/legal baseline (Privacy Policy, Terms, consent copy, and in-app legal links). <!--gh:issue=56-->
   - Formal legal counsel review and age-rating metadata can be finalized before public store launch.
-- [ ] M23: Introduce Remote Config/feature flags for staged feature rollout.
-- [ ] M24: Implement localization foundation (externalized strings, locale resolution, default i18n coverage).
-- [ ] M25: Add user-selectable app language in Settings with persisted preference and safe fallback.
-- [x] M26: Complete accessibility baseline (semantics labels, contrast, dynamic type/text scaling).
+- [ ] M23: Introduce Remote Config/feature flags for staged feature rollout. <!--gh:issue=57-->
+- [ ] M24: Implement localization foundation (externalized strings, locale resolution, default i18n coverage). <!--gh:issue=58-->
+- [ ] M25: Add user-selectable app language in Settings with persisted preference and safe fallback. <!--gh:issue=59-->
+- [x] M26: Complete accessibility baseline (semantics labels, contrast, dynamic type/text scaling). <!--gh:issue=60-->
   - Added semantic labels for core logo/question imagery surfaces.
   - Added WCAG AA contrast unit checks for primary theme color pairs.
   - Added large text-scaling widget coverage for entry, settings, about, difficulty, home, quiz, result, leaderboard, and profile flows.
@@ -118,12 +122,13 @@ Use this as a short, editable delivery plan.
   - Expanded flag-description metadata baseline to `263` entries (`100%` current asset coverage) with unit QA guardrails for metadata quality + coverage floor (`>=70%`).
   - Replaced all seeded placeholder templates with curated per-flag structural descriptions (`0` generic seed-template entries remaining).
   - [ ] Manual visual QA sweep for flag-description accuracy (owner: user).
+  - [ ] MVP+1 accessibility enhancements tracked in `docs/ISSUES.md` (for example `ISS-005` audio description mode).
   - Follow-up audit and prioritized backlog: `docs/ACCESSIBILITY_AUDIT.md`.
-- [ ] M27: Establish release operations readiness (alerts, KPI dashboard, rollback playbook, beta process).
+- [ ] M27: Establish release operations readiness (alerts, KPI dashboard, rollback playbook, beta process). <!--gh:issue=61-->
   - [x] Baseline release ops runbook published: `docs/RELEASE_OPS_RUNBOOK.md`.
   - [x] Rollback playbook and kill-switch checklist documented.
   - [x] Alert routing policy + KPI thresholds documented: `docs/ALERT_ROUTING_AND_KPI_THRESHOLDS.md`.
   - [x] CI failure alert routing automation shipped (webhook via `ALERT_WEBHOOK_URL`).
   - [x] Incident postmortem template + review cadence documented: `docs/INCIDENT_POSTMORTEM_TEMPLATE.md`.
   - [ ] Dedicated pager/on-call automation and KPI dashboard automation still pending.
-- [ ] M28: Build feedback intelligence loop (in-app feedback capture, tagged triage, and recurring roadmap review cadence).
+- [ ] M28: Build feedback intelligence loop (in-app feedback capture, tagged triage, and recurring roadmap review cadence). <!--gh:issue=62-->

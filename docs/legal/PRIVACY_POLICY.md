@@ -52,7 +52,7 @@ This Privacy Policy explains how Quiznetic collects, uses, and stores informatio
 ## 7. Your Choices
 
 - You can stop using the app at any time.
-- You can request account/data deletion support by contacting `support@quiznetic.app`.
+- You can request account/data deletion support by contacting `quizneticapp@gmail.com`.
 - If you uninstall before account linking, anonymous data recovery may not be possible.
 
 ## 8. Children
@@ -70,4 +70,4 @@ This Privacy Policy explains how Quiznetic collects, uses, and stores informatio
 
 ## 11. Contact
 
-- Privacy questions: `support@quiznetic.app`
+- Privacy questions: `quizneticapp@gmail.com`

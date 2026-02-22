@@ -74,12 +74,15 @@ class QuizNetic extends StatelessWidget {
       brightness: Brightness.light,
     );
 
-    // Override just the roles we want:
+    // Override brand-critical roles so backgrounds/buttons stay on-palette.
     final scheme = base.copyWith(
+      primary: BrandConfig.seedColor,
+      onPrimary: Colors.white,
       secondary: BrandConfig.correctAnswerColor, // correct-answer green
       onSecondary: Colors.white, // text on the green
       error: BrandConfig.wrongAnswerColor, // wrong-answer red
       onError: Colors.white, // text on red
+      surface: BrandConfig.appBackgroundColor,
       surfaceContainerHighest:
           BrandConfig.neutralSurfaceColor, // unselected button grey
       onSurfaceVariant: Colors.black87, // text on grey
