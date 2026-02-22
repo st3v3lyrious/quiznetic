@@ -139,7 +139,7 @@ class AdsService {
   }
 
   String? get bannerAdUnitId {
-    if (!_supportsAds()) return null;
+    if (!_enabled || !_supportsAds()) return null;
     final fallback = _rawBannerFallbackUnitId;
     if (fallback.isNotEmpty) return fallback;
     return bannerAdUnitIdForPlacement(placementHome) ??
@@ -147,7 +147,7 @@ class AdsService {
   }
 
   String? bannerAdUnitIdForPlacement(String placement) {
-    if (!_supportsAds()) return null;
+    if (!_enabled || !_supportsAds()) return null;
     final normalizedPlacement = placement.trim().toLowerCase();
     final rawUnitId = switch (defaultTargetPlatform) {
       TargetPlatform.android => _resolveBannerUnitId(
@@ -187,7 +187,9 @@ class AdsService {
   }
 
   String? get resultInterstitialAdUnitId {
-    if (!_supportsAds()) return null;
+    if (!_enabled || !_resultInterstitialEnabled || !_supportsAds()) {
+      return null;
+    }
     final rawUnitId = switch (defaultTargetPlatform) {
       TargetPlatform.android => _androidResultInterstitialUnitId,
       TargetPlatform.iOS => _iosResultInterstitialUnitId,
@@ -201,7 +203,7 @@ class AdsService {
   }
 
   String? get rewardedHintAdUnitId {
-    if (!_supportsAds()) return null;
+    if (!_rewardedHintsEnabled || !_supportsAds()) return null;
     final rawUnitId = switch (defaultTargetPlatform) {
       TargetPlatform.android =>
         _androidRewardedHintUnitId.isEmpty ? null : _androidRewardedHintUnitId,

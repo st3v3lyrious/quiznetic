@@ -15,6 +15,25 @@ void main() {
       expect(service.isEnabled, isFalse);
     });
 
+    test(
+      'banner unit resolution is blocked when ads feature flag is disabled',
+      () {
+        final service = AdsService(
+          enabled: false,
+          androidHomeBannerUnitId: 'android-home',
+          iosHomeBannerUnitId: 'ios-home',
+          supportsAds: () => true,
+          initializeAdsSdk: () async => throw UnimplementedError(),
+        );
+
+        expect(
+          service.bannerAdUnitIdForPlacement(AdsService.placementHome),
+          isNull,
+        );
+        expect(service.bannerAdUnitId, isNull);
+      },
+    );
+
     test('isEnabled is false when no banner unit id is configured', () {
       final service = AdsService(
         enabled: true,
@@ -189,6 +208,7 @@ void main() {
       () {
         final service = AdsService(
           enabled: true,
+          resultInterstitialEnabled: true,
           androidResultInterstitialUnitId:
               'ca-app-pub-3940256099942544/1033173712',
           iosResultInterstitialUnitId: '',
@@ -217,6 +237,39 @@ void main() {
         );
 
         expect(service.isResultInterstitialEnabled, isTrue);
+      },
+    );
+
+    test(
+      'result interstitial unit resolution is blocked when feature flag is off',
+      () {
+        final service = AdsService(
+          enabled: true,
+          resultInterstitialEnabled: false,
+          androidResultInterstitialUnitId:
+              'ca-app-pub-3940256099942544/1033173712',
+          iosResultInterstitialUnitId: '',
+          supportsAds: () => true,
+          initializeAdsSdk: () async => throw UnimplementedError(),
+        );
+
+        expect(service.resultInterstitialAdUnitId, isNull);
+      },
+    );
+
+    test(
+      'rewarded hint unit resolution is blocked when rewarded flag is off',
+      () {
+        final service = AdsService(
+          enabled: true,
+          rewardedHintsEnabled: false,
+          androidRewardedHintUnitId: 'ca-app-pub-3940256099942544/5224354917',
+          iosRewardedHintUnitId: '',
+          supportsAds: () => true,
+          initializeAdsSdk: () async => throw UnimplementedError(),
+        );
+
+        expect(service.rewardedHintAdUnitId, isNull);
       },
     );
 
