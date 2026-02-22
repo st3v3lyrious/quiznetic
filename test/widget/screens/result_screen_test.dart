@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quiznetic_flutter/screens/difficulty_screen.dart';
 import 'package:quiznetic_flutter/screens/home_screen.dart';
+import 'package:quiznetic_flutter/screens/leaderboard_screen.dart';
 import 'package:quiznetic_flutter/screens/quiz_screen.dart';
 import 'package:quiznetic_flutter/screens/result_screen.dart';
 import 'package:quiznetic_flutter/screens/upgrade_account_screen.dart';
@@ -56,6 +57,7 @@ void main() {
           QuizScreen.routeName: (_) => const _QuizArgsProbe(),
           DifficultyScreen.routeName: (_) => const _DifficultyArgsProbe(),
           HomeScreen.routeName: (_) => const _HomeProbe(),
+          LeaderboardScreen.routeName: (_) => const _LeaderboardArgsProbe(),
           UserProfileScreen.routeName: (_) => const _ProfileProbe(),
           UpgradeAccountScreen.routeName:
               upgradeRouteBuilder ?? (_) => const _UpgradeProbe(),
@@ -181,6 +183,33 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('home-screen'), findsOneWidget);
+  });
+
+  testWidgets('leaderboard app bar action routes with current result scope', (
+    tester,
+  ) async {
+    await pumpResult(
+      tester,
+      args: ResultScreenArgs(
+        categoryKey: 'capital',
+        score: 6,
+        total: 15,
+        difficulty: 'intermediate',
+      ),
+      saveScore:
+          ({
+            required categoryKey,
+            required difficulty,
+            required score,
+            required totalQuestions,
+          }) async => 10,
+      getHighScore: (categoryKey, difficulty) async => 10,
+    );
+
+    await tester.tap(find.byTooltip('Leaderboard'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('leaderboard:capital:intermediate'), findsOneWidget);
   });
 
   testWidgets('blocks back navigation while on the result screen', (
@@ -524,6 +553,21 @@ class _HomeProbe extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Scaffold(body: Text('home-screen'));
+  }
+}
+
+class _LeaderboardArgsProbe extends StatelessWidget {
+  const _LeaderboardArgsProbe();
+
+  @override
+  Widget build(BuildContext context) {
+    final args = ModalRoute.of(context)?.settings.arguments;
+    if (args is LeaderboardScreenArgs) {
+      return Scaffold(
+        body: Text('leaderboard:${args.categoryKey}:${args.difficulty}'),
+      );
+    }
+    return const Scaffold(body: Text('leaderboard:default'));
   }
 }
 

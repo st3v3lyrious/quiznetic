@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:quiznetic_flutter/config/brand_config.dart';
 import 'package:quiznetic_flutter/screens/about_screen.dart';
 import 'package:quiznetic_flutter/screens/legal_document_screen.dart';
+import 'package:quiznetic_flutter/screens/leaderboard_screen.dart';
 
 void main() {
   test('exposes the expected route name', () {
@@ -54,4 +55,31 @@ void main() {
 
     expect(find.text(LegalDocumentScreen.privacyTitle), findsOneWidget);
   });
+
+  testWidgets('leaderboard action routes to leaderboard screen', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        routes: {
+          '/': (_) => const AboutScreen(),
+          LeaderboardScreen.routeName: (_) => const _LeaderboardProbe(),
+        },
+      ),
+    );
+
+    await tester.tap(find.byTooltip('Leaderboard'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('leaderboard-screen'), findsOneWidget);
+  });
+}
+
+class _LeaderboardProbe extends StatelessWidget {
+  const _LeaderboardProbe();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(body: Text('leaderboard-screen'));
+  }
 }

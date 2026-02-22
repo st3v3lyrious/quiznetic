@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quiznetic_flutter/config/brand_config.dart';
 import 'package:quiznetic_flutter/models/flag_question.dart';
+import 'package:quiznetic_flutter/screens/leaderboard_screen.dart';
 import 'package:quiznetic_flutter/screens/quiz_screen.dart';
 import 'package:quiznetic_flutter/screens/result_screen.dart';
 import 'package:quiznetic_flutter/services/accessibility_preferences.dart';
@@ -62,7 +63,10 @@ void main() {
             ),
           ),
         ],
-        routes: {ResultScreen.routeName: (_) => const _ResultArgsProbe()},
+        routes: {
+          ResultScreen.routeName: (_) => const _ResultArgsProbe(),
+          LeaderboardScreen.routeName: (_) => const _LeaderboardArgsProbe(),
+        },
       ),
     );
     await tester.pumpAndSettle();
@@ -157,6 +161,15 @@ void main() {
     expect(find.text('result:flag:easy:1:1'), findsOneWidget);
   });
 
+  testWidgets('routes to leaderboard with current quiz scope', (tester) async {
+    await pumpQuiz(tester, categoryKey: 'capital');
+
+    await tester.tap(find.byTooltip('Leaderboard'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('leaderboard:capital:easy'), findsOneWidget);
+  });
+
   testWidgets('hint action removes two wrong options when granted', (
     tester,
   ) async {
@@ -216,6 +229,21 @@ class _ResultArgsProbe extends StatelessWidget {
         'result:${args.categoryKey}:${args.difficulty}:${args.score}:${args.total}',
       ),
     );
+  }
+}
+
+class _LeaderboardArgsProbe extends StatelessWidget {
+  const _LeaderboardArgsProbe();
+
+  @override
+  Widget build(BuildContext context) {
+    final args = ModalRoute.of(context)?.settings.arguments;
+    if (args is LeaderboardScreenArgs) {
+      return Scaffold(
+        body: Text('leaderboard:${args.categoryKey}:${args.difficulty}'),
+      );
+    }
+    return const Scaffold(body: Text('leaderboard:default'));
   }
 }
 

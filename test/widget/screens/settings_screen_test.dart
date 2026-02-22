@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:quiznetic_flutter/screens/about_screen.dart';
 import 'package:quiznetic_flutter/screens/entry_choice_screen.dart';
 import 'package:quiznetic_flutter/screens/legal_document_screen.dart';
+import 'package:quiznetic_flutter/screens/leaderboard_screen.dart';
 import 'package:quiznetic_flutter/screens/settings_screen.dart';
 import 'package:quiznetic_flutter/services/accessibility_preferences.dart';
 import 'package:quiznetic_flutter/services/auth_service.dart';
@@ -130,6 +131,25 @@ void main() {
     expect(find.text('about-screen'), findsOneWidget);
   });
 
+  testWidgets('leaderboard action routes to leaderboard screen', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        routes: {
+          '/': (_) => const SettingsScreen(),
+          LeaderboardScreen.routeName: (_) => const _LeaderboardProbe(),
+        },
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Leaderboard'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('leaderboard-screen'), findsOneWidget);
+  });
+
   testWidgets('sign out action signs out and routes to entry choice', (
     tester,
   ) async {
@@ -205,6 +225,15 @@ class _AboutProbe extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Scaffold(body: Text('about-screen'));
+  }
+}
+
+class _LeaderboardProbe extends StatelessWidget {
+  const _LeaderboardProbe();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(body: Text('leaderboard-screen'));
   }
 }
 

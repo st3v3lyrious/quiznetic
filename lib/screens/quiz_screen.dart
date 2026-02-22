@@ -13,6 +13,7 @@ import 'package:quiznetic_flutter/services/hint_monetization_service.dart';
 import '../data/capital_loader.dart';
 import '../data/flag_loader.dart';
 import '../models/flag_question.dart';
+import 'leaderboard_screen.dart';
 import 'result_screen.dart';
 
 class QuizScreenArgs {
@@ -135,6 +136,18 @@ class _QuizScreenState extends State<QuizScreen> {
       'capital' => 'No capital questions found.\nPlease verify flag assets.',
       _ => 'No flags found.\nPlease add images to assets/flags/',
     };
+  }
+
+  /// Opens leaderboard filtered to the current quiz scope.
+  void _openLeaderboard() {
+    Navigator.pushNamed(
+      context,
+      LeaderboardScreen.routeName,
+      arguments: LeaderboardScreenArgs(
+        categoryKey: args.categoryKey,
+        difficulty: args.difficulty,
+      ),
+    );
   }
 
   /// Reads route args once, loads flags, and prepares randomized questions.
@@ -337,7 +350,16 @@ class _QuizScreenState extends State<QuizScreen> {
     // Guard against empty questions (in case no assets were found)
     if (_questions.isEmpty) {
       return Scaffold(
-        appBar: AppBar(title: Text(_categoryTitle(args.categoryKey))),
+        appBar: AppBar(
+          title: Text(_categoryTitle(args.categoryKey)),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.leaderboard),
+              tooltip: 'Leaderboard',
+              onPressed: _openLeaderboard,
+            ),
+          ],
+        ),
         body: Center(
           child: Text(
             _emptyStateMessage(args.categoryKey),
@@ -361,6 +383,13 @@ class _QuizScreenState extends State<QuizScreen> {
         title: Text(
           '${_categoryTitle(args.categoryKey)} (${_currentIndex + 1}/${_questions.length})',
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.leaderboard),
+            tooltip: 'Leaderboard',
+            onPressed: _openLeaderboard,
+          ),
+        ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(12),
           child: Center(
