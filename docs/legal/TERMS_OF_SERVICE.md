@@ -66,4 +66,4 @@ You agree not to:
 
 ## 12. Contact
 
-- Terms questions: `support@quiznetic.app`
+- Terms questions: `quizneticapp@gmail.com`

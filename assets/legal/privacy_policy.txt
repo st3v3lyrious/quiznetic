@@ -49,7 +49,7 @@ information when you use the app.
 7) Your Choices
 - You can stop using the app at any time.
 - You can request account/data deletion support by contacting:
-  support@quiznetic.app
+  quizneticapp@gmail.com
 - If you uninstall before account linking, anonymous data recovery may not be
   possible.
 
@@ -66,4 +66,4 @@ information when you use the app.
 - Updated versions become effective when published in the app/repository.
 
 11) Contact
-- Privacy questions: support@quiznetic.app
+- Privacy questions: quizneticapp@gmail.com

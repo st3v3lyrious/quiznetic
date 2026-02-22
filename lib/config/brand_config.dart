@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 class BrandConfig {
   static const appName = 'QuizNetic';
   static const tagline = 'Train your world trivia reflexes.';
-  static const supportEmail = 'support@quiznetic.app';
+  static const supportEmail = 'quizneticapp@gmail.com';
   static const appVersionLabel = '1.0.0+1';
   static const logoSemanticLabel = 'QuizNetic logo';
   static const quizQuestionImageSemanticLabel = 'Quiz question image';

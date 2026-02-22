@@ -48,7 +48,7 @@ Use this as a short, editable delivery plan.
   - [x] Baseline asset pipeline configured (`flutter_launcher_icons`, `flutter_native_splash`, and `tools/refresh_branding_assets.sh`).
   - [x] Brand color tokens centralized in `lib/config/brand_config.dart`.
   - [ ] Apply EIRENYA color scheme consistently across logo, banners, backgrounds, and buttons.
-  - [ ] Update support-contact email references to the current QuizNetic inbox across app UI and legal docs.
+  - [x] Update support-contact email references to the current QuizNetic inbox across app UI and legal docs.
   - [ ] Final artwork export + multi-platform visual QA pending.
   - Activation/update runbook: `docs/BRANDING_ASSETS.md`
 - [x] M13: Build Settings and About screens. <!--gh:issue=47-->
