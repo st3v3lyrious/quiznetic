@@ -299,32 +299,45 @@ class ScoreService {
       final prevBest = scoreSnapshot.exists
           ? ((scoreSnapshot.data()?['bestScore'] as num?) ?? 0).toInt()
           : 0;
+      final bestScoreUpdated = shouldUpdateBestScore(
+        previousBest: prevBest,
+        newScore: score,
+      );
+      final newBestScore = bestScoreUpdated ? score : prevBest;
 
-      if (!shouldUpdateBestScore(previousBest: prevBest, newScore: score)) {
-        return;
+      if (bestScoreUpdated) {
+        tx.set(userDoc, {
+          'categoryKey': categoryKey,
+          'difficulty': difficulty,
+          'bestScore': newBestScore,
+          'source': user.isAnonymous ? 'guest' : 'account',
+          'updatedAt': now,
+        }, SetOptions(merge: true));
       }
 
-      tx.set(userDoc, {
-        'categoryKey': categoryKey,
-        'difficulty': difficulty,
-        'bestScore': score,
-        'source': user.isAnonymous ? 'guest' : 'account',
-        'updatedAt': now,
-      }, SetOptions(merge: true));
+      final leaderboardSnapshot = await tx.get(leadDoc);
+      final existingLeaderboardScore = leaderboardSnapshot.exists
+          ? ((leaderboardSnapshot.data()?['score'] as num?) ?? 0).toInt()
+          : null;
 
-      tx.set(leadDoc, {
-        'categoryKey': categoryKey,
-        'difficulty': difficulty,
-        'score': score,
-        'isAnonymous': user.isAnonymous,
-        'displayName': leaderboardDisplayName(
-          uid: uid,
-          isAnonymous: user.isAnonymous,
-          displayName: user.displayName,
-          email: user.email,
-        ),
-        'updatedAt': now,
-      }, SetOptions(merge: true));
+      if (shouldUpsertLeaderboard(
+        bestScore: newBestScore,
+        leaderboardScore: existingLeaderboardScore,
+      )) {
+        tx.set(leadDoc, {
+          'categoryKey': categoryKey,
+          'difficulty': difficulty,
+          'score': newBestScore,
+          'isAnonymous': user.isAnonymous,
+          'displayName': leaderboardDisplayName(
+            uid: uid,
+            isAnonymous: user.isAnonymous,
+            displayName: user.displayName,
+            email: user.email,
+          ),
+          'updatedAt': now,
+        }, SetOptions(merge: true));
+      }
     });
   }
 
@@ -486,6 +499,24 @@ class ScoreService {
     required int newScore,
   }) {
     return newScore > previousBest;
+  }
+
+  /// Returns true when leaderboard entry should be created or improved.
+  ///
+  /// This allows healing missing leaderboard docs even when the latest attempt
+  /// does not beat the stored best-score document.
+  @visibleForTesting
+  static bool shouldUpsertLeaderboard({
+    required int bestScore,
+    required int? leaderboardScore,
+  }) {
+    if (bestScore <= 0) {
+      return false;
+    }
+    if (leaderboardScore == null) {
+      return true;
+    }
+    return bestScore > leaderboardScore;
   }
 
   /// Generates an idempotency-safe attempt id when client does not provide one.

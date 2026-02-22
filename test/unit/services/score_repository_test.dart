@@ -320,6 +320,53 @@ void main() {
       },
     );
 
+    test(
+      'saveScore keeps flag and capital scopes isolated for same difficulty',
+      () async {
+        SharedPreferences.setMockInitialValues({});
+
+        final repo = LocalFirstScoreRepository(
+          currentUserProvider: () => _FakeUser(),
+          saveRemoteScore:
+              ({
+                required categoryKey,
+                required difficulty,
+                required score,
+                required attemptId,
+                required totalQuestions,
+              }) async {},
+          loadRemoteBestScore:
+              ({required categoryKey, required difficulty}) async => 0,
+          loadRemoteScores: () async => [],
+        );
+
+        await repo.saveScore(
+          categoryKey: 'flag',
+          difficulty: 'easy',
+          score: 12,
+          totalQuestions: 15,
+        );
+        await repo.saveScore(
+          categoryKey: 'capital',
+          difficulty: 'easy',
+          score: 4,
+          totalQuestions: 15,
+        );
+
+        final flagBest = await repo.getBestScore(
+          categoryKey: 'flag',
+          difficulty: 'easy',
+        );
+        final capitalBest = await repo.getBestScore(
+          categoryKey: 'capital',
+          difficulty: 'easy',
+        );
+
+        expect(flagBest, equals(12));
+        expect(capitalBest, equals(4));
+      },
+    );
+
     test('getBestScore migrates legacy category-only local key', () async {
       SharedPreferences.setMockInitialValues({'highscore_flag': 11});
 

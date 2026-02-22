@@ -132,3 +132,7 @@ Use this as a short, editable delivery plan.
   - [x] Incident postmortem template + review cadence documented: `docs/INCIDENT_POSTMORTEM_TEMPLATE.md`.
   - [ ] Dedicated pager/on-call automation and KPI dashboard automation still pending.
 - [ ] M28: Build feedback intelligence loop (in-app feedback capture, tagged triage, and recurring roadmap review cadence). <!--gh:issue=62-->
+- [ ] M29: Centralize quiz category definitions under a single source of truth (JSON-first) with generated enforcement artifacts.
+  - Canonical config file: `config/categories.json` (category keys, labels, enabled state, and difficulty/question-count constraints).
+  - Generate/sync category allowlists for app validator, Cloud Functions `submitScore`, and Firestore rules from the canonical config.
+  - Add CI drift guard so builds fail when generated artifacts are out of sync with `config/categories.json`.
