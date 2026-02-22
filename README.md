@@ -143,6 +143,64 @@ flutter pub get
 flutter run
 ```
 
+## Markdown Issue Sync CLI
+
+Use `sync_md_to_gh.py` to sync `docs/ROADMAP.md`, `docs/FEATURES.md`, and
+`docs/ISSUES.md` with GitHub Issues.
+Detailed runbook: `docs/MARKDOWN_ISSUE_SYNC.md`.
+
+### Local manual run (recommended)
+
+```bash
+python3.11 -m pip install -r requirements.txt
+
+# Option A: token/repo in environment
+export GITHUB_TOKEN=ghp_xxx
+export GITHUB_REPOSITORY=owner/repo
+
+# Option B: authenticate locally with GitHub CLI
+gh auth login
+
+# Preview first
+python3.11 sync_md_to_gh.py --dry-run --verbose
+
+# Apply
+python3.11 sync_md_to_gh.py --verbose
+```
+
+CLI flags:
+- `--dry-run`
+- `--verbose`
+- `--allow-reopen` (disabled by default)
+- `--check-labels`
+
+### GitHub Actions run (optional)
+
+```yaml
+name: Sync markdown to issues
+on:
+  push:
+    paths:
+      - "docs/*.md"
+permissions:
+  contents: write
+  issues: write
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - run: python sync_md_to_gh.py
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+
+In GitHub Actions, `GITHUB_REPOSITORY` is automatically provided by GitHub.
+
 ## Testing
 
 - **Unit/Widget tests:** `35` files

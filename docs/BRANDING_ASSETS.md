@@ -29,6 +29,12 @@ Update brand colors in:
 - `pubspec.yaml` `flutter_native_splash` colors
 - `pubspec.yaml` `flutter_launcher_icons.web.theme_color`
 
+Current EIRENYA baseline tokens:
+
+- Primary: `#4A596D`
+- Surface/background: `#F3F4F5`
+- Neutral surface container: `#DBDEE2`
+
 ## Generate Icons And Splash
 
 Run:

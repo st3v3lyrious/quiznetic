@@ -77,6 +77,19 @@ This document defines the repository quality gates and the intended merge flow.
 - Local run:
   - `python3 tools/review_agent.py --emit-annotations --fail-on error`
 
+## Markdown Issue Sync Agent
+
+- Script: `sync_md_to_gh.py`
+- Runbook: `docs/MARKDOWN_ISSUE_SYNC.md`
+- Purpose:
+  - Synchronize `docs/ROADMAP.md`, `docs/FEATURES.md`, and `docs/ISSUES.md` with
+    GitHub Issues.
+  - Keep Markdown as source of truth with idempotent anchors/GH references.
+  - Enforce safe behavior: closes issues when Markdown is completed, and only
+    reopens closed issues when `--allow-reopen` is explicitly set.
+- Local dry run:
+  - `python3 sync_md_to_gh.py --dry-run --verbose`
+
 ## Firestore Rules Gate
 
 - Rules source: `firestore.rules`
