@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quiznetic_flutter/screens/difficulty_screen.dart';
 import 'package:quiznetic_flutter/screens/home_screen.dart';
+import 'package:quiznetic_flutter/screens/leaderboard_screen.dart';
 import 'package:quiznetic_flutter/screens/quiz_screen.dart';
 import 'package:quiznetic_flutter/screens/user_profile_screen.dart';
 
@@ -23,6 +24,7 @@ void main() {
         ],
         routes: {
           UserProfileScreen.routeName: (_) => const _ProfileProbe(),
+          LeaderboardScreen.routeName: (_) => const _LeaderboardProbe(),
           QuizScreen.routeName: (_) => const _QuizArgsProbe(),
           HomeScreen.routeName: (_) => const _HomeProbe(),
         },
@@ -94,6 +96,15 @@ void main() {
     expect(find.text('profile-screen'), findsOneWidget);
   });
 
+  testWidgets('routes to leaderboard from app bar action', (tester) async {
+    await pumpDifficultyScreen(tester, categoryKey: 'capital');
+
+    await tester.tap(find.byTooltip('Leaderboard'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('leaderboard:capital:easy'), findsOneWidget);
+  });
+
   testWidgets('change quiz type button routes to home', (tester) async {
     await pumpDifficultyScreen(tester);
 
@@ -133,5 +144,20 @@ class _HomeProbe extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Scaffold(body: Text('home-screen'));
+  }
+}
+
+class _LeaderboardProbe extends StatelessWidget {
+  const _LeaderboardProbe();
+
+  @override
+  Widget build(BuildContext context) {
+    final args = ModalRoute.of(context)?.settings.arguments;
+    if (args is LeaderboardScreenArgs) {
+      return Scaffold(
+        body: Text('leaderboard:${args.categoryKey}:${args.difficulty}'),
+      );
+    }
+    return const Scaffold(body: Text('leaderboard:default'));
   }
 }

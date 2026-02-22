@@ -6,6 +6,7 @@
 import 'package:flutter/material.dart';
 import 'package:quiznetic_flutter/config/brand_config.dart';
 import 'package:quiznetic_flutter/screens/legal_document_screen.dart';
+import 'package:quiznetic_flutter/screens/leaderboard_screen.dart';
 
 class AboutScreen extends StatelessWidget {
   static const routeName = '/about';
@@ -34,7 +35,18 @@ class AboutScreen extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('About')),
+      appBar: AppBar(
+        title: const Text('About'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.leaderboard),
+            tooltip: 'Leaderboard',
+            onPressed: () {
+              Navigator.pushNamed(context, LeaderboardScreen.routeName);
+            },
+          ),
+        ],
+      ),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),

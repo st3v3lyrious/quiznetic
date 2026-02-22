@@ -5,6 +5,7 @@
 */
 import 'package:flutter/material.dart';
 import 'home_screen.dart';
+import 'leaderboard_screen.dart';
 import 'quiz_screen.dart';
 import 'user_profile_screen.dart';
 
@@ -33,6 +34,20 @@ class DifficultyScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Select Difficulty'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.leaderboard),
+            tooltip: 'Leaderboard',
+            onPressed: () {
+              Navigator.pushNamed(
+                context,
+                LeaderboardScreen.routeName,
+                arguments: LeaderboardScreenArgs(
+                  categoryKey: args.categoryKey,
+                  difficulty: 'easy',
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.person),
             tooltip: 'Profile',

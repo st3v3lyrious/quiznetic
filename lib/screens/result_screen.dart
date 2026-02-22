@@ -19,6 +19,7 @@ import 'package:quiznetic_flutter/widgets/monetized_banner_ad.dart';
 import 'quiz_screen.dart';
 import 'difficulty_screen.dart';
 import 'home_screen.dart';
+import 'leaderboard_screen.dart';
 import 'user_profile_screen.dart';
 
 typedef ResultInterstitialPresenter = Future<bool> Function(String adUnitId);
@@ -344,6 +345,25 @@ class _ResultScreenState extends State<ResultScreen> {
     }
   }
 
+  void _openLeaderboard({
+    required String? categoryKey,
+    required String? difficulty,
+  }) {
+    if (categoryKey == null || difficulty == null) {
+      Navigator.pushNamed(context, LeaderboardScreen.routeName);
+      return;
+    }
+
+    Navigator.pushNamed(
+      context,
+      LeaderboardScreen.routeName,
+      arguments: LeaderboardScreenArgs(
+        categoryKey: categoryKey,
+        difficulty: difficulty,
+      ),
+    );
+  }
+
   /// Builds the score summary, high-score status, and follow-up actions.
   @override
   Widget build(BuildContext context) {
@@ -354,6 +374,12 @@ class _ResultScreenState extends State<ResultScreen> {
           automaticallyImplyLeading: false,
           title: const Text('Quiz Results'),
           actions: [
+            IconButton(
+              icon: const Icon(Icons.leaderboard),
+              tooltip: 'Leaderboard',
+              onPressed: () =>
+                  _openLeaderboard(categoryKey: null, difficulty: null),
+            ),
             IconButton(
               icon: const Icon(Icons.person),
               tooltip: 'Profile',
@@ -377,6 +403,14 @@ class _ResultScreenState extends State<ResultScreen> {
           automaticallyImplyLeading: false,
           title: const Text('Quiz Results'),
           actions: [
+            IconButton(
+              icon: const Icon(Icons.leaderboard),
+              tooltip: 'Leaderboard',
+              onPressed: () => _openLeaderboard(
+                categoryKey: args.categoryKey,
+                difficulty: args.difficulty,
+              ),
+            ),
             IconButton(
               icon: const Icon(Icons.person),
               tooltip: 'Profile',
