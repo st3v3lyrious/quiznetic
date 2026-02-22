@@ -18,6 +18,50 @@ void main() {
       );
     });
 
+    test('shouldUpsertLeaderboard creates entry when none exists', () {
+      expect(
+        ScoreService.shouldUpsertLeaderboard(
+          bestScore: 12,
+          leaderboardScore: null,
+        ),
+        isTrue,
+      );
+    });
+
+    test('shouldUpsertLeaderboard updates only for strictly higher scores', () {
+      expect(
+        ScoreService.shouldUpsertLeaderboard(
+          bestScore: 12,
+          leaderboardScore: 11,
+        ),
+        isTrue,
+      );
+      expect(
+        ScoreService.shouldUpsertLeaderboard(
+          bestScore: 12,
+          leaderboardScore: 12,
+        ),
+        isFalse,
+      );
+      expect(
+        ScoreService.shouldUpsertLeaderboard(
+          bestScore: 11,
+          leaderboardScore: 12,
+        ),
+        isFalse,
+      );
+    });
+
+    test('shouldUpsertLeaderboard ignores non-positive best scores', () {
+      expect(
+        ScoreService.shouldUpsertLeaderboard(
+          bestScore: 0,
+          leaderboardScore: null,
+        ),
+        isFalse,
+      );
+    });
+
     test('parseCategoryScore extracts category and difficulty from doc id', () {
       final parsed = ScoreService.parseCategoryScore(
         docId: 'flag_easy',

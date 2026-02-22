@@ -291,15 +291,24 @@ exports.submitScore = onCall(
           tx.set(userScoreRef, {
             categoryKey,
             difficulty,
-            bestScore: correctCount,
+            bestScore: newBestScore,
             source,
             updatedAt: admin.firestore.FieldValue.serverTimestamp(),
           }, {merge: true});
+        }
 
+        const leaderboardSnapshot = await tx.get(leaderboardRef);
+        const previousLeaderboardScore = leaderboardSnapshot.exists ?
+          Number(leaderboardSnapshot.data()?.score || 0) : null;
+        const shouldWriteLeaderboard = newBestScore > 0 &&
+          (!leaderboardSnapshot.exists ||
+            newBestScore > previousLeaderboardScore);
+
+        if (shouldWriteLeaderboard) {
           tx.set(leaderboardRef, {
             categoryKey,
             difficulty,
-            score: correctCount,
+            score: newBestScore,
             isAnonymous,
             displayName,
             updatedAt: admin.firestore.FieldValue.serverTimestamp(),
