@@ -204,33 +204,72 @@ class HintMonetizationService implements HintMonetizationGateway {
 
   static Future<bool> _defaultPresentRewardedHintAd(String adUnitId) async {
     final completer = Completer<bool>();
+    RewardedAd? loadedAd;
+    Timer? showWatchdog;
+    Timer? postRewardWatchdog;
     RewardedAd.load(
       adUnitId: adUnitId,
       request: const AdRequest(),
       rewardedAdLoadCallback: RewardedAdLoadCallback(
         onAdLoaded: (ad) {
+          loadedAd = ad;
           var rewardEarned = false;
+          var finalized = false;
+          var dismissed = false;
+          void completeIfPending(bool value) {
+            if (finalized) return;
+            finalized = true;
+            showWatchdog?.cancel();
+            postRewardWatchdog?.cancel();
+            if (!completer.isCompleted) {
+              completer.complete(value);
+            }
+          }
+
+          // Defensive watchdog for rare callback stalls that can leave the ad
+          // overlay stuck on screen.
+          showWatchdog = Timer(const Duration(seconds: 60), () {
+            if (dismissed) return;
+            debugPrint('Rewarded ad watchdog timeout; forcing cleanup.');
+            ad.dispose();
+            completeIfPending(rewardEarned);
+          });
+
           ad.fullScreenContentCallback = FullScreenContentCallback(
             onAdDismissedFullScreenContent: (ad) {
+              dismissed = true;
               ad.dispose();
-              if (!completer.isCompleted) {
-                completer.complete(rewardEarned);
-              }
+              completeIfPending(rewardEarned);
             },
             onAdFailedToShowFullScreenContent: (ad, error) {
+              dismissed = true;
+              debugPrint('Rewarded ad failed to show: $error');
               ad.dispose();
-              if (!completer.isCompleted) {
-                completer.complete(false);
-              }
+              completeIfPending(false);
             },
           );
           ad.show(
             onUserEarnedReward: (adWithoutView, rewardItem) {
               rewardEarned = true;
+              // Reward should be granted as soon as SDK confirms earn event,
+              // even if full-screen dismissal callback is delayed or missed.
+              completeIfPending(true);
+              // If close controls become unresponsive on some devices, force
+              // cleanup shortly after reward is earned so gameplay can resume.
+              postRewardWatchdog = Timer(const Duration(seconds: 8), () {
+                if (dismissed) return;
+                debugPrint(
+                  'Rewarded ad did not dismiss after reward; forcing cleanup.',
+                );
+                ad.dispose();
+              });
             },
           );
         },
         onAdFailedToLoad: (error) {
+          showWatchdog?.cancel();
+          postRewardWatchdog?.cancel();
+          debugPrint('Rewarded ad failed to load: $error');
           if (!completer.isCompleted) {
             completer.complete(false);
           }
@@ -238,10 +277,17 @@ class HintMonetizationService implements HintMonetizationGateway {
       ),
     );
 
-    return completer.future.timeout(
+    final unlocked = await completer.future.timeout(
       const Duration(seconds: 45),
-      onTimeout: () => false,
+      onTimeout: () {
+        debugPrint('Rewarded ad timed out.');
+        loadedAd?.dispose();
+        return false;
+      },
     );
+    showWatchdog?.cancel();
+    postRewardWatchdog?.cancel();
+    return unlocked;
   }
 
   Future<void> _safeLogEvent(

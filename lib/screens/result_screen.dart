@@ -297,32 +297,65 @@ class _ResultScreenState extends State<ResultScreen> {
     String adUnitId,
   ) async {
     final completer = Completer<bool>();
+    InterstitialAd? loadedAd;
+    Timer? watchdog;
     InterstitialAd.load(
       adUnitId: adUnitId,
       request: const AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (ad) {
-          var shown = false;
+          loadedAd = ad;
+          var showed = false;
+          var hadImpression = false;
+          var finalized = false;
+          void finalize(bool shown) {
+            if (finalized) return;
+            finalized = true;
+            watchdog?.cancel();
+            if (!completer.isCompleted) {
+              completer.complete(shown);
+            }
+          }
+
+          // Defensive fallback for rare SDK callback stalls that can leave a
+          // dark overlay. Treat as not shown so the banner fallback can render.
+          watchdog = Timer(const Duration(seconds: 30), () {
+            debugPrint(
+              'Result interstitial watchdog timeout; forcing cleanup.',
+            );
+            ad.dispose();
+            finalize(false);
+          });
+
           ad.fullScreenContentCallback = FullScreenContentCallback(
             onAdShowedFullScreenContent: (ad) {
-              shown = true;
+              showed = true;
+            },
+            onAdImpression: (ad) {
+              hadImpression = true;
             },
             onAdDismissedFullScreenContent: (ad) {
               ad.dispose();
-              if (!completer.isCompleted) {
-                completer.complete(shown);
+              final actuallyShown = showed && hadImpression;
+              if (!actuallyShown) {
+                debugPrint(
+                  'Result interstitial dismissed without impression; '
+                  'treating as fallback.',
+                );
               }
+              finalize(actuallyShown);
             },
             onAdFailedToShowFullScreenContent: (ad, error) {
               ad.dispose();
-              if (!completer.isCompleted) {
-                completer.complete(false);
-              }
+              debugPrint('Result interstitial failed to show: $error');
+              finalize(false);
             },
           );
           ad.show();
         },
         onAdFailedToLoad: (error) {
+          watchdog?.cancel();
+          debugPrint('Result interstitial failed to load: $error');
           if (!completer.isCompleted) {
             completer.complete(false);
           }
@@ -330,10 +363,16 @@ class _ResultScreenState extends State<ResultScreen> {
       ),
     );
 
-    return completer.future.timeout(
+    final shown = await completer.future.timeout(
       const Duration(seconds: 20),
-      onTimeout: () => false,
+      onTimeout: () {
+        debugPrint('Result interstitial load/show timed out.');
+        loadedAd?.dispose();
+        return false;
+      },
     );
+    watchdog?.cancel();
+    return shown;
   }
 
   Future<void> _safeLogEvent(String name) async {
