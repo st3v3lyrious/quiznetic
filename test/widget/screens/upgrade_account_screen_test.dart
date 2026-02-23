@@ -79,6 +79,18 @@ void main() {
     expect(message, contains('Network error'));
   });
 
+  test('authFailureMessage maps Google config failure hints to safe text', () {
+    final message = UpgradeAccountScreen.authFailureMessage(
+      fba.FirebaseAuthException(
+        code: 'unknown',
+        message:
+            'com.google.android.gms.common.api.ApiException: 10: DEVELOPER_ERROR',
+      ),
+    );
+
+    expect(message, contains('not configured'));
+  });
+
   test('preservesGuestIdentity allows same uid', () {
     final result = UpgradeAccountScreen.preservesGuestIdentity(
       initialAnonymousUid: 'guest123',

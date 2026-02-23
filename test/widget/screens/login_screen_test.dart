@@ -98,4 +98,16 @@ void main() {
 
     expect(message, contains('currently unavailable'));
   });
+
+  test('authFailureMessage maps Google config failure hints to safe text', () {
+    final message = LoginScreen.authFailureMessage(
+      fba.FirebaseAuthException(
+        code: 'unknown',
+        message:
+            'com.google.android.gms.common.api.ApiException: 10: DEVELOPER_ERROR',
+      ),
+    );
+
+    expect(message, contains('not configured'));
+  });
 }

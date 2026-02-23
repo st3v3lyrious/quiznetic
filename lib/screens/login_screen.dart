@@ -71,10 +71,18 @@ class LoginScreen extends StatelessWidget {
   /// Maps Firebase Auth failures to user-safe sign-in messages.
   @visibleForTesting
   static String authFailureMessage(Exception exception) {
+    if (_isLikelyGoogleConfigIssue(exception)) {
+      return 'Google sign-in is not configured for this app build yet. Please use email sign-in or try again later.';
+    }
+
     if (exception is fba.FirebaseAuthException) {
       switch (exception.code) {
         case 'operation-not-allowed':
           return 'This sign-in method is currently unavailable. Please try another option.';
+        case 'invalid-credential':
+          return 'The sign-in credentials are invalid for this app build. Please try another sign-in option.';
+        case 'account-exists-with-different-credential':
+          return 'An account already exists with a different sign-in method. Use that method and try again.';
         case 'web-context-cancelled':
           return 'Sign-in was cancelled. Please try again.';
         case 'web-context-already-presented':
@@ -86,6 +94,15 @@ class LoginScreen extends StatelessWidget {
       }
     }
     return 'Sign-in failed. Please try again.';
+  }
+
+  /// Heuristics for Android Google auth setup errors surfaced as unknown.
+  static bool _isLikelyGoogleConfigIssue(Exception exception) {
+    final raw = exception.toString().toLowerCase();
+    return raw.contains('developer_error') ||
+        raw.contains('apiexception: 10') ||
+        raw.contains('12500') ||
+        raw.contains('sign_in_failed');
   }
 
   /// Builds provider sign-in and account-creation actions.
