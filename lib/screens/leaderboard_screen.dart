@@ -3,8 +3,10 @@
  Title: Leaderboard Screen
  Purpose: Displays global ranking with category+difficulty filters and user highlight.
 */
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:quiznetic_flutter/services/leaderboard_service.dart';
+import 'package:quiznetic_flutter/services/score_repository.dart';
 
 class LeaderboardScreenArgs {
   final String categoryKey;
@@ -16,8 +18,13 @@ class LeaderboardScreenArgs {
 class LeaderboardScreen extends StatefulWidget {
   static const routeName = '/leaderboard';
   final LeaderboardService? leaderboardService;
+  final ScoreRepository? scoreRepository;
 
-  const LeaderboardScreen({super.key, this.leaderboardService});
+  const LeaderboardScreen({
+    super.key,
+    this.leaderboardService,
+    this.scoreRepository,
+  });
 
   /// Creates state that handles filters and data refresh.
   @override
@@ -37,6 +44,8 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
 
   late final LeaderboardService _leaderboardService =
       widget.leaderboardService ?? LeaderboardService();
+  late final ScoreRepository _scoreRepository =
+      widget.scoreRepository ?? LocalFirstScoreRepository();
   late Future<LeaderboardSnapshot> _leaderboardFuture;
   bool _didInit = false;
   String _selectedCategory = 'flag';
@@ -62,7 +71,16 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   }
 
   /// Loads one leaderboard snapshot for the selected filters.
-  Future<LeaderboardSnapshot> _loadLeaderboard() {
+  Future<LeaderboardSnapshot> _loadLeaderboard() async {
+    // Force one retry before reading leaderboard so recent local-first score
+    // writes are not left stale behind retry backoff windows.
+    if (Firebase.apps.isNotEmpty) {
+      try {
+        await _scoreRepository.syncPendingScores(forceRetry: true);
+      } catch (e) {
+        debugPrint('Leaderboard pre-load score sync failed: $e');
+      }
+    }
     return _leaderboardService.load(
       categoryKey: _selectedCategory,
       difficulty: _selectedDifficulty,
@@ -181,7 +199,17 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Global Leaderboard')),
+      appBar: AppBar(
+        title: const Text('Global Leaderboard'),
+        actions: [
+          IconButton(
+            key: const Key('leaderboard-refresh-action'),
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Refresh',
+            onPressed: _retry,
+          ),
+        ],
+      ),
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
@@ -301,6 +329,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                             await _leaderboardFuture;
                           },
                           child: ListView(
+                            physics: const AlwaysScrollableScrollPhysics(),
                             padding: const EdgeInsets.only(bottom: 24),
                             children: [
                               Card(

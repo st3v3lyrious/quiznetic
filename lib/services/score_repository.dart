@@ -558,6 +558,11 @@ class LocalFirstScoreRepository implements ScoreRepository {
         );
         syncedCount++;
       } catch (e) {
+        debugPrint(
+          'ScoreRepository sync failed for '
+          '${attempt.categoryKey}/${attempt.difficulty} '
+          '(attempt ${attempt.id}): $e',
+        );
         final nextDelay = _retryDelay(
           attemptNumber: attempt.syncAttempts + 1,
           connectivityError: _looksLikeConnectivityError(e),

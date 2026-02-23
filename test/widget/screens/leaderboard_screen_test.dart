@@ -141,6 +141,38 @@ void main() {
     expect(find.text('CapitalLeader'), findsOneWidget);
     expect(requestedScopes, contains('capital:easy'));
   });
+
+  testWidgets('refresh action triggers leaderboard reload', (tester) async {
+    var loadCalls = 0;
+    final service = LeaderboardService(
+      currentUserLoader: () => _FakeUser(uid: 'u1'),
+      entriesLoader:
+          ({required categoryKey, required difficulty, required limit}) async {
+            loadCalls++;
+            return [
+              LeaderboardEntry(
+                uid: 'u1',
+                score: 50,
+                updatedAt: DateTime.utc(2025, 1, 1),
+                isAnonymous: false,
+                displayName: 'Reloadable',
+              ),
+            ];
+          },
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(home: LeaderboardScreen(leaderboardService: service)),
+    );
+    await tester.pumpAndSettle();
+    expect(loadCalls, equals(1));
+
+    await tester.tap(find.byKey(const Key('leaderboard-refresh-action')));
+    await tester.pumpAndSettle();
+
+    expect(loadCalls, greaterThanOrEqualTo(2));
+    expect(find.text('Reloadable'), findsOneWidget);
+  });
 }
 
 class _FakeUser implements User {
