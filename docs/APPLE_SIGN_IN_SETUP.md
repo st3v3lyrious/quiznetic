@@ -6,7 +6,9 @@ This runbook covers production setup for Sign in with Apple in Quiznetic.
 
 - Apple provider is wired in `LoginScreen` and `UpgradeAccountScreen`.
 - Provider visibility is guarded by `ENABLE_APPLE_SIGN_IN` (default `false`).
-- iOS entitlement file added: `ios/Runner/Runner.entitlements`.
+- iOS entitlement placeholder file exists: `ios/Runner/Runner.entitlements`.
+  - Current MVP default keeps this file empty so Personal Team signing works on
+    real iOS devices while Apple sign-in is deferred.
 - macOS entitlements include Apple sign-in capability:
   - `macos/Runner/DebugProfile.entitlements`
   - `macos/Runner/Release.entitlements`
@@ -18,6 +20,8 @@ This runbook covers production setup for Sign in with Apple in Quiznetic.
    - Open Apple Developer portal.
    - Enable `Sign in with Apple` on your App ID(s) used by this app.
    - Ensure bundle identifiers match Xcode/Firebase app settings.
+   - Important: Personal development teams do not support this capability for
+     iOS app signing. Use a paid Apple Developer team before enabling.
 2. Apple Developer: create sign-in key
    - Create a `Sign in with Apple` key (`.p8`).
    - Record:
@@ -43,6 +47,11 @@ This runbook covers production setup for Sign in with Apple in Quiznetic.
 
 ## Validation Checklist
 
+0. iOS capability activation baseline
+   - Add Apple entitlement key to `ios/Runner/Runner.entitlements`:
+     - `com.apple.developer.applesignin = [Default]`
+   - In Xcode Signing & Capabilities, ensure `Sign In with Apple` appears under
+     Runner target.
 1. iOS: sign in with Apple from `/login`, verify user reaches `/home`.
 2. iOS: anonymous user upgrade via `/upgrade`, verify UID continuity is preserved.
 3. macOS: repeat login + upgrade smoke checks.
