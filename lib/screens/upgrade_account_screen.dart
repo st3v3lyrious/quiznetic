@@ -50,6 +50,23 @@ class UpgradeAccountScreen extends StatefulWidget {
         resolvedPlatform == TargetPlatform.macOS;
   }
 
+  /// Returns true when we should show an "Apple unavailable" notice.
+  ///
+  /// On Android we intentionally hide this notice to avoid irrelevant UX copy.
+  @visibleForTesting
+  static bool shouldShowAppleUnavailableMessage({
+    required bool appleProviderEnabled,
+    bool isWeb = kIsWeb,
+    TargetPlatform? platform,
+  }) {
+    if (appleProviderEnabled) return false;
+    if (isWeb) return true;
+
+    final resolvedPlatform = platform ?? defaultTargetPlatform;
+    return resolvedPlatform == TargetPlatform.iOS ||
+        resolvedPlatform == TargetPlatform.macOS;
+  }
+
   /// Builds provider list for anonymous-account upgrade.
   @visibleForTesting
   static List<AuthProvider> buildProviders({
@@ -91,6 +108,18 @@ class UpgradeAccountScreen extends StatefulWidget {
       }
     }
     return 'Sign-in failed. Please try again.';
+  }
+
+  /// Normalized reason used for analytics segmentation.
+  @visibleForTesting
+  static String authFailureReason(Exception exception) {
+    if (_isLikelyGoogleConfigIssue(exception)) {
+      return 'google_config';
+    }
+    if (exception is fba.FirebaseAuthException) {
+      return exception.code;
+    }
+    return 'unknown';
   }
 
   /// Heuristics for Android Google auth setup errors surfaced as unknown.
@@ -275,7 +304,9 @@ class _UpgradeAccountScreenState extends State<UpgradeAccountScreen> {
                     textAlign: TextAlign.center,
                   ),
                 ),
-              if (!appleConfigured)
+              if (UpgradeAccountScreen.shouldShowAppleUnavailableMessage(
+                appleProviderEnabled: appleConfigured,
+              ))
                 const Padding(
                   padding: EdgeInsets.only(top: 8),
                   child: Text(
@@ -302,7 +333,13 @@ class _UpgradeAccountScreenState extends State<UpgradeAccountScreen> {
             unawaited(
               AnalyticsService.instance.logEvent(
                 'auth_upgrade_failed',
-                parameters: {'flow': 'upgrade', 'error_code': errorCode},
+                parameters: {
+                  'flow': 'upgrade',
+                  'error_code': errorCode,
+                  'failure_reason': UpgradeAccountScreen.authFailureReason(
+                    exception,
+                  ),
+                },
               ),
             );
             ScaffoldMessenger.of(context).showSnackBar(

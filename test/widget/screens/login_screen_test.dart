@@ -91,6 +91,32 @@ void main() {
     },
   );
 
+  test(
+    'shouldShowAppleUnavailableMessage is false on Android when Apple is disabled',
+    () {
+      final show = LoginScreen.shouldShowAppleUnavailableMessage(
+        appleProviderEnabled: false,
+        isWeb: false,
+        platform: TargetPlatform.android,
+      );
+
+      expect(show, isFalse);
+    },
+  );
+
+  test(
+    'shouldShowAppleUnavailableMessage is true on iOS when Apple is disabled',
+    () {
+      final show = LoginScreen.shouldShowAppleUnavailableMessage(
+        appleProviderEnabled: false,
+        isWeb: false,
+        platform: TargetPlatform.iOS,
+      );
+
+      expect(show, isTrue);
+    },
+  );
+
   test('authFailureMessage maps operation-not-allowed to safe text', () {
     final message = LoginScreen.authFailureMessage(
       fba.FirebaseAuthException(code: 'operation-not-allowed'),

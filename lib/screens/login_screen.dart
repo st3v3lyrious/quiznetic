@@ -53,6 +53,23 @@ class LoginScreen extends StatelessWidget {
         resolvedPlatform == TargetPlatform.macOS;
   }
 
+  /// Returns true when we should show an "Apple unavailable" notice.
+  ///
+  /// On Android we intentionally hide this notice to avoid irrelevant UX copy.
+  @visibleForTesting
+  static bool shouldShowAppleUnavailableMessage({
+    required bool appleProviderEnabled,
+    bool isWeb = kIsWeb,
+    TargetPlatform? platform,
+  }) {
+    if (appleProviderEnabled) return false;
+    if (isWeb) return true;
+
+    final resolvedPlatform = platform ?? defaultTargetPlatform;
+    return resolvedPlatform == TargetPlatform.iOS ||
+        resolvedPlatform == TargetPlatform.macOS;
+  }
+
   /// Builds provider list, conditionally including Google based on config.
   @visibleForTesting
   static List<AuthProvider> buildProviders({
@@ -94,6 +111,18 @@ class LoginScreen extends StatelessWidget {
       }
     }
     return 'Sign-in failed. Please try again.';
+  }
+
+  /// Normalized reason used for analytics segmentation.
+  @visibleForTesting
+  static String authFailureReason(Exception exception) {
+    if (_isLikelyGoogleConfigIssue(exception)) {
+      return 'google_config';
+    }
+    if (exception is fba.FirebaseAuthException) {
+      return exception.code;
+    }
+    return 'unknown';
   }
 
   /// Heuristics for Android Google auth setup errors surfaced as unknown.
@@ -170,7 +199,9 @@ class LoginScreen extends StatelessWidget {
                         textAlign: TextAlign.center,
                       ),
                     ),
-                  if (!appleConfigured)
+                  if (shouldShowAppleUnavailableMessage(
+                    appleProviderEnabled: appleConfigured,
+                  ))
                     const Padding(
                       padding: EdgeInsets.only(top: 8),
                       child: Text(
@@ -273,7 +304,11 @@ class LoginScreen extends StatelessWidget {
               unawaited(
                 AnalyticsService.instance.logEvent(
                   'auth_signin_failed',
-                  parameters: {'flow': 'login', 'error_code': errorCode},
+                  parameters: {
+                    'flow': 'login',
+                    'error_code': errorCode,
+                    'failure_reason': authFailureReason(exception),
+                  },
                 ),
               );
               ScaffoldMessenger.of(context).showSnackBar(
