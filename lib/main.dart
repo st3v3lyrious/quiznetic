@@ -31,22 +31,26 @@ import 'firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 /// Initializes Firebase and launches the app shell.
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+void main() {
   final crashReportingService = CrashReportingService();
-  final analyticsService = AnalyticsService.instance;
-  final entitlementService = EntitlementService.instance;
-  final iapService = IapService.instance;
-  final adsService = AdsService.instance;
-  await crashReportingService.initialize();
-  await analyticsService.initialize();
-  await entitlementService.initialize();
-  await iapService.initialize();
-  await adsService.initialize();
-
-  await runZonedGuarded(
+  runZonedGuarded(
     () async {
+      WidgetsFlutterBinding.ensureInitialized();
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+
+      final analyticsService = AnalyticsService.instance;
+      final entitlementService = EntitlementService.instance;
+      final iapService = IapService.instance;
+      final adsService = AdsService.instance;
+
+      await crashReportingService.initialize();
+      await analyticsService.initialize();
+      await entitlementService.initialize();
+      await iapService.initialize();
+      await adsService.initialize();
+
       runApp(const QuizNetic());
     },
     (error, stackTrace) {
