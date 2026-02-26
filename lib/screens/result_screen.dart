@@ -342,6 +342,9 @@ class _ResultScreenState extends State<ResultScreen> {
             debugPrint(
               'Result interstitial watchdog timeout; forcing cleanup.',
             );
+            unawaited(
+              _safeLogAnalyticsEvent('ad_result_interstitial_watchdog_timeout'),
+            );
             ad.dispose();
             finalize(false);
           });
@@ -361,12 +364,26 @@ class _ResultScreenState extends State<ResultScreen> {
                   'Result interstitial dismissed without impression; '
                   'treating as fallback.',
                 );
+                unawaited(
+                  _safeLogAnalyticsEvent(
+                    'ad_result_interstitial_no_impression',
+                  ),
+                );
               }
               finalize(actuallyShown);
             },
             onAdFailedToShowFullScreenContent: (ad, error) {
               ad.dispose();
               debugPrint('Result interstitial failed to show: $error');
+              unawaited(
+                _safeLogAnalyticsEvent(
+                  'ad_result_interstitial_show_failed',
+                  parameters: {
+                    'error_code': error.code,
+                    'error_domain': error.domain,
+                  },
+                ),
+              );
               finalize(false);
             },
           );
@@ -375,6 +392,15 @@ class _ResultScreenState extends State<ResultScreen> {
         onAdFailedToLoad: (error) {
           watchdog?.cancel();
           debugPrint('Result interstitial failed to load: $error');
+          unawaited(
+            _safeLogAnalyticsEvent(
+              'ad_result_interstitial_load_failed',
+              parameters: {
+                'error_code': error.code,
+                'error_domain': error.domain,
+              },
+            ),
+          );
           if (!completer.isCompleted) {
             completer.complete(false);
           }
@@ -386,12 +412,25 @@ class _ResultScreenState extends State<ResultScreen> {
       const Duration(seconds: 20),
       onTimeout: () {
         debugPrint('Result interstitial load/show timed out.');
+        unawaited(_safeLogAnalyticsEvent('ad_result_interstitial_timeout'));
         loadedAd?.dispose();
         return false;
       },
     );
     watchdog?.cancel();
     return shown;
+  }
+
+  static Future<void> _safeLogAnalyticsEvent(
+    String name, {
+    Map<String, Object?>? parameters,
+  }) async {
+    try {
+      await AnalyticsService.instance.logEvent(name, parameters: parameters);
+    } catch (e, stackTrace) {
+      debugPrint('ResultScreen analytics event failed for "$name": $e');
+      debugPrintStack(stackTrace: stackTrace);
+    }
   }
 
   Future<void> _safeLogEvent(String name) async {

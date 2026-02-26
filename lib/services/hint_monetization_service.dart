@@ -231,6 +231,7 @@ class HintMonetizationService implements HintMonetizationGateway {
           showWatchdog = Timer(const Duration(seconds: 60), () {
             if (dismissed) return;
             debugPrint('Rewarded ad watchdog timeout; forcing cleanup.');
+            unawaited(_safeStaticLogEvent('ad_rewarded_watchdog_timeout'));
             ad.dispose();
             completeIfPending(rewardEarned);
           });
@@ -244,6 +245,15 @@ class HintMonetizationService implements HintMonetizationGateway {
             onAdFailedToShowFullScreenContent: (ad, error) {
               dismissed = true;
               debugPrint('Rewarded ad failed to show: $error');
+              unawaited(
+                _safeStaticLogEvent(
+                  'ad_rewarded_show_failed',
+                  parameters: {
+                    'error_code': error.code,
+                    'error_domain': error.domain,
+                  },
+                ),
+              );
               ad.dispose();
               completeIfPending(false);
             },
@@ -261,6 +271,9 @@ class HintMonetizationService implements HintMonetizationGateway {
                 debugPrint(
                   'Rewarded ad did not dismiss after reward; forcing cleanup.',
                 );
+                unawaited(
+                  _safeStaticLogEvent('ad_rewarded_postreward_forced_close'),
+                );
                 ad.dispose();
               });
             },
@@ -270,6 +283,15 @@ class HintMonetizationService implements HintMonetizationGateway {
           showWatchdog?.cancel();
           postRewardWatchdog?.cancel();
           debugPrint('Rewarded ad failed to load: $error');
+          unawaited(
+            _safeStaticLogEvent(
+              'ad_rewarded_load_failed',
+              parameters: {
+                'error_code': error.code,
+                'error_domain': error.domain,
+              },
+            ),
+          );
           if (!completer.isCompleted) {
             completer.complete(false);
           }
@@ -281,6 +303,7 @@ class HintMonetizationService implements HintMonetizationGateway {
       const Duration(seconds: 45),
       onTimeout: () {
         debugPrint('Rewarded ad timed out.');
+        unawaited(_safeStaticLogEvent('ad_rewarded_timeout'));
         loadedAd?.dispose();
         return false;
       },
@@ -288,6 +311,18 @@ class HintMonetizationService implements HintMonetizationGateway {
     showWatchdog?.cancel();
     postRewardWatchdog?.cancel();
     return unlocked;
+  }
+
+  static Future<void> _safeStaticLogEvent(
+    String name, {
+    Map<String, Object?>? parameters,
+  }) async {
+    try {
+      await AnalyticsService.instance.logEvent(name, parameters: parameters);
+    } catch (e, stackTrace) {
+      debugPrint('HintMonetizationService analytics event failed: $e');
+      debugPrintStack(stackTrace: stackTrace);
+    }
   }
 
   Future<void> _safeLogEvent(

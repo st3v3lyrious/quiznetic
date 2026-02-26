@@ -103,6 +103,16 @@ class _MonetizedBannerAdState extends State<MonetizedBannerAd> {
             _loaded = false;
           });
           debugPrint('Banner ad failed for ${widget.placement}: $error');
+          unawaited(
+            _analyticsService.logEvent(
+              'ad_banner_load_failed',
+              parameters: {
+                'placement': widget.placement,
+                'error_code': error.code,
+                'error_domain': error.domain,
+              },
+            ),
+          );
         },
         onAdImpression: (ad) {
           unawaited(
