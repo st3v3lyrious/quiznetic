@@ -139,14 +139,21 @@ class _ResultScreenState extends State<ResultScreen> {
             required String difficulty,
             required int score,
             required int totalQuestions,
-          }) => scoreRepository
-              .saveScore(
-                categoryKey: categoryKey,
-                score: score,
-                difficulty: difficulty,
-                totalQuestions: totalQuestions,
-              )
-              .then((result) => result.bestScore);
+          }) async {
+            final result = await scoreRepository.saveScore(
+              categoryKey: categoryKey,
+              score: score,
+              difficulty: difficulty,
+              totalQuestions: totalQuestions,
+            );
+            if (result.queuedForSync) {
+              debugPrint(
+                'ResultScreen score sync queued for '
+                '$categoryKey/$difficulty: ${result.syncError}',
+              );
+            }
+            return result.bestScore;
+          };
       final getHighScore =
           widget.getHighScore ??
           (String categoryKey, String difficulty) => scoreRepository
@@ -192,6 +199,12 @@ class _ResultScreenState extends State<ResultScreen> {
       return _ResultData(highScore: highScore, guestBand: band);
     } catch (e) {
       debugPrint('SaveScore error: $e');
+      unawaited(
+        _safeLogAnalyticsEvent(
+          'score_save_failed',
+          parameters: {'error_type': e.runtimeType.toString()},
+        ),
+      );
       final highScore = await getHighScore(args.categoryKey, args.difficulty);
       return _ResultData(highScore: highScore, guestBand: null);
     }
@@ -219,6 +232,12 @@ class _ResultScreenState extends State<ResultScreen> {
       );
     } catch (e) {
       debugPrint('Leaderboard band lookup failed: $e');
+      unawaited(
+        _safeLogAnalyticsEvent(
+          'leaderboard_band_lookup_failed',
+          parameters: {'error_type': e.runtimeType.toString()},
+        ),
+      );
       return null;
     }
   }

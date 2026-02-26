@@ -7,6 +7,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:quiznetic_flutter/services/leaderboard_service.dart';
 import 'package:quiznetic_flutter/services/score_repository.dart';
+import 'package:quiznetic_flutter/services/score_submission_validator.dart';
 
 class LeaderboardScreenArgs {
   final String categoryKey;
@@ -50,6 +51,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   bool _didInit = false;
   String _selectedCategory = 'flag';
   String _selectedDifficulty = 'easy';
+  final Set<String> _repairAttemptedScopes = <String>{};
 
   /// Initializes filter defaults from optional route args.
   @override
@@ -81,10 +83,61 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         debugPrint('Leaderboard pre-load score sync failed: $e');
       }
     }
-    return _leaderboardService.load(
+    var snapshot = await _leaderboardService.load(
       categoryKey: _selectedCategory,
       difficulty: _selectedDifficulty,
     );
+    final repaired = await _attemptLeaderboardRepair(snapshot);
+    if (repaired) {
+      snapshot = await _leaderboardService.load(
+        categoryKey: _selectedCategory,
+        difficulty: _selectedDifficulty,
+      );
+    }
+    return snapshot;
+  }
+
+  /// If current user is missing from this scope but local best exists,
+  /// resubmit once to heal stale/missing leaderboard projection.
+  Future<bool> _attemptLeaderboardRepair(LeaderboardSnapshot snapshot) async {
+    if (Firebase.apps.isEmpty) return false;
+    if (snapshot.currentUserRow != null) return false;
+    final currentUserUid = snapshot.currentUserUid;
+    if (currentUserUid == null || currentUserUid.isEmpty) return false;
+
+    final scopeKey = '${snapshot.categoryKey}:${snapshot.difficulty}';
+    if (_repairAttemptedScopes.contains(scopeKey)) return false;
+    _repairAttemptedScopes.add(scopeKey);
+
+    final expectedTotal = ScoreSubmissionValidator.expectedTotalQuestions(
+      snapshot.difficulty,
+    );
+    if (expectedTotal == null) return false;
+
+    final localBest = await _scoreRepository.getBestScore(
+      categoryKey: snapshot.categoryKey,
+      difficulty: snapshot.difficulty,
+    );
+    if (localBest <= 0 || localBest > expectedTotal) {
+      return false;
+    }
+
+    final result = await _scoreRepository.saveScore(
+      categoryKey: snapshot.categoryKey,
+      difficulty: snapshot.difficulty,
+      score: localBest,
+      totalQuestions: expectedTotal,
+    );
+
+    if (result.queuedForSync) {
+      debugPrint(
+        'Leaderboard repair queued for $scopeKey; '
+        'syncError=${result.syncError}',
+      );
+    } else {
+      debugPrint('Leaderboard repair synced for $scopeKey.');
+    }
+    return result.synced || !result.queuedForSync;
   }
 
   /// Updates category filter and reloads the board.
