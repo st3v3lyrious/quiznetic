@@ -3,12 +3,17 @@
  Title: Ads Service
  Purpose: Controls ad SDK enablement and placement eligibility.
 */
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:quiznetic_flutter/config/app_config.dart';
+import 'package:quiznetic_flutter/services/analytics_service.dart';
 
 typedef AdsSupportResolver = bool Function();
 typedef AdsSdkInitializer = Future<Object?> Function();
+typedef AdsAnalyticsLogger =
+    Future<void> Function(String name, {Map<String, Object?>? parameters});
 
 enum _AdUnitFormat { banner, interstitial, rewarded }
 
@@ -45,6 +50,7 @@ class AdsService {
     String? iosRewardedHintUnitId,
     AdsSupportResolver? supportsAds,
     AdsSdkInitializer? initializeAdsSdk,
+    AdsAnalyticsLogger? logEvent,
   }) : _enabled = enabled ?? AppConfig.enableAds,
        _resultInterstitialEnabled =
            resultInterstitialEnabled ?? AppConfig.enableResultInterstitialAds,
@@ -81,7 +87,8 @@ class AdsService {
            (iosRewardedHintUnitId ?? AppConfig.adsIosRewardedHintUnitId).trim(),
        _supportsAds = supportsAds ?? _defaultSupportsAds,
        _initializeAdsSdk =
-           initializeAdsSdk ?? (() => MobileAds.instance.initialize());
+           initializeAdsSdk ?? (() => MobileAds.instance.initialize()),
+       _logEvent = logEvent ?? AnalyticsService.instance.logEvent;
 
   static final AdsService instance = AdsService();
 
@@ -101,6 +108,7 @@ class AdsService {
   final String _iosRewardedHintUnitId;
   final AdsSupportResolver _supportsAds;
   final AdsSdkInitializer _initializeAdsSdk;
+  final AdsAnalyticsLogger _logEvent;
 
   bool _initialized = false;
   final Set<String> _policyWarningsLogged = <String>{};
@@ -139,7 +147,7 @@ class AdsService {
   }
 
   String? get bannerAdUnitId {
-    if (!_supportsAds()) return null;
+    if (!_enabled || !_supportsAds()) return null;
     final fallback = _rawBannerFallbackUnitId;
     if (fallback.isNotEmpty) return fallback;
     return bannerAdUnitIdForPlacement(placementHome) ??
@@ -147,7 +155,7 @@ class AdsService {
   }
 
   String? bannerAdUnitIdForPlacement(String placement) {
-    if (!_supportsAds()) return null;
+    if (!_enabled || !_supportsAds()) return null;
     final normalizedPlacement = placement.trim().toLowerCase();
     final rawUnitId = switch (defaultTargetPlatform) {
       TargetPlatform.android => _resolveBannerUnitId(
@@ -187,7 +195,9 @@ class AdsService {
   }
 
   String? get resultInterstitialAdUnitId {
-    if (!_supportsAds()) return null;
+    if (!_enabled || !_resultInterstitialEnabled || !_supportsAds()) {
+      return null;
+    }
     final rawUnitId = switch (defaultTargetPlatform) {
       TargetPlatform.android => _androidResultInterstitialUnitId,
       TargetPlatform.iOS => _iosResultInterstitialUnitId,
@@ -201,7 +211,7 @@ class AdsService {
   }
 
   String? get rewardedHintAdUnitId {
-    if (!_supportsAds()) return null;
+    if (!_enabled || !_rewardedHintsEnabled || !_supportsAds()) return null;
     final rawUnitId = switch (defaultTargetPlatform) {
       TargetPlatform.android =>
         _androidRewardedHintUnitId.isEmpty ? null : _androidRewardedHintUnitId,
@@ -280,6 +290,12 @@ class AdsService {
       'Use Google test ids or set ALLOW_LIVE_AD_UNITS_IN_DEBUG=true for '
       'explicit internal validation.',
     );
+    unawaited(
+      _safeLogEvent(
+        'ad_policy_blocked_debug',
+        parameters: {'format': format.name, 'placement': placementLabel},
+      ),
+    );
   }
 
   /// Initializes Google Mobile Ads SDK once for current runtime.
@@ -295,6 +311,24 @@ class AdsService {
       await _initializeAdsSdk();
     } catch (e, stackTrace) {
       debugPrint('AdsService initialize failed: $e');
+      debugPrintStack(stackTrace: stackTrace);
+      unawaited(
+        _safeLogEvent(
+          'ad_sdk_initialize_failed',
+          parameters: {'error_type': e.runtimeType.toString()},
+        ),
+      );
+    }
+  }
+
+  Future<void> _safeLogEvent(
+    String name, {
+    Map<String, Object?>? parameters,
+  }) async {
+    try {
+      await _logEvent(name, parameters: parameters);
+    } catch (e, stackTrace) {
+      debugPrint('AdsService analytics event failed for "$name": $e');
       debugPrintStack(stackTrace: stackTrace);
     }
   }

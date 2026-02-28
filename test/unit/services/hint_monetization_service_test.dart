@@ -16,6 +16,7 @@ void main() {
           paidHintsEnabled: false,
           rewardedHintsPerSession: 2,
           adsService: AdsService(
+            enabled: true,
             rewardedHintsEnabled: true,
             androidRewardedHintUnitId: 'android.rewarded.unit',
             iosRewardedHintUnitId: 'ios.rewarded.unit',
@@ -44,6 +45,7 @@ void main() {
           paidHintsEnabled: false,
           rewardedHintsPerSession: 1,
           adsService: AdsService(
+            enabled: true,
             rewardedHintsEnabled: true,
             androidRewardedHintUnitId: 'android.rewarded.unit',
             iosRewardedHintUnitId: 'ios.rewarded.unit',
@@ -71,6 +73,7 @@ void main() {
         rewardedHintsPerSession: 1,
         paidHintPriceUsdCents: 50,
         adsService: AdsService(
+          enabled: true,
           rewardedHintsEnabled: true,
           androidRewardedHintUnitId: 'android.rewarded.unit',
           iosRewardedHintUnitId: 'ios.rewarded.unit',
@@ -103,6 +106,7 @@ void main() {
           rewardedHintsPerSession: 1,
           paidHintPriceUsdCents: 50,
           adsService: AdsService(
+            enabled: true,
             rewardedHintsEnabled: true,
             androidRewardedHintUnitId: '',
             iosRewardedHintUnitId: '',

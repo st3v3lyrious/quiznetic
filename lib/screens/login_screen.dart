@@ -18,6 +18,7 @@ import 'package:quiznetic_flutter/services/auth_service.dart';
 import 'package:quiznetic_flutter/services/score_repository.dart';
 import 'package:quiznetic_flutter/services/user_checker.dart';
 import 'package:quiznetic_flutter/screens/home_screen.dart';
+import 'package:quiznetic_flutter/utils/auth_ui_helper.dart';
 import 'package:quiznetic_flutter/widgets/legal_consent_notice.dart';
 
 class LoginScreen extends StatelessWidget {
@@ -30,7 +31,7 @@ class LoginScreen extends StatelessWidget {
   /// Returns true when Google provider config is available.
   @visibleForTesting
   static bool isGoogleProviderEnabled(String clientId) {
-    return clientId.trim().isNotEmpty;
+    return AuthUiHelper.isGoogleProviderEnabled(clientId);
   }
 
   /// Returns true when Apple provider is available in current build/platform.
@@ -40,17 +41,27 @@ class LoginScreen extends StatelessWidget {
     bool isWeb = kIsWeb,
     TargetPlatform? platform,
   }) {
-    if (!(appleSignInEnabled ?? AppConfig.enableAppleSignIn)) {
-      return false;
-    }
-    if (isWeb) {
-      return true;
-    }
+    return AuthUiHelper.isAppleProviderEnabled(
+      appleSignInEnabled: appleSignInEnabled,
+      isWeb: isWeb,
+      platform: platform,
+    );
+  }
 
-    final resolvedPlatform = platform ?? defaultTargetPlatform;
-    return resolvedPlatform == TargetPlatform.android ||
-        resolvedPlatform == TargetPlatform.iOS ||
-        resolvedPlatform == TargetPlatform.macOS;
+  /// Returns true when we should show an "Apple unavailable" notice.
+  ///
+  /// On Android we intentionally hide this notice to avoid irrelevant UX copy.
+  @visibleForTesting
+  static bool shouldShowAppleUnavailableMessage({
+    required bool appleProviderEnabled,
+    bool isWeb = kIsWeb,
+    TargetPlatform? platform,
+  }) {
+    return AuthUiHelper.shouldShowAppleUnavailableMessage(
+      appleProviderEnabled: appleProviderEnabled,
+      isWeb: isWeb,
+      platform: platform,
+    );
   }
 
   /// Builds provider list, conditionally including Google based on config.
@@ -71,21 +82,13 @@ class LoginScreen extends StatelessWidget {
   /// Maps Firebase Auth failures to user-safe sign-in messages.
   @visibleForTesting
   static String authFailureMessage(Exception exception) {
-    if (exception is fba.FirebaseAuthException) {
-      switch (exception.code) {
-        case 'operation-not-allowed':
-          return 'This sign-in method is currently unavailable. Please try another option.';
-        case 'web-context-cancelled':
-          return 'Sign-in was cancelled. Please try again.';
-        case 'web-context-already-presented':
-          return 'Another sign-in prompt is already open.';
-        case 'missing-or-invalid-nonce':
-          return 'Apple sign-in validation failed. Please try again.';
-        case 'network-request-failed':
-          return 'Network error while signing in. Check your connection and try again.';
-      }
-    }
-    return 'Sign-in failed. Please try again.';
+    return AuthUiHelper.authFailureMessage(exception);
+  }
+
+  /// Normalized reason used for analytics segmentation.
+  @visibleForTesting
+  static String authFailureReason(Exception exception) {
+    return AuthUiHelper.authFailureReason(exception);
   }
 
   /// Builds provider sign-in and account-creation actions.
@@ -153,7 +156,9 @@ class LoginScreen extends StatelessWidget {
                         textAlign: TextAlign.center,
                       ),
                     ),
-                  if (!appleConfigured)
+                  if (shouldShowAppleUnavailableMessage(
+                    appleProviderEnabled: appleConfigured,
+                  ))
                     const Padding(
                       padding: EdgeInsets.only(top: 8),
                       child: Text(
@@ -256,7 +261,11 @@ class LoginScreen extends StatelessWidget {
               unawaited(
                 AnalyticsService.instance.logEvent(
                   'auth_signin_failed',
-                  parameters: {'flow': 'login', 'error_code': errorCode},
+                  parameters: {
+                    'flow': 'login',
+                    'error_code': errorCode,
+                    'failure_reason': authFailureReason(exception),
+                  },
                 ),
               );
               ScaffoldMessenger.of(context).showSnackBar(

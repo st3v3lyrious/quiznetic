@@ -15,6 +15,25 @@ void main() {
       expect(service.isEnabled, isFalse);
     });
 
+    test(
+      'banner unit resolution is blocked when ads feature flag is disabled',
+      () {
+        final service = AdsService(
+          enabled: false,
+          androidHomeBannerUnitId: 'android-home',
+          iosHomeBannerUnitId: 'ios-home',
+          supportsAds: () => true,
+          initializeAdsSdk: () async => throw UnimplementedError(),
+        );
+
+        expect(
+          service.bannerAdUnitIdForPlacement(AdsService.placementHome),
+          isNull,
+        );
+        expect(service.bannerAdUnitId, isNull);
+      },
+    );
+
     test('isEnabled is false when no banner unit id is configured', () {
       final service = AdsService(
         enabled: true,
@@ -153,7 +172,7 @@ void main() {
 
     test('allows official Google test rewarded ids in non-release builds', () {
       final service = AdsService(
-        enabled: false,
+        enabled: true,
         rewardedHintsEnabled: true,
         androidRewardedHintUnitId: 'ca-app-pub-3940256099942544/5224354917',
         iosRewardedHintUnitId: '',
@@ -166,6 +185,20 @@ void main() {
         service.rewardedHintAdUnitId,
         'ca-app-pub-3940256099942544/5224354917',
       );
+    });
+
+    test('rewarded hint unit resolution is blocked when ads are disabled', () {
+      final service = AdsService(
+        enabled: false,
+        rewardedHintsEnabled: true,
+        androidRewardedHintUnitId: 'ca-app-pub-3940256099942544/5224354917',
+        iosRewardedHintUnitId: '',
+        supportsAds: () => true,
+        initializeAdsSdk: () async => throw UnimplementedError(),
+      );
+
+      expect(service.isRewardedHintsEnabled, isFalse);
+      expect(service.rewardedHintAdUnitId, isNull);
     });
 
     test(
@@ -189,6 +222,7 @@ void main() {
       () {
         final service = AdsService(
           enabled: true,
+          resultInterstitialEnabled: true,
           androidResultInterstitialUnitId:
               'ca-app-pub-3940256099942544/1033173712',
           iosResultInterstitialUnitId: '',
@@ -220,6 +254,39 @@ void main() {
       },
     );
 
+    test(
+      'result interstitial unit resolution is blocked when feature flag is off',
+      () {
+        final service = AdsService(
+          enabled: true,
+          resultInterstitialEnabled: false,
+          androidResultInterstitialUnitId:
+              'ca-app-pub-3940256099942544/1033173712',
+          iosResultInterstitialUnitId: '',
+          supportsAds: () => true,
+          initializeAdsSdk: () async => throw UnimplementedError(),
+        );
+
+        expect(service.resultInterstitialAdUnitId, isNull);
+      },
+    );
+
+    test(
+      'rewarded hint unit resolution is blocked when rewarded flag is off',
+      () {
+        final service = AdsService(
+          enabled: true,
+          rewardedHintsEnabled: false,
+          androidRewardedHintUnitId: 'ca-app-pub-3940256099942544/5224354917',
+          iosRewardedHintUnitId: '',
+          supportsAds: () => true,
+          initializeAdsSdk: () async => throw UnimplementedError(),
+        );
+
+        expect(service.rewardedHintAdUnitId, isNull);
+      },
+    );
+
     test('initialize runs SDK initialization once when enabled', () async {
       var initializeCalls = 0;
       final service = AdsService(
@@ -244,7 +311,7 @@ void main() {
       () async {
         var initializeCalls = 0;
         final service = AdsService(
-          enabled: false,
+          enabled: true,
           rewardedHintsEnabled: true,
           androidBannerUnitId: '',
           iosBannerUnitId: '',

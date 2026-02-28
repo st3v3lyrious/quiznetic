@@ -34,6 +34,36 @@ Use this checklist on the release-candidate commit you plan to ship.
 
 If revenue is required for launch, treat this entire section as `NO-GO` blocking.
 
+### Monetization QA Execution Matrix (Run in Order)
+
+Use the build-define recipes in `docs/MONETIZATION_SETUP.md` and execute runs in
+this order.
+
+| Run ID | Device Target | Focus | Must Be Green Before Next Run |
+| --- | --- | --- | --- |
+| MZ-RUN-1 | Android emulator (debug) | Ads smoke with test IDs (home/result banner + interstitial fallback behavior). | Ads surface renders, app remains usable on ad failure/offline. |
+| MZ-RUN-2 | iOS simulator (debug) | Ads smoke parity on iOS with test IDs. | Same as `MZ-RUN-1` on iOS. |
+| MZ-RUN-3 | Android physical device (internal/sandbox account) | Full monetization flow: ads + remove-ads purchase + restore + hint flow. | All `MZ-ADS-*`, `MZ-IAP-*`, and `MZ-HINT-*` scenarios pass. |
+| MZ-RUN-4 | iOS physical device (sandbox/TestFlight) | Full monetization flow parity on iOS. | Same pass criteria as `MZ-RUN-3` on iOS. |
+| MZ-RUN-5 | Release-candidate config check | Final safety check for launch flags and rollback defaults. | Section 1 flags and Section 3 decision align with launch mode. |
+
+### Scenario Matrix (Record Evidence Per Row)
+
+| ID | Scope | Device Requirement | Expected Result | Evidence | Status |
+| --- | --- | --- | --- | --- | --- |
+| MZ-ADS-01 | Home banner loads when ads enabled and no `remove_ads` entitlement. | Simulator or physical (both platforms). | Banner displays without blocking gameplay; `ad_impression` observed. | Screenshot + analytics/log note | [ ] |
+| MZ-ADS-02 | Result ad strategy works (interstitial-first when enabled, banner fallback on failure). | Simulator + physical (both platforms). | Interstitial shows when available; on failure app continues and result banner path works. | Screen recording + fallback note | [ ] |
+| MZ-ADS-03 | Ads suppressed after `remove_ads` entitlement is granted. | Physical required (both platforms). | No banner/interstitial shown after successful remove-ads purchase and app restart. | Before/after screenshots | [ ] |
+| MZ-IAP-01 | Remove Ads purchase success path. | Physical required (both platforms). | Purchase completes, entitlement saved, UI updates without restart requirement. | Store sandbox receipt + UI screenshot | [ ] |
+| MZ-IAP-02 | Purchase cancel/failure path is safe. | Physical required (both platforms). | User gets clear non-technical message; app remains usable; no false entitlement. | Screenshot + note | [ ] |
+| MZ-IAP-03 | Restore purchases re-applies entitlement. | Physical required (both platforms). | Restore succeeds and `remove_ads` entitlement is restored after reinstall/sign-out+sign-in. | Restore logs + UI screenshot | [ ] |
+| MZ-HINT-01 | Rewarded hint grant path (remove 2 wrong answers). | Physical preferred (both), simulator acceptable for smoke. | Rewarded completion grants hint and removes exactly two wrong answers. | Quiz capture + event note | [ ] |
+| MZ-HINT-02 | Rewarded hint session cap enforcement. | Simulator or physical (both platforms). | Free hint count decreases to zero at configured cap (`REWARDED_HINTS_PER_SESSION`). | Screenshot of hint counter transitions | [ ] |
+| MZ-HINT-03 | Paid hint fallback after free cap. | Physical required (both platforms). | Paid hint purchase flow starts only after free cap exhausted; successful purchase grants one hint. | Purchase + quiz capture | [ ] |
+| MZ-HINT-04 | Rewarded unavailable fallback behavior. | Simulator or physical (both platforms). | If rewarded ad is unavailable, flow falls back to paid path when enabled; otherwise user-safe unavailable state is shown. | Screenshot + config note | [ ] |
+| MZ-AN-01 | Monetization analytics baseline. | At least one platform physical. | Revenue events are emitted (`ad_impression`, `ad_click`, `iap_started`, `iap_success`, `iap_restore`). | Analytics debug output/query screenshot | [ ] |
+| MZ-COMP-01 | Compliance baseline verification. | Documentation + store console check. | Privacy policy/store metadata include ads + IAP disclosures; ATT decision documented for current scope. | Links/screenshots | [ ] |
+
 ### Ads Readiness
 
 - [ ] Ad network account is approved and payment profile is configured.
@@ -62,6 +92,7 @@ If revenue is required for launch, treat this entire section as `NO-GO` blocking
 - [ ] Privacy policy copy includes ads/IAP data handling.
 - [ ] Store listing metadata includes pricing/IAP disclosures.
 - [ ] Platform permissions/prompts are reviewed (ATT runtime prompt required only if using IDFA, personalized ads, or advanced attribution).
+- [ ] Scenario matrix above is fully green on both Android and iOS physical-device runs (`MZ-RUN-3` and `MZ-RUN-4`).
 
 ## 4) Launch Decision
 

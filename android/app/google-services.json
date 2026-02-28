@@ -12,7 +12,20 @@
           "package_name": "com.example.quiznetic_flutter"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "989742825315-7s6oc4v6dhcjcf8qbhn5fkjnkc6rk6st.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.quiznetic_flutter",
+            "certificate_hash": "e3dc684f508b8e814c20af32bfa2469a63301e3f"
+          }
+        },
+        {
+          "client_id": "989742825315-pat9hhouf3n72orn51icos861d67lpin.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyAf0dulhlgoNZRXV-iLIEHhM9a6NNL8Sjc"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "989742825315-pat9hhouf3n72orn51icos861d67lpin.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "989742825315-u4bq6041n2tthm97mcfvkt5ekfjith4b.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.quizneticFlutter"
+              }
+            }
+          ]
         }
       }
     }

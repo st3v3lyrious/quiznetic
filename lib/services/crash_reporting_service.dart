@@ -22,11 +22,16 @@ class CrashReportingService {
   }) : _enabled = enabled ?? AppConfig.enableCrashReporting,
        _setCollectionEnabled =
            setCollectionEnabled ??
-           FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled,
-       _recordError = recordError ?? FirebaseCrashlytics.instance.recordError,
+           ((enabled) => FirebaseCrashlytics.instance
+               .setCrashlyticsCollectionEnabled(enabled)),
+       _recordError =
+           recordError ??
+           ((error, stackTrace, {fatal = false}) => FirebaseCrashlytics.instance
+               .recordError(error, stackTrace, fatal: fatal)),
        _recordFlutterFatalError =
            recordFlutterFatalError ??
-           FirebaseCrashlytics.instance.recordFlutterFatalError;
+           ((details) =>
+               FirebaseCrashlytics.instance.recordFlutterFatalError(details));
 
   final bool _enabled;
   final CrashSetCollectionEnabled _setCollectionEnabled;

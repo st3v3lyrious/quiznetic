@@ -6,6 +6,7 @@
 import 'dart:async';
 
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/widgets.dart';
 import 'package:quiznetic_flutter/config/app_config.dart';
@@ -42,7 +43,16 @@ class AnalyticsService {
   final AnalyticsLogScreenView _logScreenView;
   final CrashBreadcrumbLogger _logCrashBreadcrumb;
 
+  static bool get _hasFirebaseApp {
+    try {
+      return Firebase.apps.isNotEmpty;
+    } catch (_) {
+      return false;
+    }
+  }
+
   static Future<void> _defaultSetCollectionEnabled(bool enabled) {
+    if (!_hasFirebaseApp) return Future<void>.value();
     return FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(enabled);
   }
 
@@ -50,6 +60,7 @@ class AnalyticsService {
     required String name,
     Map<String, Object>? parameters,
   }) {
+    if (!_hasFirebaseApp) return Future<void>.value();
     return FirebaseAnalytics.instance.logEvent(
       name: name,
       parameters: parameters,
@@ -60,6 +71,7 @@ class AnalyticsService {
     String? screenName,
     String? screenClass,
   }) {
+    if (!_hasFirebaseApp) return Future<void>.value();
     return FirebaseAnalytics.instance.logScreenView(
       screenName: screenName,
       screenClass: screenClass,
@@ -67,6 +79,7 @@ class AnalyticsService {
   }
 
   static void _defaultLogCrashBreadcrumb(String message) {
+    if (!_hasFirebaseApp) return;
     FirebaseCrashlytics.instance.log(message);
   }
 

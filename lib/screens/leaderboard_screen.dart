@@ -3,8 +3,11 @@
  Title: Leaderboard Screen
  Purpose: Displays global ranking with category+difficulty filters and user highlight.
 */
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:quiznetic_flutter/services/leaderboard_service.dart';
+import 'package:quiznetic_flutter/services/score_repository.dart';
+import 'package:quiznetic_flutter/services/score_submission_validator.dart';
 
 class LeaderboardScreenArgs {
   final String categoryKey;
@@ -16,8 +19,15 @@ class LeaderboardScreenArgs {
 class LeaderboardScreen extends StatefulWidget {
   static const routeName = '/leaderboard';
   final LeaderboardService? leaderboardService;
+  final ScoreRepository? scoreRepository;
+  final bool Function()? hasFirebaseApp;
 
-  const LeaderboardScreen({super.key, this.leaderboardService});
+  const LeaderboardScreen({
+    super.key,
+    this.leaderboardService,
+    this.scoreRepository,
+    this.hasFirebaseApp,
+  });
 
   /// Creates state that handles filters and data refresh.
   @override
@@ -37,10 +47,37 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
 
   late final LeaderboardService _leaderboardService =
       widget.leaderboardService ?? LeaderboardService();
+  ScoreRepository? _defaultScoreRepository;
+  late final bool Function() _hasFirebaseAppChecker =
+      widget.hasFirebaseApp ?? _defaultHasFirebaseApp;
   late Future<LeaderboardSnapshot> _leaderboardFuture;
   bool _didInit = false;
   String _selectedCategory = 'flag';
   String _selectedDifficulty = 'easy';
+  final Set<String> _repairAttemptedScopes = <String>{};
+
+  static bool _defaultHasFirebaseApp() {
+    try {
+      return Firebase.apps.isNotEmpty;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  bool _hasFirebaseApp() {
+    try {
+      return _hasFirebaseAppChecker();
+    } catch (e) {
+      debugPrint('Leaderboard Firebase availability check failed: $e');
+      return false;
+    }
+  }
+
+  ScoreRepository get _scoreRepository {
+    final injected = widget.scoreRepository;
+    if (injected != null) return injected;
+    return _defaultScoreRepository ??= LocalFirstScoreRepository();
+  }
 
   /// Initializes filter defaults from optional route args.
   @override
@@ -62,11 +99,73 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   }
 
   /// Loads one leaderboard snapshot for the selected filters.
-  Future<LeaderboardSnapshot> _loadLeaderboard() {
-    return _leaderboardService.load(
+  Future<LeaderboardSnapshot> _loadLeaderboard() async {
+    // Force one retry before reading leaderboard so recent local-first score
+    // writes are not left stale behind retry backoff windows.
+    if (_hasFirebaseApp()) {
+      try {
+        await _scoreRepository.syncPendingScores(forceRetry: true);
+      } catch (e) {
+        debugPrint('Leaderboard pre-load score sync failed: $e');
+      }
+    }
+    var snapshot = await _leaderboardService.load(
       categoryKey: _selectedCategory,
       difficulty: _selectedDifficulty,
     );
+    final repaired = await _attemptLeaderboardRepair(snapshot);
+    if (repaired) {
+      snapshot = await _leaderboardService.load(
+        categoryKey: _selectedCategory,
+        difficulty: _selectedDifficulty,
+      );
+    }
+    return snapshot;
+  }
+
+  /// If current user is missing from this scope but local best exists,
+  /// resubmit once to heal stale/missing leaderboard projection.
+  Future<bool> _attemptLeaderboardRepair(LeaderboardSnapshot snapshot) async {
+    if (!_hasFirebaseApp()) return false;
+    if (snapshot.currentUserRow != null) return false;
+    final currentUserUid = snapshot.currentUserUid;
+    if (currentUserUid == null || currentUserUid.isEmpty) return false;
+
+    final scopeKey = '${snapshot.categoryKey}:${snapshot.difficulty}';
+    if (_repairAttemptedScopes.contains(scopeKey)) return false;
+
+    final expectedTotal = ScoreSubmissionValidator.expectedTotalQuestions(
+      snapshot.difficulty,
+    );
+    if (expectedTotal == null) return false;
+
+    final localBest = await _scoreRepository.getBestScore(
+      categoryKey: snapshot.categoryKey,
+      difficulty: snapshot.difficulty,
+    );
+    if (localBest <= 0 || localBest > expectedTotal) {
+      return false;
+    }
+
+    // Mark this scope as attempted only once we know a repair write is valid.
+    _repairAttemptedScopes.add(scopeKey);
+
+    final result = await _scoreRepository.saveScore(
+      categoryKey: snapshot.categoryKey,
+      difficulty: snapshot.difficulty,
+      score: localBest,
+      totalQuestions: expectedTotal,
+    );
+
+    if (result.queuedForSync) {
+      debugPrint(
+        'Leaderboard repair queued for $scopeKey; '
+        'syncError=${result.syncError}',
+      );
+    } else {
+      debugPrint('Leaderboard repair synced for $scopeKey.');
+    }
+    return result.synced || !result.queuedForSync;
   }
 
   /// Updates category filter and reloads the board.
@@ -181,7 +280,17 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Global Leaderboard')),
+      appBar: AppBar(
+        title: const Text('Global Leaderboard'),
+        actions: [
+          IconButton(
+            key: const Key('leaderboard-refresh-action'),
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Refresh',
+            onPressed: _retry,
+          ),
+        ],
+      ),
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
@@ -301,6 +410,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                             await _leaderboardFuture;
                           },
                           child: ListView(
+                            physics: const AlwaysScrollableScrollPhysics(),
                             padding: const EdgeInsets.only(bottom: 24),
                             children: [
                               Card(

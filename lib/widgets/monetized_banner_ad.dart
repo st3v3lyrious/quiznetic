@@ -32,6 +32,7 @@ class MonetizedBannerAd extends StatefulWidget {
 class _MonetizedBannerAdState extends State<MonetizedBannerAd> {
   BannerAd? _bannerAd;
   bool _loaded = false;
+  bool _didRunInitialLoad = false;
 
   late final AdsService _adsService;
   late final EntitlementService _entitlementService;
@@ -47,6 +48,13 @@ class _MonetizedBannerAdState extends State<MonetizedBannerAd> {
     _entitlementService.hasRemoveAdsListenable.addListener(
       _handleEntitlementUpdate,
     );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_didRunInitialLoad) return;
+    _didRunInitialLoad = true;
     unawaited(_maybeLoadBannerAd());
   }
 
@@ -74,11 +82,13 @@ class _MonetizedBannerAdState extends State<MonetizedBannerAd> {
 
     final adUnitId = _adsService.bannerAdUnitIdForPlacement(widget.placement);
     if (adUnitId == null || adUnitId.isEmpty) return;
+    final adSize = await _resolveBannerAdSize();
+    if (!mounted || _bannerAd != null) return;
 
     final bannerAd = BannerAd(
       adUnitId: adUnitId,
       request: const AdRequest(),
-      size: AdSize.banner,
+      size: adSize,
       listener: BannerAdListener(
         onAdLoaded: (ad) {
           if (!mounted) return;
@@ -93,6 +103,16 @@ class _MonetizedBannerAdState extends State<MonetizedBannerAd> {
             _loaded = false;
           });
           debugPrint('Banner ad failed for ${widget.placement}: $error');
+          unawaited(
+            _analyticsService.logEvent(
+              'ad_banner_load_failed',
+              parameters: {
+                'placement': widget.placement,
+                'error_code': error.code,
+                'error_domain': error.domain,
+              },
+            ),
+          );
         },
         onAdImpression: (ad) {
           unawaited(
@@ -115,6 +135,18 @@ class _MonetizedBannerAdState extends State<MonetizedBannerAd> {
 
     _bannerAd = bannerAd;
     await bannerAd.load();
+  }
+
+  Future<AdSize> _resolveBannerAdSize() async {
+    final mediaQuery = MediaQuery.maybeOf(context);
+    final width = mediaQuery?.size.width.truncate() ?? 0;
+    if (width <= 0) {
+      return AdSize.banner;
+    }
+
+    final adaptive =
+        await AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(width);
+    return adaptive ?? AdSize.banner;
   }
 
   void _disposeBannerAd([Ad? ad]) {

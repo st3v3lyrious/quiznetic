@@ -91,11 +91,49 @@ void main() {
     },
   );
 
+  test(
+    'shouldShowAppleUnavailableMessage is false on Android when Apple is disabled',
+    () {
+      final show = LoginScreen.shouldShowAppleUnavailableMessage(
+        appleProviderEnabled: false,
+        isWeb: false,
+        platform: TargetPlatform.android,
+      );
+
+      expect(show, isFalse);
+    },
+  );
+
+  test(
+    'shouldShowAppleUnavailableMessage is true on iOS when Apple is disabled',
+    () {
+      final show = LoginScreen.shouldShowAppleUnavailableMessage(
+        appleProviderEnabled: false,
+        isWeb: false,
+        platform: TargetPlatform.iOS,
+      );
+
+      expect(show, isTrue);
+    },
+  );
+
   test('authFailureMessage maps operation-not-allowed to safe text', () {
     final message = LoginScreen.authFailureMessage(
       fba.FirebaseAuthException(code: 'operation-not-allowed'),
     );
 
     expect(message, contains('currently unavailable'));
+  });
+
+  test('authFailureMessage maps Google config failure hints to safe text', () {
+    final message = LoginScreen.authFailureMessage(
+      fba.FirebaseAuthException(
+        code: 'unknown',
+        message:
+            'com.google.android.gms.common.api.ApiException: 10: DEVELOPER_ERROR',
+      ),
+    );
+
+    expect(message, contains('not configured'));
   });
 }

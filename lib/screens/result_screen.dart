@@ -139,14 +139,21 @@ class _ResultScreenState extends State<ResultScreen> {
             required String difficulty,
             required int score,
             required int totalQuestions,
-          }) => scoreRepository
-              .saveScore(
-                categoryKey: categoryKey,
-                score: score,
-                difficulty: difficulty,
-                totalQuestions: totalQuestions,
-              )
-              .then((result) => result.bestScore);
+          }) async {
+            final result = await scoreRepository.saveScore(
+              categoryKey: categoryKey,
+              score: score,
+              difficulty: difficulty,
+              totalQuestions: totalQuestions,
+            );
+            if (result.queuedForSync) {
+              debugPrint(
+                'ResultScreen score sync queued for '
+                '$categoryKey/$difficulty: ${result.syncError}',
+              );
+            }
+            return result.bestScore;
+          };
       final getHighScore =
           widget.getHighScore ??
           (String categoryKey, String difficulty) => scoreRepository
@@ -192,6 +199,12 @@ class _ResultScreenState extends State<ResultScreen> {
       return _ResultData(highScore: highScore, guestBand: band);
     } catch (e) {
       debugPrint('SaveScore error: $e');
+      unawaited(
+        _safeLogAnalyticsEvent(
+          'score_save_failed',
+          parameters: {'error_type': e.runtimeType.toString()},
+        ),
+      );
       final highScore = await getHighScore(args.categoryKey, args.difficulty);
       return _ResultData(highScore: highScore, guestBand: null);
     }
@@ -219,6 +232,12 @@ class _ResultScreenState extends State<ResultScreen> {
       );
     } catch (e) {
       debugPrint('Leaderboard band lookup failed: $e');
+      unawaited(
+        _safeLogAnalyticsEvent(
+          'leaderboard_band_lookup_failed',
+          parameters: {'error_type': e.runtimeType.toString()},
+        ),
+      );
       return null;
     }
   }
@@ -297,32 +316,91 @@ class _ResultScreenState extends State<ResultScreen> {
     String adUnitId,
   ) async {
     final completer = Completer<bool>();
+    InterstitialAd? loadedAd;
+    Timer? watchdog;
     InterstitialAd.load(
       adUnitId: adUnitId,
       request: const AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (ad) {
-          var shown = false;
+          loadedAd = ad;
+          var showed = false;
+          var hadImpression = false;
+          var finalized = false;
+          void finalize(bool shown) {
+            if (finalized) return;
+            finalized = true;
+            watchdog?.cancel();
+            if (!completer.isCompleted) {
+              completer.complete(shown);
+            }
+          }
+
+          // Defensive fallback for rare SDK callback stalls that can leave a
+          // dark overlay. Treat as not shown so the banner fallback can render.
+          watchdog = Timer(const Duration(seconds: 30), () {
+            debugPrint(
+              'Result interstitial watchdog timeout; forcing cleanup.',
+            );
+            unawaited(
+              _safeLogAnalyticsEvent('ad_result_interstitial_watchdog_timeout'),
+            );
+            ad.dispose();
+            finalize(false);
+          });
+
           ad.fullScreenContentCallback = FullScreenContentCallback(
             onAdShowedFullScreenContent: (ad) {
-              shown = true;
+              showed = true;
+            },
+            onAdImpression: (ad) {
+              hadImpression = true;
             },
             onAdDismissedFullScreenContent: (ad) {
               ad.dispose();
-              if (!completer.isCompleted) {
-                completer.complete(shown);
+              final actuallyShown = showed && hadImpression;
+              if (!actuallyShown) {
+                debugPrint(
+                  'Result interstitial dismissed without impression; '
+                  'treating as fallback.',
+                );
+                unawaited(
+                  _safeLogAnalyticsEvent(
+                    'ad_result_interstitial_no_impression',
+                  ),
+                );
               }
+              finalize(actuallyShown);
             },
             onAdFailedToShowFullScreenContent: (ad, error) {
               ad.dispose();
-              if (!completer.isCompleted) {
-                completer.complete(false);
-              }
+              debugPrint('Result interstitial failed to show: $error');
+              unawaited(
+                _safeLogAnalyticsEvent(
+                  'ad_result_interstitial_show_failed',
+                  parameters: {
+                    'error_code': error.code,
+                    'error_domain': error.domain,
+                  },
+                ),
+              );
+              finalize(false);
             },
           );
           ad.show();
         },
         onAdFailedToLoad: (error) {
+          watchdog?.cancel();
+          debugPrint('Result interstitial failed to load: $error');
+          unawaited(
+            _safeLogAnalyticsEvent(
+              'ad_result_interstitial_load_failed',
+              parameters: {
+                'error_code': error.code,
+                'error_domain': error.domain,
+              },
+            ),
+          );
           if (!completer.isCompleted) {
             completer.complete(false);
           }
@@ -330,10 +408,29 @@ class _ResultScreenState extends State<ResultScreen> {
       ),
     );
 
-    return completer.future.timeout(
+    final shown = await completer.future.timeout(
       const Duration(seconds: 20),
-      onTimeout: () => false,
+      onTimeout: () {
+        debugPrint('Result interstitial load/show timed out.');
+        unawaited(_safeLogAnalyticsEvent('ad_result_interstitial_timeout'));
+        loadedAd?.dispose();
+        return false;
+      },
     );
+    watchdog?.cancel();
+    return shown;
+  }
+
+  static Future<void> _safeLogAnalyticsEvent(
+    String name, {
+    Map<String, Object?>? parameters,
+  }) async {
+    try {
+      await AnalyticsService.instance.logEvent(name, parameters: parameters);
+    } catch (e, stackTrace) {
+      debugPrint('ResultScreen analytics event failed for "$name": $e');
+      debugPrintStack(stackTrace: stackTrace);
+    }
   }
 
   Future<void> _safeLogEvent(String name) async {
