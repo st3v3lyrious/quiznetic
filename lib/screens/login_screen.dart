@@ -28,6 +28,7 @@ class LoginScreen extends StatelessWidget {
   static const _headerDefaultVerticalPadding = 20.0;
   static const _headerCompactVerticalPadding = 12.0;
   static const _headerTextReservation = 96.0;
+  static const _headerLogoSpacing = 8.0;
   static const _headerLogoMaxHeight = 180.0;
   static const _headerLogoMinVisibleHeight = 72.0;
   final String? googleOAuthClientId;
@@ -107,7 +108,8 @@ class LoginScreen extends StatelessWidget {
         constraints.maxHeight < _headerCompactHeightThreshold
         ? _headerCompactVerticalPadding
         : _headerDefaultVerticalPadding;
-    final rawLogoHeight = constraints.maxHeight - _headerTextReservation;
+    final rawLogoHeight =
+        constraints.maxHeight - (verticalPadding * 2) - _headerTextReservation;
     final logoHeight = rawLogoHeight
         .clamp(0.0, _headerLogoMaxHeight)
         .toDouble();
@@ -127,7 +129,7 @@ class LoginScreen extends StatelessWidget {
                 semanticLabel: BrandConfig.logoSemanticLabel,
               ),
             ),
-          if (showLogo) const SizedBox(height: 8),
+          if (showLogo) const SizedBox(height: _headerLogoSpacing),
           Text(
             BrandConfig.appName,
             style: theme.textTheme.headlineMedium,

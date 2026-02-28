@@ -167,4 +167,35 @@ void main() {
     expect(find.text(BrandConfig.appName), findsOneWidget);
     expect(find.text(BrandConfig.tagline), findsOneWidget);
   });
+
+  testWidgets('buildHeader shows logo in taller vertical space', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 360,
+            height: 260,
+            child: Builder(
+              builder: (context) {
+                return LoginScreen.buildHeader(
+                  context: context,
+                  constraints: const BoxConstraints.tightFor(
+                    width: 360,
+                    height: 260,
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(tester.takeException(), isNull);
+    expect(find.byType(Image), findsOneWidget);
+    expect(find.text(BrandConfig.appName), findsOneWidget);
+    expect(find.text(BrandConfig.tagline), findsOneWidget);
+  });
 }
