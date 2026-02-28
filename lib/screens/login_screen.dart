@@ -118,14 +118,14 @@ class LoginScreen extends StatelessWidget {
             ),
           if (showLogo) const SizedBox(height: 8),
           Text(
-            'Quiznetic',
+            BrandConfig.appName,
             style: theme.textTheme.headlineMedium,
             textAlign: TextAlign.center,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
           Text(
-            'Test your knowledge of world flags!',
+            BrandConfig.tagline,
             style: theme.textTheme.bodyLarge,
             textAlign: TextAlign.center,
             maxLines: 2,

@@ -178,7 +178,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 20),
-            Text('Support Quiznetic', style: textTheme.titleMedium),
+            Text(
+              'Support ${BrandConfig.appName}',
+              style: textTheme.titleMedium,
+            ),
             const SizedBox(height: 8),
             Card(
               child: Column(

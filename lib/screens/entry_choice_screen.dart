@@ -65,7 +65,7 @@ class EntryChoiceScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 20),
                       Text(
-                        'Welcome to QuizNetic',
+                        'Welcome to ${BrandConfig.appName}',
                         style: theme.textTheme.headlineMedium,
                         textAlign: TextAlign.center,
                       ),

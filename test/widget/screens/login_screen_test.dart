@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:firebase_ui_oauth_apple/firebase_ui_oauth_apple.dart';
 import 'package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart';
+import 'package:quiznetic_flutter/config/brand_config.dart';
 import 'package:quiznetic_flutter/screens/login_screen.dart';
 
 void main() {
@@ -163,6 +164,7 @@ void main() {
     );
 
     expect(tester.takeException(), isNull);
-    expect(find.text('Quiznetic'), findsOneWidget);
+    expect(find.text(BrandConfig.appName), findsOneWidget);
+    expect(find.text(BrandConfig.tagline), findsOneWidget);
   });
 }
