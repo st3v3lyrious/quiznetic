@@ -47,8 +47,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
 
   late final LeaderboardService _leaderboardService =
       widget.leaderboardService ?? LeaderboardService();
-  late final ScoreRepository _scoreRepository =
-      widget.scoreRepository ?? LocalFirstScoreRepository();
+  ScoreRepository? _defaultScoreRepository;
   late final bool Function() _hasFirebaseAppChecker =
       widget.hasFirebaseApp ?? _defaultHasFirebaseApp;
   late Future<LeaderboardSnapshot> _leaderboardFuture;
@@ -72,6 +71,12 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       debugPrint('Leaderboard Firebase availability check failed: $e');
       return false;
     }
+  }
+
+  ScoreRepository get _scoreRepository {
+    final injected = widget.scoreRepository;
+    if (injected != null) return injected;
+    return _defaultScoreRepository ??= LocalFirstScoreRepository();
   }
 
   /// Initializes filter defaults from optional route args.
@@ -128,7 +133,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
 
     final scopeKey = '${snapshot.categoryKey}:${snapshot.difficulty}';
     if (_repairAttemptedScopes.contains(scopeKey)) return false;
-    _repairAttemptedScopes.add(scopeKey);
 
     final expectedTotal = ScoreSubmissionValidator.expectedTotalQuestions(
       snapshot.difficulty,
@@ -142,6 +146,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     if (localBest <= 0 || localBest > expectedTotal) {
       return false;
     }
+
+    // Mark this scope as attempted only once we know a repair write is valid.
+    _repairAttemptedScopes.add(scopeKey);
 
     final result = await _scoreRepository.saveScore(
       categoryKey: snapshot.categoryKey,
