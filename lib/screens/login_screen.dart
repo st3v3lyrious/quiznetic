@@ -154,7 +154,7 @@ class LoginScreen extends StatelessWidget {
           ),
 
           // Header
-          headerBuilder: (context, constraints, shrinkOffset) {
+          headerBuilder: (context, constraints, _) {
             return buildHeader(context: context, constraints: constraints);
           },
 
