@@ -91,6 +91,51 @@ class LoginScreen extends StatelessWidget {
     return AuthUiHelper.authFailureReason(exception);
   }
 
+  @visibleForTesting
+  static Widget buildHeader({
+    required BuildContext context,
+    required BoxConstraints constraints,
+  }) {
+    final theme = Theme.of(context);
+    final verticalPadding = constraints.maxHeight < 140 ? 12.0 : 20.0;
+    final rawLogoHeight = constraints.maxHeight - 96;
+    final logoHeight = rawLogoHeight.clamp(0.0, 180.0).toDouble();
+    final showLogo = logoHeight >= 72;
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(20, verticalPadding, 20, verticalPadding),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (showLogo)
+            SizedBox(
+              height: logoHeight,
+              child: Image.asset(
+                logoAssetPath,
+                fit: BoxFit.contain,
+                semanticLabel: BrandConfig.logoSemanticLabel,
+              ),
+            ),
+          if (showLogo) const SizedBox(height: 8),
+          Text(
+            'Quiznetic',
+            style: theme.textTheme.headlineMedium,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          Text(
+            'Test your knowledge of world flags!',
+            style: theme.textTheme.bodyLarge,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+
   /// Builds provider sign-in and account-creation actions.
   @override
   Widget build(BuildContext context) {
@@ -110,31 +155,7 @@ class LoginScreen extends StatelessWidget {
 
           // Header
           headerBuilder: (context, constraints, shrinkOffset) {
-            final theme = Theme.of(context);
-            return Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  AspectRatio(
-                    aspectRatio: 1,
-                    child: Image.asset(
-                      logoAssetPath,
-                      semanticLabel: BrandConfig.logoSemanticLabel,
-                    ),
-                  ),
-                  Text(
-                    'QuizNetic',
-                    style: theme.textTheme.headlineMedium,
-                    textAlign: TextAlign.center,
-                  ),
-                  Text(
-                    'Test your knowledge of world flags!',
-                    style: theme.textTheme.bodyLarge,
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            );
+            return buildHeader(context: context, constraints: constraints);
           },
 
           // Subtitle
