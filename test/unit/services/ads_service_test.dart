@@ -172,7 +172,7 @@ void main() {
 
     test('allows official Google test rewarded ids in non-release builds', () {
       final service = AdsService(
-        enabled: false,
+        enabled: true,
         rewardedHintsEnabled: true,
         androidRewardedHintUnitId: 'ca-app-pub-3940256099942544/5224354917',
         iosRewardedHintUnitId: '',
@@ -185,6 +185,20 @@ void main() {
         service.rewardedHintAdUnitId,
         'ca-app-pub-3940256099942544/5224354917',
       );
+    });
+
+    test('rewarded hint unit resolution is blocked when ads are disabled', () {
+      final service = AdsService(
+        enabled: false,
+        rewardedHintsEnabled: true,
+        androidRewardedHintUnitId: 'ca-app-pub-3940256099942544/5224354917',
+        iosRewardedHintUnitId: '',
+        supportsAds: () => true,
+        initializeAdsSdk: () async => throw UnimplementedError(),
+      );
+
+      expect(service.isRewardedHintsEnabled, isFalse);
+      expect(service.rewardedHintAdUnitId, isNull);
     });
 
     test(
@@ -297,7 +311,7 @@ void main() {
       () async {
         var initializeCalls = 0;
         final service = AdsService(
-          enabled: false,
+          enabled: true,
           rewardedHintsEnabled: true,
           androidBannerUnitId: '',
           iosBannerUnitId: '',

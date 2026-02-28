@@ -211,7 +211,7 @@ class AdsService {
   }
 
   String? get rewardedHintAdUnitId {
-    if (!_rewardedHintsEnabled || !_supportsAds()) return null;
+    if (!_enabled || !_rewardedHintsEnabled || !_supportsAds()) return null;
     final rawUnitId = switch (defaultTargetPlatform) {
       TargetPlatform.android =>
         _androidRewardedHintUnitId.isEmpty ? null : _androidRewardedHintUnitId,
