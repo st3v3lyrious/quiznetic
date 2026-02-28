@@ -24,6 +24,12 @@ import 'package:quiznetic_flutter/widgets/legal_consent_notice.dart';
 class LoginScreen extends StatelessWidget {
   static const routeName = '/login';
   static const logoAssetPath = 'assets/images/logo-no-background.png';
+  static const _headerCompactHeightThreshold = 140.0;
+  static const _headerDefaultVerticalPadding = 20.0;
+  static const _headerCompactVerticalPadding = 12.0;
+  static const _headerTextReservation = 96.0;
+  static const _headerLogoMaxHeight = 180.0;
+  static const _headerLogoMinVisibleHeight = 72.0;
   final String? googleOAuthClientId;
 
   const LoginScreen({super.key, this.googleOAuthClientId});
@@ -97,10 +103,15 @@ class LoginScreen extends StatelessWidget {
     required BoxConstraints constraints,
   }) {
     final theme = Theme.of(context);
-    final verticalPadding = constraints.maxHeight < 140 ? 12.0 : 20.0;
-    final rawLogoHeight = constraints.maxHeight - 96;
-    final logoHeight = rawLogoHeight.clamp(0.0, 180.0).toDouble();
-    final showLogo = logoHeight >= 72;
+    final verticalPadding =
+        constraints.maxHeight < _headerCompactHeightThreshold
+        ? _headerCompactVerticalPadding
+        : _headerDefaultVerticalPadding;
+    final rawLogoHeight = constraints.maxHeight - _headerTextReservation;
+    final logoHeight = rawLogoHeight
+        .clamp(0.0, _headerLogoMaxHeight)
+        .toDouble();
+    final showLogo = logoHeight >= _headerLogoMinVisibleHeight;
 
     return Padding(
       padding: EdgeInsets.fromLTRB(20, verticalPadding, 20, verticalPadding),
