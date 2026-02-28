@@ -193,8 +193,16 @@ void main() {
       ),
     );
 
+    await tester.pump();
     expect(tester.takeException(), isNull);
-    expect(find.byType(Image), findsOneWidget);
+    final logoFinder = find.byType(Image);
+    expect(logoFinder, findsOneWidget);
+    final logoWidget = tester.widget<Image>(logoFinder);
+    expect(logoWidget.image, isA<AssetImage>());
+    expect(
+      (logoWidget.image as AssetImage).assetName,
+      LoginScreen.logoAssetPath,
+    );
     expect(find.text(BrandConfig.appName), findsOneWidget);
     expect(find.text(BrandConfig.tagline), findsOneWidget);
   });

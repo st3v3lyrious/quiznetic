@@ -37,11 +37,18 @@ class _SplashScreenState extends State<SplashScreen> {
   /// Routes to home for signed-in users, otherwise to entry choice.
   Future<void> _checkUserAndNavigate() async {
     await Future.delayed(widget.startupDelay);
-    // Only check Firebase Authentication. Do NOT create or read Firestore
-    // documents here — creation is handled in the login/signup flows.
-    final currentUser = widget.currentUserProvider != null
-        ? widget.currentUserProvider!.call()
-        : FirebaseAuth.instance.currentUser;
+    User? currentUser;
+    try {
+      // Only check Firebase Authentication. Do NOT create or read Firestore
+      // documents here — creation is handled in the login/signup flows.
+      currentUser = widget.currentUserProvider != null
+          ? widget.currentUserProvider!.call()
+          : FirebaseAuth.instance.currentUser;
+    } catch (e, stackTrace) {
+      debugPrint('Splash auth lookup failed, defaulting to entry route: $e');
+      debugPrintStack(stackTrace: stackTrace);
+      currentUser = null;
+    }
     if (!mounted) return;
     if (currentUser != null) {
       Navigator.pushReplacementNamed(
