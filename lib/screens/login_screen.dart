@@ -106,13 +106,12 @@ class LoginScreen extends StatelessWidget {
     final theme = Theme.of(context);
     final verticalPadding =
         constraints.maxHeight < _headerCompactHeightThreshold
-        ? _headerCompactVerticalPadding
-        : _headerDefaultVerticalPadding;
+            ? _headerCompactVerticalPadding
+            : _headerDefaultVerticalPadding;
     final rawLogoHeight =
         constraints.maxHeight - (verticalPadding * 2) - _headerTextReservation;
-    final logoHeight = rawLogoHeight
-        .clamp(0.0, _headerLogoMaxHeight)
-        .toDouble();
+    final logoHeight =
+        rawLogoHeight.clamp(0.0, _headerLogoMaxHeight).toDouble();
     final showLogo = logoHeight >= _headerLogoMinVisibleHeight;
 
     return Padding(
