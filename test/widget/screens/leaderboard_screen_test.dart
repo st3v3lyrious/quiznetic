@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:quiznetic_flutter/screens/leaderboard_screen.dart';
 import 'package:quiznetic_flutter/services/leaderboard_band_service.dart';
 import 'package:quiznetic_flutter/services/leaderboard_service.dart';
+import 'package:quiznetic_flutter/services/score_repository.dart';
+import 'package:quiznetic_flutter/services/score_service.dart';
 
 void main() {
   testWidgets('renders ranked rows and highlights current user rank', (
@@ -205,6 +207,49 @@ void main() {
     expect(find.text('NoFirebaseStillLoads'), findsOneWidget);
     expect(find.byKey(const Key('leaderboard-scope-summary')), findsOneWidget);
   });
+
+  testWidgets(
+    'repair scope is not marked attempted when local best is invalid',
+    (tester) async {
+      final scoreRepository = _RepairFakeScoreRepository(initialBest: 0);
+      final service = LeaderboardService(
+        currentUserLoader: () => _FakeUser(uid: 'u1'),
+        entriesLoader:
+            ({
+              required categoryKey,
+              required difficulty,
+              required limit,
+            }) async => [
+              LeaderboardEntry(
+                uid: 'u2',
+                score: 14,
+                updatedAt: DateTime.utc(2025, 1, 1),
+                isAnonymous: true,
+                displayName: 'Guest-u2',
+              ),
+            ],
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: LeaderboardScreen(
+            leaderboardService: service,
+            scoreRepository: scoreRepository,
+            hasFirebaseApp: () => true,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(scoreRepository.saveScoreCalls, 0);
+
+      scoreRepository.bestScore = 12;
+      await tester.tap(find.byKey(const Key('leaderboard-refresh-action')));
+      await tester.pumpAndSettle();
+
+      expect(scoreRepository.saveScoreCalls, 1);
+    },
+  );
 }
 
 class _FakeUser implements User {
@@ -215,4 +260,39 @@ class _FakeUser implements User {
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _RepairFakeScoreRepository implements ScoreRepository {
+  _RepairFakeScoreRepository({required int initialBest})
+    : bestScore = initialBest;
+
+  int bestScore;
+  int saveScoreCalls = 0;
+
+  @override
+  Future<int> getBestScore({
+    required String categoryKey,
+    required String difficulty,
+  }) async => bestScore;
+
+  @override
+  Future<List<CategoryScore>> getAllHighScores() async => const [];
+
+  @override
+  Future<ScoreSaveResult> saveScore({
+    required String categoryKey,
+    required String difficulty,
+    required int score,
+    required int totalQuestions,
+  }) async {
+    saveScoreCalls++;
+    return ScoreSaveResult(
+      bestScore: score,
+      synced: true,
+      queuedForSync: false,
+    );
+  }
+
+  @override
+  Future<int> syncPendingScores({bool forceRetry = false}) async => 0;
 }
