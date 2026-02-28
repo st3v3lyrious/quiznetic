@@ -173,6 +173,38 @@ void main() {
     expect(loadCalls, greaterThanOrEqualTo(2));
     expect(find.text('Reloadable'), findsOneWidget);
   });
+
+  testWidgets('loads leaderboard when Firebase availability check throws', (
+    tester,
+  ) async {
+    final service = LeaderboardService(
+      currentUserLoader: () => _FakeUser(uid: 'u1'),
+      entriesLoader:
+          ({required categoryKey, required difficulty, required limit}) async =>
+              [
+                LeaderboardEntry(
+                  uid: 'u1',
+                  score: 42,
+                  updatedAt: DateTime.utc(2025, 1, 1),
+                  isAnonymous: false,
+                  displayName: 'NoFirebaseStillLoads',
+                ),
+              ],
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: LeaderboardScreen(
+          leaderboardService: service,
+          hasFirebaseApp: () => throw StateError('no-firebase'),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('NoFirebaseStillLoads'), findsOneWidget);
+    expect(find.byKey(const Key('leaderboard-scope-summary')), findsOneWidget);
+  });
 }
 
 class _FakeUser implements User {

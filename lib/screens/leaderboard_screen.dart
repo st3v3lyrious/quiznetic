@@ -20,11 +20,13 @@ class LeaderboardScreen extends StatefulWidget {
   static const routeName = '/leaderboard';
   final LeaderboardService? leaderboardService;
   final ScoreRepository? scoreRepository;
+  final bool Function()? hasFirebaseApp;
 
   const LeaderboardScreen({
     super.key,
     this.leaderboardService,
     this.scoreRepository,
+    this.hasFirebaseApp,
   });
 
   /// Creates state that handles filters and data refresh.
@@ -47,11 +49,30 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       widget.leaderboardService ?? LeaderboardService();
   late final ScoreRepository _scoreRepository =
       widget.scoreRepository ?? LocalFirstScoreRepository();
+  late final bool Function() _hasFirebaseAppChecker =
+      widget.hasFirebaseApp ?? _defaultHasFirebaseApp;
   late Future<LeaderboardSnapshot> _leaderboardFuture;
   bool _didInit = false;
   String _selectedCategory = 'flag';
   String _selectedDifficulty = 'easy';
   final Set<String> _repairAttemptedScopes = <String>{};
+
+  static bool _defaultHasFirebaseApp() {
+    try {
+      return Firebase.apps.isNotEmpty;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  bool _hasFirebaseApp() {
+    try {
+      return _hasFirebaseAppChecker();
+    } catch (e) {
+      debugPrint('Leaderboard Firebase availability check failed: $e');
+      return false;
+    }
+  }
 
   /// Initializes filter defaults from optional route args.
   @override
@@ -76,7 +97,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   Future<LeaderboardSnapshot> _loadLeaderboard() async {
     // Force one retry before reading leaderboard so recent local-first score
     // writes are not left stale behind retry backoff windows.
-    if (Firebase.apps.isNotEmpty) {
+    if (_hasFirebaseApp()) {
       try {
         await _scoreRepository.syncPendingScores(forceRetry: true);
       } catch (e) {
@@ -100,7 +121,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   /// If current user is missing from this scope but local best exists,
   /// resubmit once to heal stale/missing leaderboard projection.
   Future<bool> _attemptLeaderboardRepair(LeaderboardSnapshot snapshot) async {
-    if (Firebase.apps.isEmpty) return false;
+    if (!_hasFirebaseApp()) return false;
     if (snapshot.currentUserRow != null) return false;
     final currentUserUid = snapshot.currentUserUid;
     if (currentUserUid == null || currentUserUid.isEmpty) return false;
