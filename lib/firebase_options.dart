@@ -15,6 +15,81 @@ import 'package:flutter/foundation.dart'
 /// );
 /// ```
 class DefaultFirebaseOptions {
+  static const _webApiKey = String.fromEnvironment(
+    'FIREBASE_WEB_API_KEY',
+    defaultValue: '',
+  );
+  static const _webAppId = String.fromEnvironment(
+    'FIREBASE_WEB_APP_ID',
+    defaultValue: '',
+  );
+  static const _webMessagingSenderId = String.fromEnvironment(
+    'FIREBASE_WEB_MESSAGING_SENDER_ID',
+    defaultValue: '',
+  );
+  static const _webProjectId = String.fromEnvironment(
+    'FIREBASE_WEB_PROJECT_ID',
+    defaultValue: '',
+  );
+  static const _webAuthDomain = String.fromEnvironment(
+    'FIREBASE_WEB_AUTH_DOMAIN',
+    defaultValue: '',
+  );
+  static const _webStorageBucket = String.fromEnvironment(
+    'FIREBASE_WEB_STORAGE_BUCKET',
+    defaultValue: '',
+  );
+  static const _webMeasurementId = String.fromEnvironment(
+    'FIREBASE_WEB_MEASUREMENT_ID',
+    defaultValue: '',
+  );
+
+  static const _androidApiKey = String.fromEnvironment(
+    'FIREBASE_ANDROID_API_KEY',
+    defaultValue: '',
+  );
+  static const _androidAppId = String.fromEnvironment(
+    'FIREBASE_ANDROID_APP_ID',
+    defaultValue: '',
+  );
+  static const _androidMessagingSenderId = String.fromEnvironment(
+    'FIREBASE_ANDROID_MESSAGING_SENDER_ID',
+    defaultValue: '',
+  );
+  static const _androidProjectId = String.fromEnvironment(
+    'FIREBASE_ANDROID_PROJECT_ID',
+    defaultValue: '',
+  );
+  static const _androidStorageBucket = String.fromEnvironment(
+    'FIREBASE_ANDROID_STORAGE_BUCKET',
+    defaultValue: '',
+  );
+
+  static const _iosApiKey = String.fromEnvironment(
+    'FIREBASE_IOS_API_KEY',
+    defaultValue: '',
+  );
+  static const _iosAppId = String.fromEnvironment(
+    'FIREBASE_IOS_APP_ID',
+    defaultValue: '',
+  );
+  static const _iosMessagingSenderId = String.fromEnvironment(
+    'FIREBASE_IOS_MESSAGING_SENDER_ID',
+    defaultValue: '',
+  );
+  static const _iosProjectId = String.fromEnvironment(
+    'FIREBASE_IOS_PROJECT_ID',
+    defaultValue: '',
+  );
+  static const _iosStorageBucket = String.fromEnvironment(
+    'FIREBASE_IOS_STORAGE_BUCKET',
+    defaultValue: '',
+  );
+  static const _iosBundleId = String.fromEnvironment(
+    'FIREBASE_IOS_BUNDLE_ID',
+    defaultValue: '',
+  );
+
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
       return web;
@@ -47,29 +122,29 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyBEuNX2DgBxdNzhj2d4ij6uyyqpXec3TMQ',
-    appId: '1:989742825315:web:87d554d851ed89a717dd56',
-    messagingSenderId: '989742825315',
-    projectId: 'quiznetic-30734',
-    authDomain: 'quiznetic-30734.firebaseapp.com',
-    storageBucket: 'quiznetic-30734.firebasestorage.app',
-    measurementId: 'G-W0CM8C9NE5',
+    apiKey: _webApiKey,
+    appId: _webAppId,
+    messagingSenderId: _webMessagingSenderId,
+    projectId: _webProjectId,
+    authDomain: _webAuthDomain,
+    storageBucket: _webStorageBucket,
+    measurementId: _webMeasurementId,
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyAf0dulhlgoNZRXV-iLIEHhM9a6NNL8Sjc',
-    appId: '1:989742825315:android:f8141c45d184257217dd56',
-    messagingSenderId: '989742825315',
-    projectId: 'quiznetic-30734',
-    storageBucket: 'quiznetic-30734.firebasestorage.app',
+    apiKey: _androidApiKey,
+    appId: _androidAppId,
+    messagingSenderId: _androidMessagingSenderId,
+    projectId: _androidProjectId,
+    storageBucket: _androidStorageBucket,
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyAFleaftelJvJ58_yAPU6aK8yHX_xilSX8',
-    appId: '1:989742825315:ios:807d44c9c7fbd09b17dd56',
-    messagingSenderId: '989742825315',
-    projectId: 'quiznetic-30734',
-    storageBucket: 'quiznetic-30734.firebasestorage.app',
-    iosBundleId: 'com.example.quizneticFlutter',
+    apiKey: _iosApiKey,
+    appId: _iosAppId,
+    messagingSenderId: _iosMessagingSenderId,
+    projectId: _iosProjectId,
+    storageBucket: _iosStorageBucket,
+    iosBundleId: _iosBundleId,
   );
 }

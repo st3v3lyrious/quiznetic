@@ -143,13 +143,13 @@ class AppConfig {
   /// Android banner ad unit id for the home screen placement.
   static const adsAndroidHomeBannerUnitId = String.fromEnvironment(
     'ADS_ANDROID_HOME_BANNER_UNIT_ID',
-    defaultValue: 'ca-app-pub-9485263915698875/3297690403',
+    defaultValue: '',
   );
 
   /// iOS banner ad unit id for the home screen placement.
   static const adsIosHomeBannerUnitId = String.fromEnvironment(
     'ADS_IOS_HOME_BANNER_UNIT_ID',
-    defaultValue: 'ca-app-pub-9485263915698875/8503108567',
+    defaultValue: '',
   );
 
   /// Android banner ad unit id for the result screen placement.
@@ -167,24 +167,24 @@ class AppConfig {
   /// Android interstitial ad unit id for result-screen transitions.
   static const adsAndroidResultInterstitialUnitId = String.fromEnvironment(
     'ADS_ANDROID_RESULT_INTERSTITIAL_UNIT_ID',
-    defaultValue: 'ca-app-pub-9485263915698875/2360517831',
+    defaultValue: '',
   );
 
   /// iOS interstitial ad unit id for result-screen transitions.
   static const adsIosResultInterstitialUnitId = String.fromEnvironment(
     'ADS_IOS_RESULT_INTERSTITIAL_UNIT_ID',
-    defaultValue: 'ca-app-pub-9485263915698875/6662220346',
+    defaultValue: '',
   );
 
   /// Android rewarded ad unit id used for hint unlock flow.
   static const adsAndroidRewardedHintUnitId = String.fromEnvironment(
     'ADS_ANDROID_REWARDED_HINT_UNIT_ID',
-    defaultValue: 'ca-app-pub-9485263915698875/3186009767',
+    defaultValue: '',
   );
 
   /// iOS rewarded ad unit id used for hint unlock flow.
   static const adsIosRewardedHintUnitId = String.fromEnvironment(
     'ADS_IOS_REWARDED_HINT_UNIT_ID',
-    defaultValue: 'ca-app-pub-9485263915698875/8542782807',
+    defaultValue: '',
   );
 }

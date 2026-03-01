@@ -1,0 +1,3 @@
+// Default local environment values for iOS build settings.
+// Override any of these in ios/Flutter/Env.xcconfig (gitignored).
+ADS_IOS_APP_ID=

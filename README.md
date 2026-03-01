@@ -139,9 +139,23 @@ Use this as an editable feature checklist.
 ## Run locally
 
 ```bash
+cp .env.example .env
+# Fill .env with your local keys/ids.
+./tools/sync_env.sh
+
 flutter pub get
-flutter run
+flutter run --dart-define-from-file=.env
 ```
+
+## Local configuration
+
+- `.env` is the local source for API keys, OAuth IDs, Firebase options, and ad IDs.
+- `.env` is gitignored; use `.env.example` as the template.
+- `tools/sync_env.sh` generates:
+  - `ios/Flutter/Env.xcconfig`
+  - `android/app/google-services.json`
+  - `ios/Runner/GoogleService-Info.plist`
+- Android native AdMob metadata is read from `.env` automatically during Gradle build.
 
 ## Markdown Issue Sync CLI
 

@@ -24,15 +24,17 @@ Use this file as the bug/issue tracker, separate from milestone planning in
 | ISS-009 | P1 | MVP | Open | Android real device: result interstitial appears visually broken/blank during QA. | `You` | `March 3, 2026` |  |
 | ISS-010 | P2 | MVP | In Progress | App branding name mismatch: installed app shows `quiznetic_flutter`/`Quiznetic Flutter` instead of `Quiznetic`. | `You` | `March 2, 2026` |  |
 | ISS-011 | P0 | MVP | In Progress | Leaderboard appears stale after quiz completion: verify forced pending-score sync + investigate persistent sync failures from diagnostics. | `You` | `March 3, 2026` |  |
+| ISS-012 | P0 | MVP | Open | Security hardening before MVP deploy: rotate exposed Firebase/AdMob/OAuth credentials, then purge leaked credential artifacts from git history and validate no active secrets remain reachable from prior commits/tags. | `You` | `March 6, 2026` |  |
 
 ### Recommended Execution Order (MVP)
 
 1. `ISS-006` by **March 2, 2026** (auth conversion blocker).
-2. `ISS-011` by **March 3, 2026** (leaderboard freshness and score-sync reliability on real devices).
-3. `ISS-007` by **March 2, 2026** (rewarded hint reliability before monetization launch gate).
-4. `ISS-008` by **March 3, 2026** (home banner render stability on real device).
-5. `ISS-009` by **March 3, 2026** (result interstitial render stability on real device).
-6. `ISS-010` by **March 2, 2026** (brand-name consistency on installed app icon/title).
+2. `ISS-012` by **March 6, 2026** (credential rotation + history cleanup before public release).
+3. `ISS-011` by **March 3, 2026** (leaderboard freshness and score-sync reliability on real devices).
+4. `ISS-007` by **March 2, 2026** (rewarded hint reliability before monetization launch gate).
+5. `ISS-008` by **March 3, 2026** (home banner render stability on real device).
+6. `ISS-009` by **March 3, 2026** (result interstitial render stability on real device).
+7. `ISS-010` by **March 2, 2026** (brand-name consistency on installed app icon/title).
 
 ## MVP+1 Backlog
 

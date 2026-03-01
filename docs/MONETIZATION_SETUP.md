@@ -62,7 +62,7 @@ Add AdMob app id metadata inside `<application>`:
 ```xml
 <meta-data
     android:name="com.google.android.gms.ads.APPLICATION_ID"
-    android:value="ca-app-pub-9485263915698875~7236935415" />
+    android:value="${ADMOB_APP_ID}" />
 ```
 
 - Use your AdMob **app id** (`~` separator), not an ad unit id (`/` separator).
@@ -73,7 +73,7 @@ Add AdMob app id:
 
 ```xml
 <key>GADApplicationIdentifier</key>
-<string>ca-app-pub-9485263915698875~4795109481</string>
+<string>$(ADS_IOS_APP_ID)</string>
 ```
 
 Add required SKAdNetwork IDs:
@@ -111,16 +111,16 @@ Defined in `lib/config/app_config.dart`:
 - `ALLOW_LIVE_AD_UNITS_IN_DEBUG` (default: `false`)
 - `ENABLE_IAP` (default: `false`)
 - `IAP_REMOVE_ADS_PRODUCT_ID` (default: `quiznetic.remove_ads_lifetime`)
-- `ADS_ANDROID_HOME_BANNER_UNIT_ID` (default: `ca-app-pub-9485263915698875/3297690403`)
-- `ADS_IOS_HOME_BANNER_UNIT_ID` (default: `ca-app-pub-9485263915698875/8503108567`)
+- `ADS_ANDROID_HOME_BANNER_UNIT_ID` (default: empty)
+- `ADS_IOS_HOME_BANNER_UNIT_ID` (default: empty)
 - `ADS_ANDROID_RESULT_BANNER_UNIT_ID` (default: empty)
 - `ADS_IOS_RESULT_BANNER_UNIT_ID` (default: empty)
-- `ADS_ANDROID_RESULT_INTERSTITIAL_UNIT_ID` (default: `ca-app-pub-9485263915698875/2360517831`)
-- `ADS_IOS_RESULT_INTERSTITIAL_UNIT_ID` (default: `ca-app-pub-9485263915698875/6662220346`)
+- `ADS_ANDROID_RESULT_INTERSTITIAL_UNIT_ID` (default: empty)
+- `ADS_IOS_RESULT_INTERSTITIAL_UNIT_ID` (default: empty)
 - `ADS_ANDROID_BANNER_UNIT_ID` (default: empty fallback for any placement)
 - `ADS_IOS_BANNER_UNIT_ID` (default: empty fallback for any placement)
-- `ADS_ANDROID_REWARDED_HINT_UNIT_ID` (default: `ca-app-pub-9485263915698875/3186009767`)
-- `ADS_IOS_REWARDED_HINT_UNIT_ID` (default: `ca-app-pub-9485263915698875/8542782807`)
+- `ADS_ANDROID_REWARDED_HINT_UNIT_ID` (default: empty)
+- `ADS_IOS_REWARDED_HINT_UNIT_ID` (default: empty)
 - `ENABLE_REWARDED_HINTS` (default: `false`)
 - `REWARDED_HINTS_PER_SESSION` (default: `3`)
 - `ENABLE_PAID_HINTS` (default: `false`)
@@ -142,6 +142,13 @@ Enable monetization only when all are true:
 9. `ENABLE_RESULT_INTERSTITIAL_ADS` is enabled only after result flow QA passes (show + failure fallback + no-regression checks).
 
 ## Build Examples
+
+Populate `.env` first, then run with:
+
+```bash
+./tools/sync_env.sh
+flutter run --dart-define-from-file=.env
+```
 
 ### Safe baseline (no monetization)
 

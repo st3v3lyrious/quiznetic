@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // START: FlutterFire Configuration
@@ -6,6 +8,38 @@ plugins {
     id("org.jetbrains.kotlin.android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+}
+
+val localEnv: Map<String, String> = run {
+    val envFile = rootProject.file(".env")
+    if (!envFile.exists()) {
+        emptyMap()
+    } else {
+        val properties = Properties()
+        envFile.inputStream().use { properties.load(it) }
+        properties.stringPropertyNames().associateWith {
+            properties.getProperty(it).trim()
+        }
+    }
+}
+
+fun resolveEnvValue(key: String): String? {
+    val gradleProperty = providers.gradleProperty(key).orNull
+    if (!gradleProperty.isNullOrBlank()) {
+        return gradleProperty
+    }
+
+    val systemEnv = System.getenv(key)
+    if (!systemEnv.isNullOrBlank()) {
+        return systemEnv
+    }
+
+    val envFileValue = localEnv[key]
+    if (!envFileValue.isNullOrBlank()) {
+        return envFileValue
+    }
+
+    return null
 }
 
 android {
@@ -30,6 +64,8 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        manifestPlaceholders["ADMOB_APP_ID"] =
+            resolveEnvValue("ADS_ANDROID_APP_ID") ?: ""
     }
 
     buildTypes {

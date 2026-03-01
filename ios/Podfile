@@ -42,9 +42,12 @@ post_install do |installer|
     # Keep Flutter's default iOS build settings for pods
     flutter_additional_ios_build_settings(target)
 
-    # Force every Pod target to match your global deployment target
     target.build_configurations.each do |config|
+      # Force every Pod target to match your global deployment target
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
+      
+      # Fix undefined architecture error
+      config.build_settings['ARCHS'] = 'arm64 x86_64'
     end
   end
 end

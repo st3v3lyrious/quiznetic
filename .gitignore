@@ -11,8 +11,11 @@ pubspec.lock
 # If you don't generate documentation locally you can remove this line.
 doc/api/
 
-# dotenv environment variables file
-.env*
+# dotenv environment variable files
+.env
+.env.local
+.env.*
+!.env.example
 
 # Avoid committing generated Javascript files:
 *.dart.js
@@ -114,12 +117,15 @@ Thumbs.db
 **/ios/Flutter/ephemeral/
 **/ios/Flutter/flutter_export_environment.sh
 **/macos/Flutter/ephemeral/
+ios/Flutter/Env.xcconfig
 
 # Additional signing artifacts
 android/key.properties
 *.jks
 *.p12
 *.mobileprovision
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
 
 # Playwright artifacts
 playwright/node_modules/
