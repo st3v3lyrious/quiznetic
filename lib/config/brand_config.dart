@@ -19,11 +19,11 @@ class EirenyaPalette {
 }
 
 class BrandConfig {
-  static const appName = 'QuizNetic';
+  static const appName = 'Quiznetic';
   static const tagline = 'Train your world trivia reflexes.';
   static const supportEmail = 'quizneticapp@gmail.com';
   static const appVersionLabel = '1.0.0+1';
-  static const logoSemanticLabel = 'QuizNetic logo';
+  static const logoSemanticLabel = 'Quiznetic logo';
   static const quizQuestionImageSemanticLabel = 'Quiz question image';
 
   // Current active theme tokens (kept stable until full EIRENYA rollout).

@@ -61,6 +61,7 @@ Use this as a short, editable delivery plan.
   - [x] Analytics kill switch added: `ENABLE_ANALYTICS` (default `true`).
 - [ ] M15: Integrate monetization stack (ads + in-app purchases). <!--gh:issue=49-->
   - Revenue priority: complete ads + IAP launch gate in `docs/MVP_LAUNCH_TEST_CHECKLIST.md` before public rollout.
+  - Current status: blocked pending AdMob live-serving validation in release mode or a provider/mediation decision if the no-fill issue persists.
   - [x] App baseline shipped: remove-ads entitlement persistence, IAP purchase/restore plumbing, and banner placements (home/result) behind feature flags with Android+iOS placement-specific ad-unit support.
   - [ ] Store-side setup still required (ad network approval, ad unit IDs, store product creation, and sandbox purchase QA).
   - [ ] Ad launch readiness (remaining implementation + platform setup):

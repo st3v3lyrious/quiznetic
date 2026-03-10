@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "quiznetic_flutter" "\0"
+            VALUE "FileDescription", "Quiznetic" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "quiznetic_flutter" "\0"
+            VALUE "InternalName", "Quiznetic" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2025 com.example. All rights reserved." "\0"
-            VALUE "OriginalFilename", "quiznetic_flutter.exe" "\0"
-            VALUE "ProductName", "quiznetic_flutter" "\0"
+            VALUE "OriginalFilename", "Quiznetic.exe" "\0"
+            VALUE "ProductName", "Quiznetic" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

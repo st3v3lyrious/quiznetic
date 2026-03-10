@@ -30,15 +30,26 @@ import 'screens/splash_screen.dart';
 import 'firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 
+Future<void> _ensureFirebaseInitialized() async {
+  if (Firebase.apps.isNotEmpty) return;
+
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  } on FirebaseException catch (e) {
+    // Guard against duplicate default-app init during debug/runtime re-entry.
+    if (e.code != 'duplicate-app') rethrow;
+  }
+}
+
 /// Initializes Firebase and launches the app shell.
 void main() {
   final crashReportingService = CrashReportingService();
   runZonedGuarded(
     () async {
       WidgetsFlutterBinding.ensureInitialized();
-      await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform,
-      );
+      await _ensureFirebaseInitialized();
 
       final analyticsService = AnalyticsService.instance;
       final entitlementService = EntitlementService.instance;

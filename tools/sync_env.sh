@@ -118,6 +118,12 @@ cat > "$IOS_GOOGLE_SERVICE_INFO_PLIST" <<EOF
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CLIENT_ID</key>
+	<string>${FIREBASE_IOS_OAUTH_CLIENT_ID}</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.${FIREBASE_IOS_OAUTH_CLIENT_ID%%.apps.googleusercontent.com}</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>${FIREBASE_ANDROID_OAUTH_CLIENT_ID}</string>
 	<key>API_KEY</key>
 	<string>${FIREBASE_IOS_API_KEY}</string>
 	<key>GCM_SENDER_ID</key>

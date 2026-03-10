@@ -11,8 +11,12 @@ plugins {
 }
 
 val localEnv: Map<String, String> = run {
-    val envFile = rootProject.file(".env")
-    if (!envFile.exists()) {
+    val envFileCandidates = listOf(
+        rootProject.file("../.env"), // repo root when Gradle root is /android
+        rootProject.file(".env"),
+    )
+    val envFile = envFileCandidates.firstOrNull { it.exists() }
+    if (envFile == null) {
         emptyMap()
     } else {
         val properties = Properties()
@@ -43,7 +47,7 @@ fun resolveEnvValue(key: String): String? {
 }
 
 android {
-    namespace = "com.example.quiznetic_flutter"
+    namespace = "com.eirenya.quiznetic"
     compileSdk = flutter.compileSdkVersion
 
     compileOptions {
@@ -57,7 +61,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.quiznetic_flutter"
+        applicationId = "com.eirenya.quiznetic"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = 23

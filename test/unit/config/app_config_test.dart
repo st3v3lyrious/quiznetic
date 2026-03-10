@@ -67,6 +67,16 @@ void main() {
       expect(AppConfig.adsIosResultInterstitialUnitId, isEmpty);
       expect(AppConfig.adsAndroidRewardedHintUnitId, isEmpty);
       expect(AppConfig.adsIosRewardedHintUnitId, isEmpty);
+      expect(AppConfig.adsAndroidTestBannerUnitId, isEmpty);
+      expect(AppConfig.adsIosTestBannerUnitId, isEmpty);
+      expect(AppConfig.adsAndroidTestInterstitialUnitId, isEmpty);
+      expect(AppConfig.adsIosTestInterstitialUnitId, isEmpty);
+      expect(AppConfig.adsAndroidTestRewardedUnitId, isEmpty);
+      expect(AppConfig.adsIosTestRewardedUnitId, isEmpty);
+      expect(AppConfig.adsAndroidTestDeviceIdsCsv, isEmpty);
+      expect(AppConfig.adsIosTestDeviceIdsCsv, isEmpty);
+      expect(AppConfig.adsAndroidTestDeviceIds, isEmpty);
+      expect(AppConfig.adsIosTestDeviceIds, isEmpty);
     });
   });
 }

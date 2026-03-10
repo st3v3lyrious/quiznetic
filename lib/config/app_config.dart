@@ -187,4 +187,70 @@ class AppConfig {
     'ADS_IOS_REWARDED_HINT_UNIT_ID',
     defaultValue: '',
   );
+
+  /// Android Google test banner id allowed in non-release builds.
+  static const adsAndroidTestBannerUnitId = String.fromEnvironment(
+    'ADS_ANDROID_TEST_BANNER_UNIT_ID',
+    defaultValue: '',
+  );
+
+  /// iOS Google test banner id allowed in non-release builds.
+  static const adsIosTestBannerUnitId = String.fromEnvironment(
+    'ADS_IOS_TEST_BANNER_UNIT_ID',
+    defaultValue: '',
+  );
+
+  /// Android Google test interstitial id allowed in non-release builds.
+  static const adsAndroidTestInterstitialUnitId = String.fromEnvironment(
+    'ADS_ANDROID_TEST_INTERSTITIAL_UNIT_ID',
+    defaultValue: '',
+  );
+
+  /// iOS Google test interstitial id allowed in non-release builds.
+  static const adsIosTestInterstitialUnitId = String.fromEnvironment(
+    'ADS_IOS_TEST_INTERSTITIAL_UNIT_ID',
+    defaultValue: '',
+  );
+
+  /// Android Google test rewarded id allowed in non-release builds.
+  static const adsAndroidTestRewardedUnitId = String.fromEnvironment(
+    'ADS_ANDROID_TEST_REWARDED_UNIT_ID',
+    defaultValue: '',
+  );
+
+  /// iOS Google test rewarded id allowed in non-release builds.
+  static const adsIosTestRewardedUnitId = String.fromEnvironment(
+    'ADS_IOS_TEST_REWARDED_UNIT_ID',
+    defaultValue: '',
+  );
+
+  /// Comma-separated Android test device ids for deterministic debug AdMob
+  /// behavior and Ad Inspector access.
+  static const adsAndroidTestDeviceIdsCsv = String.fromEnvironment(
+    'ADS_ANDROID_TEST_DEVICE_IDS',
+    defaultValue: '',
+  );
+
+  /// Comma-separated iOS test device ids for deterministic debug AdMob
+  /// behavior and Ad Inspector access.
+  static const adsIosTestDeviceIdsCsv = String.fromEnvironment(
+    'ADS_IOS_TEST_DEVICE_IDS',
+    defaultValue: '',
+  );
+
+  /// Android test device ids parsed from a comma-separated env string.
+  static List<String> get adsAndroidTestDeviceIds =>
+      _splitCommaSeparatedValues(adsAndroidTestDeviceIdsCsv);
+
+  /// iOS test device ids parsed from a comma-separated env string.
+  static List<String> get adsIosTestDeviceIds =>
+      _splitCommaSeparatedValues(adsIosTestDeviceIdsCsv);
+
+  static List<String> _splitCommaSeparatedValues(String raw) {
+    return raw
+        .split(',')
+        .map((value) => value.trim())
+        .where((value) => value.isNotEmpty)
+        .toList(growable: false);
+  }
 }

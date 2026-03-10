@@ -91,6 +91,11 @@ class _MonetizedBannerAdState extends State<MonetizedBannerAd> {
       size: adSize,
       listener: BannerAdListener(
         onAdLoaded: (ad) {
+          debugPrint(
+            'Banner ad loaded [${widget.placement}] '
+            'unit=${AdsService.maskAdUnitId(adUnitId)} '
+            '${AdsService.summarizeResponseInfo(ad.responseInfo)}',
+          );
           if (!mounted) return;
           setState(() {
             _loaded = true;
@@ -102,15 +107,23 @@ class _MonetizedBannerAdState extends State<MonetizedBannerAd> {
           setState(() {
             _loaded = false;
           });
-          debugPrint('Banner ad failed for ${widget.placement}: $error');
+          debugPrint(
+            AdsService.summarizeLoadAdError(
+              format: 'banner',
+              placement: widget.placement,
+              adUnitId: adUnitId,
+              error: error,
+            ),
+          );
           unawaited(
             _analyticsService.logEvent(
               'ad_banner_load_failed',
-              parameters: {
-                'placement': widget.placement,
-                'error_code': error.code,
-                'error_domain': error.domain,
-              },
+              parameters: AdsService.loadAdErrorAnalyticsParameters(
+                placement: widget.placement,
+                format: 'banner',
+                adUnitId: adUnitId,
+                error: error,
+              ),
             ),
           );
         },

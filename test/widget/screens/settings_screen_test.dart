@@ -7,6 +7,7 @@ import 'package:quiznetic_flutter/screens/legal_document_screen.dart';
 import 'package:quiznetic_flutter/screens/leaderboard_screen.dart';
 import 'package:quiznetic_flutter/screens/settings_screen.dart';
 import 'package:quiznetic_flutter/services/accessibility_preferences.dart';
+import 'package:quiznetic_flutter/services/ads_service.dart';
 import 'package:quiznetic_flutter/services/auth_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -54,6 +55,45 @@ void main() {
       200,
     );
     expect(find.byKey(const Key('settings-about-link')), findsOneWidget);
+  });
+
+  testWidgets('debug ad diagnostics opens masked report dialog', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SettingsScreen(
+          adsService: AdsService(
+            enabled: true,
+            androidHomeBannerUnitId: 'unit-home-123456',
+            androidResultInterstitialUnitId: 'unit-result-654321',
+            androidRewardedHintUnitId: 'unit-rewarded-987654',
+            supportsAds: () => true,
+            initializeAdsSdk: () async => null,
+            getSdkVersion: () async => 'sdk-test-version',
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final diagnosticsFinder = find.byKey(
+      const Key('settings-ad-diagnostics-button'),
+    );
+    await tester.scrollUntilVisible(diagnosticsFinder, 150);
+    await tester.tap(diagnosticsFinder);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(
+      find.byKey(const Key('settings-ad-diagnostics-report')),
+      findsOneWidget,
+    );
+    expect(find.textContaining('sdk_version=sdk-test-version'), findsOneWidget);
+    expect(find.textContaining('home_banner_raw=***123456'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('settings-ad-diagnostics-close')));
+    await tester.pumpAndSettle();
   });
 
   testWidgets('terms link opens the terms document screen', (tester) async {
@@ -148,6 +188,36 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('leaderboard-screen'), findsOneWidget);
+  });
+
+  testWidgets('ad inspector failure shows snackbar', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(800, 1200));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SettingsScreen(
+          adsService: AdsService(
+            enabled: true,
+            androidHomeBannerUnitId: 'unit-home-123456',
+            supportsAds: () => true,
+            initializeAdsSdk: () async => null,
+            getSdkVersion: () async => 'sdk-test-version',
+            openAdInspector: () async =>
+                'code=test_code domain=test_domain message=test_message',
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final inspectorFinder = find.byKey(
+      const Key('settings-ad-inspector-button'),
+    );
+    await tester.tap(inspectorFinder);
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Ad Inspector failed:'), findsOneWidget);
   });
 
   testWidgets('sign out action signs out and routes to entry choice', (

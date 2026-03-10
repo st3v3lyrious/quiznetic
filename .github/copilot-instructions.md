@@ -14,49 +14,16 @@ Firestore & patterns (use these exact paths)
 
 AdMob setup & patterns
 - Add to pubspec.yaml: `google_mobile_ads: ^x.y.z`
-- Android setup in android/app/src/main/AndroidManifest.xml:
-  ```xml
-  <manifest>
-    <application>
-      <meta-data
-          android:name="com.google.android.gms.ads.APPLICATION_ID"
-          android:value="ca-app-pub-xxxxxxxxxxxxxxxx~yyyyyyyyyy"/>
-    </application>
-  </manifest>
-  ```
-- iOS setup in ios/Runner/Info.plist:
-  ```xml
-  <dict>
-    <key>GADApplicationIdentifier</key>
-    <string>ca-app-pub-xxxxxxxxxxxxxxxx~yyyyyyyyyy</string>
-    <key>SKAdNetworkItems</key>
-    <array>
-      <dict>
-        <key>SKAdNetworkIdentifier</key>
-        <string>cstr6suwn9.skadnetwork</string>
-      </dict>
-    </array>
-  </dict>
-  ```
-- Initialize in main.dart:
-  ```dart
-  import 'package:google_mobile_ads/google_mobile_ads.dart';
-  
-  void main() {
-    WidgetsFlutterBinding.ensureInitialized();
-    MobileAds.instance.initialize();
-    // ... rest of initialization
-  }
-  ```
-- Banner ad example (use test IDs during development):
-  ```dart
-  BannerAd(
-    adUnitId: 'ca-app-pub-3940256099942544/6300978111', // test ID
-    size: AdSize.banner,
-    request: AdRequest(),
-    listener: BannerAdListener(),
-  )..load();
-  ```
+- AdMob app ids and ad unit ids are env-driven in this repo. Do not hardcode
+  raw `ca-app-pub-*` values in tracked source.
+- Android app id is injected through `android/app/build.gradle.kts` into
+  `android/app/src/main/AndroidManifest.xml`.
+- iOS app id is injected through `ios/Flutter/Env.xcconfig` into
+  `ios/Runner/Info.plist`.
+- Dart-side ad units come from `lib/config/app_config.dart` via
+  `--dart-define-from-file=.env`.
+- Non-release ad policy is enforced in `lib/services/ads_service.dart`.
+- For setup/runbook details, follow `docs/MONETIZATION_SETUP.md`.
 
 Integration files to check before editing Firebase code
 - `firebase_options.dart` (generated)
@@ -119,6 +86,9 @@ This file gives focused, actionable guidance for working in the Quiznetic Flutte
 - Hot reload is supported; use `r` in `flutter run` or IDE hot reload.
 - Look at debug prints emitted in `main.dart` during auth (`debugPrint('✅ Signed in as ...')`, auth error prints) as helpful checkpoints.
 - For Firebase issues, confirm platform config files are present (`google-services.json` for Android, `GoogleService-Info.plist` for iOS) and that `firebase_options.dart` matches the project.
+- For ad issues, inspect `AdsService`, `MonetizedBannerAd`, runtime device logs,
+  and the env-driven AdMob setup in `docs/MONETIZATION_SETUP.md` instead of
+  introducing hardcoded unit values.
 
 ### Code examples to reference
 - Firebase init + anonymous auth (exact location): `lib/main.dart` top of `main()`.

@@ -3,6 +3,7 @@
  Title: Settings Screen
  Purpose: Provides account/session controls, legal links, and app preferences.
 */
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:quiznetic_flutter/config/brand_config.dart';
 import 'package:quiznetic_flutter/screens/about_screen.dart';
@@ -10,6 +11,7 @@ import 'package:quiznetic_flutter/screens/entry_choice_screen.dart';
 import 'package:quiznetic_flutter/screens/legal_document_screen.dart';
 import 'package:quiznetic_flutter/screens/leaderboard_screen.dart';
 import 'package:quiznetic_flutter/services/accessibility_preferences.dart';
+import 'package:quiznetic_flutter/services/ads_service.dart';
 import 'package:quiznetic_flutter/services/auth_service.dart';
 import 'package:quiznetic_flutter/services/entitlement_service.dart';
 import 'package:quiznetic_flutter/services/iap_service.dart';
@@ -20,12 +22,14 @@ class SettingsScreen extends StatefulWidget {
   final AuthService? authService;
   final IapService? iapService;
   final EntitlementService? entitlementService;
+  final AdsService? adsService;
 
   const SettingsScreen({
     super.key,
     this.authService,
     this.iapService,
     this.entitlementService,
+    this.adsService,
   });
 
   /// Creates state for settings controls and sign-out flow.
@@ -41,11 +45,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _isLoadingRemoveAdsOffer = false;
   bool _isPurchasingRemoveAds = false;
   bool _isRestoringPurchases = false;
+  bool _isCollectingAdDiagnostics = false;
+  bool _isOpeningAdInspector = false;
   RemoveAdsOffer? _removeAdsOffer;
   String? _monetizationStatusMessage;
 
   late final IapService _iapService;
   late final EntitlementService _entitlementService;
+  late final AdsService _adsService;
 
   /// Loads persisted accessibility preferences.
   @override
@@ -54,6 +61,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _iapService = widget.iapService ?? IapService.instance;
     _entitlementService =
         widget.entitlementService ?? EntitlementService.instance;
+    _adsService = widget.adsService ?? AdsService.instance;
     _loadAccessibilityPreferences();
     _loadMonetizationState();
   }
@@ -323,6 +331,128 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  Future<void> _showAdDiagnostics() async {
+    if (_isCollectingAdDiagnostics) return;
+
+    setState(() {
+      _isCollectingAdDiagnostics = true;
+    });
+
+    try {
+      final report = await _adsService.buildDiagnosticsReport();
+      if (!mounted) return;
+      await showDialog<void>(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text('Ad Diagnostics'),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: SingleChildScrollView(
+                child: SelectableText(
+                  report,
+                  key: const Key('settings-ad-diagnostics-report'),
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(
+                key: const Key('settings-ad-diagnostics-close'),
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Close'),
+              ),
+            ],
+          );
+        },
+      );
+    } catch (e, stackTrace) {
+      debugPrint('Settings ad diagnostics failed: $e');
+      debugPrintStack(stackTrace: stackTrace);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Unable to collect ad diagnostics.')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isCollectingAdDiagnostics = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _openAdInspector() async {
+    if (_isOpeningAdInspector) return;
+
+    setState(() {
+      _isOpeningAdInspector = true;
+    });
+
+    try {
+      final error = await _adsService.openInspector();
+      if (!mounted || error == null) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Ad Inspector failed: $error')));
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isOpeningAdInspector = false;
+        });
+      }
+    }
+  }
+
+  Widget _buildDebugAdTools(TextTheme textTheme) {
+    if (kReleaseMode || !_adsService.canOpenAdInspector) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 20),
+        Text('Diagnostics', style: textTheme.titleMedium),
+        const SizedBox(height: 8),
+        Card(
+          child: Column(
+            children: [
+              ListTile(
+                key: const Key('settings-ad-diagnostics-button'),
+                leading: _isCollectingAdDiagnostics
+                    ? const SizedBox(
+                        height: 24,
+                        width: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.bug_report_outlined),
+                title: const Text('View Ad Diagnostics'),
+                subtitle: const Text(
+                  'Show masked SDK status, init adapters, and resolved units',
+                ),
+                onTap: _isCollectingAdDiagnostics ? null : _showAdDiagnostics,
+              ),
+              const Divider(height: 1),
+              ListTile(
+                key: const Key('settings-ad-inspector-button'),
+                leading: _isOpeningAdInspector
+                    ? const SizedBox(
+                        height: 24,
+                        width: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.preview_outlined),
+                title: const Text('Open Ad Inspector'),
+                subtitle: const Text('Launch Google Mobile Ads inspector UI'),
+                onTap: _isOpeningAdInspector ? null : _openAdInspector,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   /// Builds settings sections for account, legal, and app preferences.
   @override
   Widget build(BuildContext context) {
@@ -423,6 +553,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
             _buildMonetizationSection(textTheme),
+            _buildDebugAdTools(textTheme),
             const SizedBox(height: 20),
             Text('Legal', style: textTheme.titleMedium),
             const SizedBox(height: 8),

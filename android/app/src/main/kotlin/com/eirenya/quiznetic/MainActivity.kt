@@ -1,4 +1,4 @@
-package com.example.quiznetic_flutter
+package com.eirenya.quiznetic
 
 import io.flutter.embedding.android.FlutterActivity
 
