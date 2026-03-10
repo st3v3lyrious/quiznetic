@@ -13,10 +13,77 @@ if [[ ! -f "$ENV_FILE" ]]; then
   exit 1
 fi
 
-set -a
-# shellcheck disable=SC1090
-source "$ENV_FILE"
-set +a
+trim_whitespace() {
+  local value="$1"
+  value="${value#"${value%%[![:space:]]*}"}"
+  value="${value%"${value##*[![:space:]]}"}"
+  printf '%s' "$value"
+}
+
+parse_env_value() {
+  local raw_value="$1"
+  local line_number="$2"
+
+  if [[ -z "$raw_value" ]]; then
+    printf '%s' ""
+    return 0
+  fi
+
+  if [[ "$raw_value" == \"* ]]; then
+    if [[ ${#raw_value} -lt 2 || "${raw_value: -1}" != '"' ]]; then
+      echo "Invalid env line $line_number in $ENV_FILE: unmatched double quote" >&2
+      exit 1
+    fi
+    printf '%s' "${raw_value:1:${#raw_value}-2}"
+    return 0
+  fi
+
+  if [[ "$raw_value" == \'* ]]; then
+    if [[ ${#raw_value} -lt 2 || "${raw_value: -1}" != "'" ]]; then
+      echo "Invalid env line $line_number in $ENV_FILE: unmatched single quote" >&2
+      exit 1
+    fi
+    printf '%s' "${raw_value:1:${#raw_value}-2}"
+    return 0
+  fi
+
+  printf '%s' "$raw_value"
+}
+
+load_env_file() {
+  local raw_line=""
+  local trimmed=""
+  local key=""
+  local raw_value=""
+  local parsed_value=""
+  local line_number=0
+
+  while IFS= read -r raw_line || [[ -n "$raw_line" ]]; do
+    line_number=$((line_number + 1))
+    raw_line="${raw_line%$'\r'}"
+    trimmed="$(trim_whitespace "$raw_line")"
+
+    if [[ -z "$trimmed" || "${trimmed:0:1}" == "#" ]]; then
+      continue
+    fi
+
+    if [[ "$trimmed" == export[[:space:]]* ]]; then
+      trimmed="$(trim_whitespace "${trimmed#export}")"
+    fi
+
+    if [[ ! "$trimmed" =~ ^[A-Za-z_][A-Za-z0-9_]*[[:space:]]*= ]]; then
+      echo "Invalid env line $line_number in $ENV_FILE: expected KEY=VALUE" >&2
+      exit 1
+    fi
+
+    key="$(trim_whitespace "${trimmed%%=*}")"
+    raw_value="$(trim_whitespace "${trimmed#*=}")"
+    parsed_value="$(parse_env_value "$raw_value" "$line_number")"
+    printf -v "$key" '%s' "$parsed_value"
+  done < "$ENV_FILE"
+}
+
+load_env_file
 
 required_vars=(
   FIREBASE_PROJECT_NUMBER

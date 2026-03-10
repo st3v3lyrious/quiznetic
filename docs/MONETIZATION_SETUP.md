@@ -170,6 +170,9 @@ Populate `.env` first, then run with:
 flutter run --dart-define-from-file=.env
 ```
 
+`tools/sync_env.sh` expects a plain `KEY=VALUE` `.env` file. Keep comments on
+their own lines and do not use shell expressions in env values.
+
 ### Safe baseline (no monetization)
 
 ```bash

@@ -151,6 +151,7 @@ flutter run --dart-define-from-file=.env
 
 - `.env` is the local source for API keys, OAuth IDs, Firebase options, and ad IDs.
 - `.env` is gitignored; use `.env.example` as the template.
+- `tools/sync_env.sh` parses `.env` as strict `KEY=VALUE` data. Keep comments on their own lines and do not use shell expressions or command substitution in `.env`.
 - `tools/sync_env.sh` generates:
   - `ios/Flutter/Env.xcconfig`
   - `android/app/google-services.json`
