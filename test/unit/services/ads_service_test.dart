@@ -332,6 +332,31 @@ void main() {
     });
 
     test(
+      'initialize retries after a transient SDK initialization failure',
+      () async {
+        var initializeCalls = 0;
+        final service = AdsService(
+          enabled: true,
+          androidBannerUnitId: 'test-unit',
+          iosBannerUnitId: '',
+          supportsAds: () => true,
+          initializeAdsSdk: () async {
+            initializeCalls++;
+            if (initializeCalls == 1) {
+              throw Exception('temporary ads init failure');
+            }
+            return null;
+          },
+        );
+
+        await service.initialize();
+        await service.initialize();
+
+        expect(initializeCalls, 2);
+      },
+    );
+
+    test(
       'initialize runs when rewarded hints are enabled without banners',
       () async {
         var initializeCalls = 0;

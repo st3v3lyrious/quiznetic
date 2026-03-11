@@ -109,6 +109,7 @@ required_vars=(
   FIREBASE_PROJECT_NUMBER
   FIREBASE_ANDROID_API_KEY
   FIREBASE_ANDROID_APP_ID
+  FIREBASE_ANDROID_MESSAGING_SENDER_ID
   FIREBASE_ANDROID_PROJECT_ID
   FIREBASE_ANDROID_STORAGE_BUCKET
   FIREBASE_ANDROID_PACKAGE_NAME
@@ -135,6 +136,12 @@ if [[ ${#missing_vars[@]} -gt 0 ]]; then
   for var_name in "${missing_vars[@]}"; do
     echo "  - $var_name"
   done
+  exit 1
+fi
+
+if [[ "$FIREBASE_ANDROID_MESSAGING_SENDER_ID" != "$FIREBASE_PROJECT_NUMBER" ]]; then
+  echo "Invalid FIREBASE_ANDROID_MESSAGING_SENDER_ID in $ENV_FILE:" >&2
+  echo "  expected it to match FIREBASE_PROJECT_NUMBER ($FIREBASE_PROJECT_NUMBER)" >&2
   exit 1
 fi
 

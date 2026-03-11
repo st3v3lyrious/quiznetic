@@ -5,7 +5,7 @@
 */
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
-    show TargetPlatform, defaultTargetPlatform, kIsWeb;
+    show TargetPlatform, defaultTargetPlatform, kIsWeb, visibleForTesting;
 
 /// Runtime [FirebaseOptions] resolved from compile-time env values.
 ///
@@ -52,7 +52,10 @@ class AppFirebaseOptions {
   );
   static const _androidMessagingSenderId = String.fromEnvironment(
     'FIREBASE_ANDROID_MESSAGING_SENDER_ID',
-    defaultValue: '',
+    defaultValue: String.fromEnvironment(
+      'FIREBASE_PROJECT_NUMBER',
+      defaultValue: '',
+    ),
   );
   static const _androidProjectId = String.fromEnvironment(
     'FIREBASE_ANDROID_PROJECT_ID',
@@ -89,14 +92,179 @@ class AppFirebaseOptions {
   );
 
   static FirebaseOptions get currentPlatform {
-    if (kIsWeb) {
-      return web;
+    return optionsForPlatform(
+      targetPlatform: defaultTargetPlatform,
+      isWeb: kIsWeb,
+    );
+  }
+
+  @visibleForTesting
+  static FirebaseOptions optionsForPlatform({
+    required TargetPlatform targetPlatform,
+    required bool isWeb,
+    Map<String, String>? overrides,
+  }) {
+    if (isWeb) {
+      _validateRequiredKeys(
+        platformLabel: 'web',
+        values: {
+          'FIREBASE_WEB_API_KEY': _valueFor(
+            'FIREBASE_WEB_API_KEY',
+            _webApiKey,
+            overrides,
+          ),
+          'FIREBASE_WEB_APP_ID': _valueFor(
+            'FIREBASE_WEB_APP_ID',
+            _webAppId,
+            overrides,
+          ),
+          'FIREBASE_WEB_MESSAGING_SENDER_ID': _valueFor(
+            'FIREBASE_WEB_MESSAGING_SENDER_ID',
+            _webMessagingSenderId,
+            overrides,
+          ),
+          'FIREBASE_WEB_PROJECT_ID': _valueFor(
+            'FIREBASE_WEB_PROJECT_ID',
+            _webProjectId,
+            overrides,
+          ),
+        },
+      );
+      return FirebaseOptions(
+        apiKey: _valueFor('FIREBASE_WEB_API_KEY', _webApiKey, overrides),
+        appId: _valueFor('FIREBASE_WEB_APP_ID', _webAppId, overrides),
+        messagingSenderId: _valueFor(
+          'FIREBASE_WEB_MESSAGING_SENDER_ID',
+          _webMessagingSenderId,
+          overrides,
+        ),
+        projectId: _valueFor(
+          'FIREBASE_WEB_PROJECT_ID',
+          _webProjectId,
+          overrides,
+        ),
+        authDomain: _optionalValue(
+          'FIREBASE_WEB_AUTH_DOMAIN',
+          _webAuthDomain,
+          overrides,
+        ),
+        storageBucket: _optionalValue(
+          'FIREBASE_WEB_STORAGE_BUCKET',
+          _webStorageBucket,
+          overrides,
+        ),
+        measurementId: _optionalValue(
+          'FIREBASE_WEB_MEASUREMENT_ID',
+          _webMeasurementId,
+          overrides,
+        ),
+      );
     }
-    switch (defaultTargetPlatform) {
+    switch (targetPlatform) {
       case TargetPlatform.android:
-        return android;
+        _validateRequiredKeys(
+          platformLabel: 'android',
+          values: {
+            'FIREBASE_ANDROID_API_KEY': _valueFor(
+              'FIREBASE_ANDROID_API_KEY',
+              _androidApiKey,
+              overrides,
+            ),
+            'FIREBASE_ANDROID_APP_ID': _valueFor(
+              'FIREBASE_ANDROID_APP_ID',
+              _androidAppId,
+              overrides,
+            ),
+            'FIREBASE_ANDROID_MESSAGING_SENDER_ID': _valueFor(
+              'FIREBASE_ANDROID_MESSAGING_SENDER_ID',
+              _androidMessagingSenderId,
+              overrides,
+            ),
+            'FIREBASE_ANDROID_PROJECT_ID': _valueFor(
+              'FIREBASE_ANDROID_PROJECT_ID',
+              _androidProjectId,
+              overrides,
+            ),
+          },
+        );
+        return FirebaseOptions(
+          apiKey: _valueFor(
+            'FIREBASE_ANDROID_API_KEY',
+            _androidApiKey,
+            overrides,
+          ),
+          appId: _valueFor('FIREBASE_ANDROID_APP_ID', _androidAppId, overrides),
+          messagingSenderId: _valueFor(
+            'FIREBASE_ANDROID_MESSAGING_SENDER_ID',
+            _androidMessagingSenderId,
+            overrides,
+          ),
+          projectId: _valueFor(
+            'FIREBASE_ANDROID_PROJECT_ID',
+            _androidProjectId,
+            overrides,
+          ),
+          storageBucket: _optionalValue(
+            'FIREBASE_ANDROID_STORAGE_BUCKET',
+            _androidStorageBucket,
+            overrides,
+          ),
+        );
       case TargetPlatform.iOS:
-        return ios;
+        _validateRequiredKeys(
+          platformLabel: 'ios',
+          values: {
+            'FIREBASE_IOS_API_KEY': _valueFor(
+              'FIREBASE_IOS_API_KEY',
+              _iosApiKey,
+              overrides,
+            ),
+            'FIREBASE_IOS_APP_ID': _valueFor(
+              'FIREBASE_IOS_APP_ID',
+              _iosAppId,
+              overrides,
+            ),
+            'FIREBASE_IOS_MESSAGING_SENDER_ID': _valueFor(
+              'FIREBASE_IOS_MESSAGING_SENDER_ID',
+              _iosMessagingSenderId,
+              overrides,
+            ),
+            'FIREBASE_IOS_PROJECT_ID': _valueFor(
+              'FIREBASE_IOS_PROJECT_ID',
+              _iosProjectId,
+              overrides,
+            ),
+            'FIREBASE_IOS_BUNDLE_ID': _valueFor(
+              'FIREBASE_IOS_BUNDLE_ID',
+              _iosBundleId,
+              overrides,
+            ),
+          },
+        );
+        return FirebaseOptions(
+          apiKey: _valueFor('FIREBASE_IOS_API_KEY', _iosApiKey, overrides),
+          appId: _valueFor('FIREBASE_IOS_APP_ID', _iosAppId, overrides),
+          messagingSenderId: _valueFor(
+            'FIREBASE_IOS_MESSAGING_SENDER_ID',
+            _iosMessagingSenderId,
+            overrides,
+          ),
+          projectId: _valueFor(
+            'FIREBASE_IOS_PROJECT_ID',
+            _iosProjectId,
+            overrides,
+          ),
+          storageBucket: _optionalValue(
+            'FIREBASE_IOS_STORAGE_BUCKET',
+            _iosStorageBucket,
+            overrides,
+          ),
+          iosBundleId: _optionalValue(
+            'FIREBASE_IOS_BUNDLE_ID',
+            _iosBundleId,
+            overrides,
+          ),
+        );
       case TargetPlatform.macOS:
         throw UnsupportedError(
           'AppFirebaseOptions are not configured for macOS.',
@@ -116,30 +284,37 @@ class AppFirebaseOptions {
     }
   }
 
-  static const FirebaseOptions web = FirebaseOptions(
-    apiKey: _webApiKey,
-    appId: _webAppId,
-    messagingSenderId: _webMessagingSenderId,
-    projectId: _webProjectId,
-    authDomain: _webAuthDomain,
-    storageBucket: _webStorageBucket,
-    measurementId: _webMeasurementId,
-  );
+  static String _valueFor(
+    String key,
+    String defaultValue,
+    Map<String, String>? overrides,
+  ) {
+    return overrides?[key] ?? defaultValue;
+  }
 
-  static const FirebaseOptions android = FirebaseOptions(
-    apiKey: _androidApiKey,
-    appId: _androidAppId,
-    messagingSenderId: _androidMessagingSenderId,
-    projectId: _androidProjectId,
-    storageBucket: _androidStorageBucket,
-  );
+  static String? _optionalValue(
+    String key,
+    String defaultValue,
+    Map<String, String>? overrides,
+  ) {
+    final value = _valueFor(key, defaultValue, overrides).trim();
+    return value.isEmpty ? null : value;
+  }
 
-  static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: _iosApiKey,
-    appId: _iosAppId,
-    messagingSenderId: _iosMessagingSenderId,
-    projectId: _iosProjectId,
-    storageBucket: _iosStorageBucket,
-    iosBundleId: _iosBundleId,
-  );
+  static void _validateRequiredKeys({
+    required String platformLabel,
+    required Map<String, String> values,
+  }) {
+    final missingKeys = values.entries
+        .where((entry) => entry.value.trim().isEmpty)
+        .map((entry) => entry.key)
+        .toList(growable: false);
+    if (missingKeys.isEmpty) return;
+
+    throw StateError(
+      'Missing required Firebase env keys for $platformLabel: '
+      '${missingKeys.join(', ')}. '
+      'Pass them with --dart-define or --dart-define-from-file.',
+    );
+  }
 }

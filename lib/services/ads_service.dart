@@ -154,6 +154,7 @@ class AdsService {
   final AdsAnalyticsLogger _logEvent;
 
   bool _initialized = false;
+  Future<void>? _initializationFuture;
   InitializationStatus? _initializationStatus;
   final Set<String> _policyWarningsLogged = <String>{};
 
@@ -470,20 +471,32 @@ class AdsService {
 
   /// Initializes Google Mobile Ads SDK once for current runtime.
   Future<void> initialize() async {
-    if (_initialized ||
-        (!isEnabled &&
-            !isRewardedHintsEnabled &&
-            !isResultInterstitialEnabled)) {
+    if (_initialized) {
       return;
     }
-    _initialized = true;
-    await _configureTestDevices();
+    if (!isEnabled && !isRewardedHintsEnabled && !isResultInterstitialEnabled) {
+      return;
+    }
+    final existingInitialization = _initializationFuture;
+    if (existingInitialization != null) {
+      return existingInitialization;
+    }
+
+    final initialization = _runInitialize();
+    _initializationFuture = initialization;
+    return initialization;
+  }
+
+  Future<void> _runInitialize() async {
     try {
+      await _configureTestDevices();
       _initializationStatus = await _initializeAdsSdk();
+      _initialized = true;
       if (!kReleaseMode && _initializationStatus != null) {
         debugPrint(_buildInitializationSummary(_initializationStatus!));
       }
     } catch (e, stackTrace) {
+      _initialized = false;
       debugPrint('AdsService initialize failed: $e');
       debugPrintStack(stackTrace: stackTrace);
       unawaited(
@@ -492,6 +505,8 @@ class AdsService {
           parameters: {'error_type': e.runtimeType.toString()},
         ),
       );
+    } finally {
+      _initializationFuture = null;
     }
   }
 
