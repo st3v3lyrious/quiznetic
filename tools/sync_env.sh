@@ -20,6 +20,26 @@ trim_whitespace() {
   printf '%s' "$value"
 }
 
+json_escape() {
+  local value="$1"
+  value="${value//\\/\\\\}"
+  value="${value//\"/\\\"}"
+  value="${value//$'\n'/\\n}"
+  value="${value//$'\r'/\\r}"
+  value="${value//$'\t'/\\t}"
+  printf '%s' "$value"
+}
+
+xml_escape() {
+  local value="$1"
+  value="${value//&/&amp;}"
+  value="${value//</&lt;}"
+  value="${value//>/&gt;}"
+  value="${value//\"/&quot;}"
+  value="${value//\'/&apos;}"
+  printf '%s' "$value"
+}
+
 parse_env_value() {
   local raw_value="$1"
   local line_number="$2"
@@ -118,6 +138,34 @@ if [[ ${#missing_vars[@]} -gt 0 ]]; then
   exit 1
 fi
 
+ios_oauth_client_suffix=".apps.googleusercontent.com"
+if [[ "$FIREBASE_IOS_OAUTH_CLIENT_ID" != *"$ios_oauth_client_suffix" ]]; then
+  echo "Invalid FIREBASE_IOS_OAUTH_CLIENT_ID in $ENV_FILE:" >&2
+  echo "  expected a Google OAuth client id ending with $ios_oauth_client_suffix" >&2
+  exit 1
+fi
+FIREBASE_IOS_REVERSED_CLIENT_ID="com.googleusercontent.apps.${FIREBASE_IOS_OAUTH_CLIENT_ID%"$ios_oauth_client_suffix"}"
+
+android_optional_oauth_client_block=""
+android_optional_other_platform_oauth_client_block=""
+if [[ -n "${GOOGLE_OAUTH_CLIENT_ID:-}" ]]; then
+  android_optional_oauth_client_block=$(cat <<EOF
+,
+        {
+          "client_id": "$(json_escape "$GOOGLE_OAUTH_CLIENT_ID")",
+          "client_type": 3
+        }
+EOF
+)
+  android_optional_other_platform_oauth_client_block=$(cat <<EOF
+            {
+              "client_id": "$(json_escape "$GOOGLE_OAUTH_CLIENT_ID")",
+              "client_type": 3
+            },
+EOF
+)
+fi
+
 cat > "$IOS_ENV_XCCONFIG" <<EOF
 // Generated from $(basename "$ENV_FILE"). Do not commit this file.
 ADS_IOS_APP_ID=${ADS_IOS_APP_ID:-}
@@ -126,49 +174,43 @@ EOF
 cat > "$ANDROID_GOOGLE_SERVICES_JSON" <<EOF
 {
   "project_info": {
-    "project_number": "${FIREBASE_PROJECT_NUMBER}",
-    "project_id": "${FIREBASE_ANDROID_PROJECT_ID}",
-    "storage_bucket": "${FIREBASE_ANDROID_STORAGE_BUCKET}"
+    "project_number": "$(json_escape "$FIREBASE_PROJECT_NUMBER")",
+    "project_id": "$(json_escape "$FIREBASE_ANDROID_PROJECT_ID")",
+    "storage_bucket": "$(json_escape "$FIREBASE_ANDROID_STORAGE_BUCKET")"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "${FIREBASE_ANDROID_APP_ID}",
+        "mobilesdk_app_id": "$(json_escape "$FIREBASE_ANDROID_APP_ID")",
         "android_client_info": {
-          "package_name": "${FIREBASE_ANDROID_PACKAGE_NAME}"
+          "package_name": "$(json_escape "$FIREBASE_ANDROID_PACKAGE_NAME")"
         }
       },
       "oauth_client": [
         {
-          "client_id": "${FIREBASE_ANDROID_OAUTH_CLIENT_ID}",
+          "client_id": "$(json_escape "$FIREBASE_ANDROID_OAUTH_CLIENT_ID")",
           "client_type": 1,
           "android_info": {
-            "package_name": "${FIREBASE_ANDROID_PACKAGE_NAME}",
-            "certificate_hash": "${FIREBASE_ANDROID_CERT_HASH}"
+            "package_name": "$(json_escape "$FIREBASE_ANDROID_PACKAGE_NAME")",
+            "certificate_hash": "$(json_escape "$FIREBASE_ANDROID_CERT_HASH")"
           }
-        },
-        {
-          "client_id": "${GOOGLE_OAUTH_CLIENT_ID:-}",
-          "client_type": 3
         }
+${android_optional_oauth_client_block}
       ],
       "api_key": [
         {
-          "current_key": "${FIREBASE_ANDROID_API_KEY}"
+          "current_key": "$(json_escape "$FIREBASE_ANDROID_API_KEY")"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
+${android_optional_other_platform_oauth_client_block}
             {
-              "client_id": "${GOOGLE_OAUTH_CLIENT_ID:-}",
-              "client_type": 3
-            },
-            {
-              "client_id": "${FIREBASE_IOS_OAUTH_CLIENT_ID}",
+              "client_id": "$(json_escape "$FIREBASE_IOS_OAUTH_CLIENT_ID")",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "${FIREBASE_IOS_BUNDLE_ID}"
+                "bundle_id": "$(json_escape "$FIREBASE_IOS_BUNDLE_ID")"
               }
             }
           ]
@@ -186,23 +228,23 @@ cat > "$IOS_GOOGLE_SERVICE_INFO_PLIST" <<EOF
 <plist version="1.0">
 <dict>
 	<key>CLIENT_ID</key>
-	<string>${FIREBASE_IOS_OAUTH_CLIENT_ID}</string>
+	<string>$(xml_escape "$FIREBASE_IOS_OAUTH_CLIENT_ID")</string>
 	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.${FIREBASE_IOS_OAUTH_CLIENT_ID%%.apps.googleusercontent.com}</string>
+	<string>$(xml_escape "$FIREBASE_IOS_REVERSED_CLIENT_ID")</string>
 	<key>ANDROID_CLIENT_ID</key>
-	<string>${FIREBASE_ANDROID_OAUTH_CLIENT_ID}</string>
+	<string>$(xml_escape "$FIREBASE_ANDROID_OAUTH_CLIENT_ID")</string>
 	<key>API_KEY</key>
-	<string>${FIREBASE_IOS_API_KEY}</string>
+	<string>$(xml_escape "$FIREBASE_IOS_API_KEY")</string>
 	<key>GCM_SENDER_ID</key>
-	<string>${FIREBASE_IOS_MESSAGING_SENDER_ID}</string>
+	<string>$(xml_escape "$FIREBASE_IOS_MESSAGING_SENDER_ID")</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>${FIREBASE_IOS_BUNDLE_ID}</string>
+	<string>$(xml_escape "$FIREBASE_IOS_BUNDLE_ID")</string>
 	<key>PROJECT_ID</key>
-	<string>${FIREBASE_IOS_PROJECT_ID}</string>
+	<string>$(xml_escape "$FIREBASE_IOS_PROJECT_ID")</string>
 	<key>STORAGE_BUCKET</key>
-	<string>${FIREBASE_IOS_STORAGE_BUCKET}</string>
+	<string>$(xml_escape "$FIREBASE_IOS_STORAGE_BUCKET")</string>
 	<key>IS_ADS_ENABLED</key>
 	<false/>
 	<key>IS_ANALYTICS_ENABLED</key>
@@ -214,7 +256,7 @@ cat > "$IOS_GOOGLE_SERVICE_INFO_PLIST" <<EOF
 	<key>IS_SIGNIN_ENABLED</key>
 	<true/>
 	<key>GOOGLE_APP_ID</key>
-	<string>${FIREBASE_IOS_APP_ID}</string>
+	<string>$(xml_escape "$FIREBASE_IOS_APP_ID")</string>
 </dict>
 </plist>
 EOF

@@ -357,7 +357,7 @@ Current implementation uses a local-first repository:
   documented in `docs/BLAZE_FEATURE_FLAGS.md`.
 - Logo quiz category is intentionally deferred until curated/licensed logo assets and answer metadata mapping are available.
 - `main.dart` still contains template `MyHomePage` counter code that is not used by app routing.
-- `firebase_options.dart` is configured for Android/iOS/Web; macOS/Linux/Windows throw unsupported errors unless configured.
+- `firebase_env_options.dart` is the app-owned env-driven Firebase options entry point for Android/iOS/Web; macOS/Linux/Windows throw unsupported errors unless explicitly configured.
 
 ## Test Structure
 
