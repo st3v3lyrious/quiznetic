@@ -70,6 +70,37 @@ parse_env_value() {
   printf '%s' "$raw_value"
 }
 
+set_allowed_env_value() {
+  local key="$1"
+  local value="$2"
+
+  case "$key" in
+    ADS_IOS_APP_ID) ADS_IOS_APP_ID="$value" ;;
+    GOOGLE_OAUTH_CLIENT_ID) GOOGLE_OAUTH_CLIENT_ID="$value" ;;
+    FIREBASE_PROJECT_NUMBER) FIREBASE_PROJECT_NUMBER="$value" ;;
+    FIREBASE_ANDROID_API_KEY) FIREBASE_ANDROID_API_KEY="$value" ;;
+    FIREBASE_ANDROID_APP_ID) FIREBASE_ANDROID_APP_ID="$value" ;;
+    FIREBASE_ANDROID_MESSAGING_SENDER_ID)
+      FIREBASE_ANDROID_MESSAGING_SENDER_ID="$value"
+      ;;
+    FIREBASE_ANDROID_PROJECT_ID) FIREBASE_ANDROID_PROJECT_ID="$value" ;;
+    FIREBASE_ANDROID_STORAGE_BUCKET) FIREBASE_ANDROID_STORAGE_BUCKET="$value" ;;
+    FIREBASE_ANDROID_PACKAGE_NAME) FIREBASE_ANDROID_PACKAGE_NAME="$value" ;;
+    FIREBASE_ANDROID_CERT_HASH) FIREBASE_ANDROID_CERT_HASH="$value" ;;
+    FIREBASE_ANDROID_OAUTH_CLIENT_ID) FIREBASE_ANDROID_OAUTH_CLIENT_ID="$value" ;;
+    FIREBASE_IOS_OAUTH_CLIENT_ID) FIREBASE_IOS_OAUTH_CLIENT_ID="$value" ;;
+    FIREBASE_IOS_API_KEY) FIREBASE_IOS_API_KEY="$value" ;;
+    FIREBASE_IOS_APP_ID) FIREBASE_IOS_APP_ID="$value" ;;
+    FIREBASE_IOS_MESSAGING_SENDER_ID) FIREBASE_IOS_MESSAGING_SENDER_ID="$value" ;;
+    FIREBASE_IOS_PROJECT_ID) FIREBASE_IOS_PROJECT_ID="$value" ;;
+    FIREBASE_IOS_STORAGE_BUCKET) FIREBASE_IOS_STORAGE_BUCKET="$value" ;;
+    FIREBASE_IOS_BUNDLE_ID) FIREBASE_IOS_BUNDLE_ID="$value" ;;
+    *) return 1 ;;
+  esac
+
+  return 0
+}
+
 load_env_file() {
   local raw_line=""
   local trimmed=""
@@ -99,7 +130,7 @@ load_env_file() {
     key="$(trim_whitespace "${trimmed%%=*}")"
     raw_value="$(trim_whitespace "${trimmed#*=}")"
     parsed_value="$(parse_env_value "$raw_value" "$line_number")"
-    printf -v "$key" '%s' "$parsed_value"
+    set_allowed_env_value "$key" "$parsed_value" || true
   done < "$ENV_FILE"
 }
 
