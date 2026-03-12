@@ -27,8 +27,21 @@ import 'package:quiznetic_flutter/screens/about_screen.dart';
 import 'package:quiznetic_flutter/widgets/auth_guard.dart';
 import 'package:quiznetic_flutter/widgets/score_sync_scope.dart';
 import 'screens/splash_screen.dart';
-import 'firebase_options.dart';
+import 'firebase_env_options.dart';
 import 'package:firebase_core/firebase_core.dart';
+
+Future<void> _ensureFirebaseInitialized() async {
+  if (Firebase.apps.isNotEmpty) return;
+
+  try {
+    await Firebase.initializeApp(
+      options: AppFirebaseOptions.currentPlatform,
+    );
+  } on FirebaseException catch (e) {
+    // Guard against duplicate default-app init during debug/runtime re-entry.
+    if (e.code != 'duplicate-app') rethrow;
+  }
+}
 
 /// Initializes Firebase and launches the app shell.
 void main() {
@@ -36,9 +49,7 @@ void main() {
   runZonedGuarded(
     () async {
       WidgetsFlutterBinding.ensureInitialized();
-      await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform,
-      );
+      await _ensureFirebaseInitialized();
 
       final analyticsService = AnalyticsService.instance;
       final entitlementService = EntitlementService.instance;

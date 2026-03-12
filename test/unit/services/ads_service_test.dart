@@ -1,5 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quiznetic_flutter/services/ads_service.dart';
+
+const _fakeLiveBannerUnitId = 'admob-live-banner';
+const _fakeTestBannerUnitId = 'admob-test-banner';
+const _fakeLiveRewardedUnitId = 'admob-live-rewarded';
+const _fakeTestRewardedUnitId = 'admob-test-rewarded';
+const _fakeLiveInterstitialUnitId = 'admob-live-interstitial';
+const _fakeTestInterstitialUnitId = 'admob-test-interstitial';
+
+bool _looksLikeAdMobUnitId(String adUnitId) => adUnitId.startsWith('admob-');
 
 void main() {
   group('AdsService', () {
@@ -100,10 +111,11 @@ void main() {
         enabled: true,
         androidBannerUnitId: '',
         iosBannerUnitId: '',
-        androidHomeBannerUnitId: 'ca-app-pub-1111111111111111/2222222222',
+        androidHomeBannerUnitId: _fakeLiveBannerUnitId,
         iosHomeBannerUnitId: '',
         androidResultBannerUnitId: '',
         iosResultBannerUnitId: '',
+        looksLikeAdMobUnitId: _looksLikeAdMobUnitId,
         supportsAds: () => true,
         initializeAdsSdk: () async => throw UnimplementedError(),
       );
@@ -120,10 +132,12 @@ void main() {
         enabled: true,
         androidBannerUnitId: '',
         iosBannerUnitId: '',
-        androidHomeBannerUnitId: 'ca-app-pub-3940256099942544/6300978111',
+        androidHomeBannerUnitId: _fakeTestBannerUnitId,
         iosHomeBannerUnitId: '',
         androidResultBannerUnitId: '',
         iosResultBannerUnitId: '',
+        debugBannerTestUnitIds: const {_fakeTestBannerUnitId},
+        looksLikeAdMobUnitId: _looksLikeAdMobUnitId,
         supportsAds: () => true,
         initializeAdsSdk: () async => throw UnimplementedError(),
       );
@@ -131,7 +145,7 @@ void main() {
       expect(service.isEnabled, isTrue);
       expect(
         service.bannerAdUnitIdForPlacement(AdsService.placementHome),
-        'ca-app-pub-3940256099942544/6300978111',
+        _fakeTestBannerUnitId,
       );
     });
 
@@ -141,10 +155,11 @@ void main() {
         allowLiveAdUnitsInDebug: true,
         androidBannerUnitId: '',
         iosBannerUnitId: '',
-        androidHomeBannerUnitId: 'ca-app-pub-1111111111111111/2222222222',
+        androidHomeBannerUnitId: _fakeLiveBannerUnitId,
         iosHomeBannerUnitId: '',
         androidResultBannerUnitId: '',
         iosResultBannerUnitId: '',
+        looksLikeAdMobUnitId: _looksLikeAdMobUnitId,
         supportsAds: () => true,
         initializeAdsSdk: () async => throw UnimplementedError(),
       );
@@ -152,7 +167,7 @@ void main() {
       expect(service.isEnabled, isTrue);
       expect(
         service.bannerAdUnitIdForPlacement(AdsService.placementHome),
-        'ca-app-pub-1111111111111111/2222222222',
+        _fakeLiveBannerUnitId,
       );
     });
 
@@ -160,8 +175,9 @@ void main() {
       final service = AdsService(
         enabled: false,
         rewardedHintsEnabled: true,
-        androidRewardedHintUnitId: 'ca-app-pub-1111111111111111/3333333333',
+        androidRewardedHintUnitId: _fakeLiveRewardedUnitId,
         iosRewardedHintUnitId: '',
+        looksLikeAdMobUnitId: _looksLikeAdMobUnitId,
         supportsAds: () => true,
         initializeAdsSdk: () async => throw UnimplementedError(),
       );
@@ -174,25 +190,26 @@ void main() {
       final service = AdsService(
         enabled: true,
         rewardedHintsEnabled: true,
-        androidRewardedHintUnitId: 'ca-app-pub-3940256099942544/5224354917',
+        androidRewardedHintUnitId: _fakeTestRewardedUnitId,
         iosRewardedHintUnitId: '',
+        debugRewardedTestUnitIds: const {_fakeTestRewardedUnitId},
+        looksLikeAdMobUnitId: _looksLikeAdMobUnitId,
         supportsAds: () => true,
         initializeAdsSdk: () async => throw UnimplementedError(),
       );
 
       expect(service.isRewardedHintsEnabled, isTrue);
-      expect(
-        service.rewardedHintAdUnitId,
-        'ca-app-pub-3940256099942544/5224354917',
-      );
+      expect(service.rewardedHintAdUnitId, _fakeTestRewardedUnitId);
     });
 
     test('rewarded hint unit resolution is blocked when ads are disabled', () {
       final service = AdsService(
         enabled: false,
         rewardedHintsEnabled: true,
-        androidRewardedHintUnitId: 'ca-app-pub-3940256099942544/5224354917',
+        androidRewardedHintUnitId: _fakeTestRewardedUnitId,
         iosRewardedHintUnitId: '',
+        debugRewardedTestUnitIds: const {_fakeTestRewardedUnitId},
+        looksLikeAdMobUnitId: _looksLikeAdMobUnitId,
         supportsAds: () => true,
         initializeAdsSdk: () async => throw UnimplementedError(),
       );
@@ -206,9 +223,9 @@ void main() {
       () {
         final service = AdsService(
           enabled: true,
-          androidResultInterstitialUnitId:
-              'ca-app-pub-1111111111111111/4444444444',
+          androidResultInterstitialUnitId: _fakeLiveInterstitialUnitId,
           iosResultInterstitialUnitId: '',
+          looksLikeAdMobUnitId: _looksLikeAdMobUnitId,
           supportsAds: () => true,
           initializeAdsSdk: () async => throw UnimplementedError(),
         );
@@ -223,17 +240,15 @@ void main() {
         final service = AdsService(
           enabled: true,
           resultInterstitialEnabled: true,
-          androidResultInterstitialUnitId:
-              'ca-app-pub-3940256099942544/1033173712',
+          androidResultInterstitialUnitId: _fakeTestInterstitialUnitId,
           iosResultInterstitialUnitId: '',
+          debugInterstitialTestUnitIds: const {_fakeTestInterstitialUnitId},
+          looksLikeAdMobUnitId: _looksLikeAdMobUnitId,
           supportsAds: () => true,
           initializeAdsSdk: () async => throw UnimplementedError(),
         );
 
-        expect(
-          service.resultInterstitialAdUnitId,
-          'ca-app-pub-3940256099942544/1033173712',
-        );
+        expect(service.resultInterstitialAdUnitId, _fakeTestInterstitialUnitId);
       },
     );
 
@@ -243,9 +258,10 @@ void main() {
         final service = AdsService(
           enabled: true,
           resultInterstitialEnabled: true,
-          androidResultInterstitialUnitId:
-              'ca-app-pub-3940256099942544/1033173712',
+          androidResultInterstitialUnitId: _fakeTestInterstitialUnitId,
           iosResultInterstitialUnitId: '',
+          debugInterstitialTestUnitIds: const {_fakeTestInterstitialUnitId},
+          looksLikeAdMobUnitId: _looksLikeAdMobUnitId,
           supportsAds: () => true,
           initializeAdsSdk: () async => throw UnimplementedError(),
         );
@@ -260,9 +276,10 @@ void main() {
         final service = AdsService(
           enabled: true,
           resultInterstitialEnabled: false,
-          androidResultInterstitialUnitId:
-              'ca-app-pub-3940256099942544/1033173712',
+          androidResultInterstitialUnitId: _fakeTestInterstitialUnitId,
           iosResultInterstitialUnitId: '',
+          debugInterstitialTestUnitIds: const {_fakeTestInterstitialUnitId},
+          looksLikeAdMobUnitId: _looksLikeAdMobUnitId,
           supportsAds: () => true,
           initializeAdsSdk: () async => throw UnimplementedError(),
         );
@@ -277,8 +294,10 @@ void main() {
         final service = AdsService(
           enabled: true,
           rewardedHintsEnabled: false,
-          androidRewardedHintUnitId: 'ca-app-pub-3940256099942544/5224354917',
+          androidRewardedHintUnitId: _fakeTestRewardedUnitId,
           iosRewardedHintUnitId: '',
+          debugRewardedTestUnitIds: const {_fakeTestRewardedUnitId},
+          looksLikeAdMobUnitId: _looksLikeAdMobUnitId,
           supportsAds: () => true,
           initializeAdsSdk: () async => throw UnimplementedError(),
         );
@@ -289,11 +308,18 @@ void main() {
 
     test('initialize runs SDK initialization once when enabled', () async {
       var initializeCalls = 0;
+      final configuredTestDeviceIds = <String>[];
       final service = AdsService(
         enabled: true,
         androidBannerUnitId: 'test-unit',
         iosBannerUnitId: '',
+        androidTestDeviceIds: const ['android-test-device-1234'],
         supportsAds: () => true,
+        updateRequestConfiguration: (configuration) async {
+          configuredTestDeviceIds.addAll(
+            configuration.testDeviceIds ?? const <String>[],
+          );
+        },
         initializeAdsSdk: () async {
           initializeCalls++;
           return null;
@@ -304,7 +330,33 @@ void main() {
       await service.initialize();
 
       expect(initializeCalls, 1);
+      expect(configuredTestDeviceIds, ['android-test-device-1234']);
     });
+
+    test(
+      'initialize retries after a transient SDK initialization failure',
+      () async {
+        var initializeCalls = 0;
+        final service = AdsService(
+          enabled: true,
+          androidBannerUnitId: 'test-unit',
+          iosBannerUnitId: '',
+          supportsAds: () => true,
+          initializeAdsSdk: () async {
+            initializeCalls++;
+            if (initializeCalls == 1) {
+              throw Exception('temporary ads init failure');
+            }
+            return null;
+          },
+        );
+
+        await service.initialize();
+        await service.initialize();
+
+        expect(initializeCalls, 2);
+      },
+    );
 
     test(
       'initialize runs when rewarded hints are enabled without banners',
@@ -343,9 +395,10 @@ void main() {
         iosHomeBannerUnitId: '',
         androidResultBannerUnitId: '',
         iosResultBannerUnitId: '',
-        androidResultInterstitialUnitId:
-            'ca-app-pub-3940256099942544/1033173712',
+        androidResultInterstitialUnitId: _fakeTestInterstitialUnitId,
         iosResultInterstitialUnitId: '',
+        debugInterstitialTestUnitIds: const {_fakeTestInterstitialUnitId},
+        looksLikeAdMobUnitId: _looksLikeAdMobUnitId,
         supportsAds: () => true,
         initializeAdsSdk: () async {
           initializeCalls++;
@@ -358,5 +411,108 @@ void main() {
       expect(service.isResultInterstitialEnabled, isTrue);
       expect(initializeCalls, 1);
     });
+
+    test('diagnostics report includes configured test device ids', () async {
+      final service = AdsService(
+        enabled: true,
+        androidHomeBannerUnitId: _fakeTestBannerUnitId,
+        iosHomeBannerUnitId: '',
+        debugBannerTestUnitIds: const {_fakeTestBannerUnitId},
+        androidTestDeviceIds: const ['android-test-device-1234'],
+        looksLikeAdMobUnitId: _looksLikeAdMobUnitId,
+        supportsAds: () => true,
+        getSdkVersion: () async => 'sdk-version',
+        updateRequestConfiguration: (_) async {},
+        initializeAdsSdk: () async => null,
+      );
+
+      final report = await service.buildDiagnosticsReport();
+
+      expect(report, contains('test_device_count=1'));
+      expect(report, contains('test_devices=***1234'));
+    });
+
+    test(
+      'diagnostics initialization retries when SDK returns null status',
+      () async {
+        var initializeCalls = 0;
+        final service = AdsService(
+          enabled: true,
+          androidHomeBannerUnitId: _fakeTestBannerUnitId,
+          iosHomeBannerUnitId: '',
+          debugBannerTestUnitIds: const {_fakeTestBannerUnitId},
+          looksLikeAdMobUnitId: _looksLikeAdMobUnitId,
+          supportsAds: () => true,
+          getSdkVersion: () async => 'sdk-version',
+          updateRequestConfiguration: (_) async {},
+          initializeAdsSdk: () async {
+            initializeCalls++;
+            return null;
+          },
+        );
+
+        await service.buildDiagnosticsReport();
+        await service.buildDiagnosticsReport();
+
+        expect(initializeCalls, 2);
+      },
+    );
+
+    test(
+      'diagnostics initialization retries when SDK initialization throws',
+      () async {
+        var initializeCalls = 0;
+        final service = AdsService(
+          enabled: true,
+          androidHomeBannerUnitId: _fakeTestBannerUnitId,
+          iosHomeBannerUnitId: '',
+          debugBannerTestUnitIds: const {_fakeTestBannerUnitId},
+          looksLikeAdMobUnitId: _looksLikeAdMobUnitId,
+          supportsAds: () => true,
+          getSdkVersion: () async => 'sdk-version',
+          openAdInspector: () async => null,
+          updateRequestConfiguration: (_) async {},
+          initializeAdsSdk: () async {
+            initializeCalls++;
+            throw Exception('diagnostics init failed');
+          },
+        );
+
+        await service.buildDiagnosticsReport();
+        await service.openInspector();
+
+        expect(initializeCalls, 2);
+      },
+    );
+
+    test(
+      'concurrent diagnostics requests share the same in-flight initialization',
+      () async {
+        var initializeCalls = 0;
+        final completer = Completer<void>();
+        final service = AdsService(
+          enabled: true,
+          androidHomeBannerUnitId: _fakeTestBannerUnitId,
+          iosHomeBannerUnitId: '',
+          debugBannerTestUnitIds: const {_fakeTestBannerUnitId},
+          looksLikeAdMobUnitId: _looksLikeAdMobUnitId,
+          supportsAds: () => true,
+          getSdkVersion: () async => 'sdk-version',
+          updateRequestConfiguration: (_) async {},
+          initializeAdsSdk: () async {
+            initializeCalls++;
+            await completer.future;
+            return null;
+          },
+        );
+
+        final firstCall = service.buildDiagnosticsReport();
+        final secondCall = service.buildDiagnosticsReport();
+        completer.complete();
+        await Future.wait([firstCall, secondCall]);
+
+        expect(initializeCalls, 1);
+      },
+    );
   });
 }

@@ -1,11 +1,11 @@
 {
-    "name": "QuizNetic",
-    "short_name": "QuizNetic",
+    "name": "Quiznetic",
+    "short_name": "Quiznetic",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#F3F4F5",
     "theme_color": "#4A596D",
-    "description": "QuizNetic trivia app.",
+    "description": "Quiznetic trivia app.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

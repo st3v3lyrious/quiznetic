@@ -14,6 +14,10 @@ import 'package:quiznetic_flutter/services/leaderboard_band_service.dart';
 import 'package:quiznetic_flutter/widgets/monetized_banner_ad.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+const _fakeResultInterstitialUnitId = 'admob-test-interstitial';
+
+bool _looksLikeAdMobUnitId(String adUnitId) => adUnitId.startsWith('admob-');
+
 void main() {
   Future<void> pumpResult(
     WidgetTester tester, {
@@ -457,9 +461,10 @@ void main() {
           iosHomeBannerUnitId: '',
           androidResultBannerUnitId: 'android-result-banner',
           iosResultBannerUnitId: '',
-          androidResultInterstitialUnitId:
-              'ca-app-pub-3940256099942544/1033173712',
+          androidResultInterstitialUnitId: _fakeResultInterstitialUnitId,
           iosResultInterstitialUnitId: '',
+          debugInterstitialTestUnitIds: const {_fakeResultInterstitialUnitId},
+          looksLikeAdMobUnitId: _looksLikeAdMobUnitId,
           supportsAds: () => true,
           initializeAdsSdk: () async => null,
         ),
@@ -499,9 +504,10 @@ void main() {
         iosHomeBannerUnitId: '',
         androidResultBannerUnitId: 'android-result-banner',
         iosResultBannerUnitId: '',
-        androidResultInterstitialUnitId:
-            'ca-app-pub-3940256099942544/1033173712',
+        androidResultInterstitialUnitId: _fakeResultInterstitialUnitId,
         iosResultInterstitialUnitId: '',
+        debugInterstitialTestUnitIds: const {_fakeResultInterstitialUnitId},
+        looksLikeAdMobUnitId: _looksLikeAdMobUnitId,
         supportsAds: () => true,
         initializeAdsSdk: () async => null,
       ),

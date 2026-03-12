@@ -32,6 +32,9 @@ This document defines the repository quality gates and the intended merge flow.
 - `.github/workflows/extended_tests.yml` (manual + weekly scheduled)
   - `Flutter Integration Tests`: Linux desktop run of `integration_test/*_integration_test.dart`
   - `Playwright E2E`: web build + static server + `npm run test:e2e` in `playwright/`
+    - Web CI injects stub `FIREBASE_WEB_*` dart-defines so
+      `AppFirebaseOptions.currentPlatform` can initialize without production web
+      Firebase credentials.
   - `Notify Failure`: webhook alert when integration/e2e job fails (enabled only if `ALERT_WEBHOOK_URL` is set)
 - `.github/workflows/release_preflight.yml` (required on PRs, manual on demand, and release tags)
   - `Release Preflight`: one-command launch-readiness gate (`./tools/release_preflight.sh`)

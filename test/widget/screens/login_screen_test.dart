@@ -1,9 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fba;
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:firebase_ui_oauth_apple/firebase_ui_oauth_apple.dart';
 import 'package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart';
+import 'package:quiznetic_flutter/config/brand_config.dart';
 import 'package:quiznetic_flutter/screens/login_screen.dart';
 
 void main() {
@@ -135,5 +136,74 @@ void main() {
     );
 
     expect(message, contains('not configured'));
+  });
+
+  testWidgets('buildHeader stays renderable in tight vertical space', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 360,
+            height: 120,
+            child: Builder(
+              builder: (context) {
+                return LoginScreen.buildHeader(
+                  context: context,
+                  constraints: const BoxConstraints.tightFor(
+                    width: 360,
+                    height: 120,
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(tester.takeException(), isNull);
+    expect(find.text(BrandConfig.appName), findsOneWidget);
+    expect(find.text(BrandConfig.tagline), findsOneWidget);
+  });
+
+  testWidgets('buildHeader shows logo in taller vertical space', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 360,
+            height: 260,
+            child: Builder(
+              builder: (context) {
+                return LoginScreen.buildHeader(
+                  context: context,
+                  constraints: const BoxConstraints.tightFor(
+                    width: 360,
+                    height: 260,
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.pump();
+    expect(tester.takeException(), isNull);
+    final logoFinder = find.byType(Image);
+    expect(logoFinder, findsOneWidget);
+    final logoWidget = tester.widget<Image>(logoFinder);
+    expect(logoWidget.image, isA<AssetImage>());
+    expect(
+      (logoWidget.image as AssetImage).assetName,
+      LoginScreen.logoAssetPath,
+    );
+    expect(find.text(BrandConfig.appName), findsOneWidget);
+    expect(find.text(BrandConfig.tagline), findsOneWidget);
   });
 }

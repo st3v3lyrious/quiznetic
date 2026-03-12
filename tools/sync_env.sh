@@ -1,0 +1,304 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ENV_FILE="${1:-$ROOT_DIR/.env}"
+IOS_ENV_XCCONFIG="$ROOT_DIR/ios/Flutter/Env.xcconfig"
+ANDROID_GOOGLE_SERVICES_JSON="$ROOT_DIR/android/app/google-services.json"
+IOS_GOOGLE_SERVICE_INFO_PLIST="$ROOT_DIR/ios/Runner/GoogleService-Info.plist"
+
+if [[ ! -f "$ENV_FILE" ]]; then
+  echo "Missing env file: $ENV_FILE"
+  echo "Create it from .env.example first."
+  exit 1
+fi
+
+trim_whitespace() {
+  local value="$1"
+  value="${value#"${value%%[![:space:]]*}"}"
+  value="${value%"${value##*[![:space:]]}"}"
+  printf '%s' "$value"
+}
+
+json_escape() {
+  local value="$1"
+  value="${value//\\/\\\\}"
+  value="${value//\"/\\\"}"
+  value="${value//$'\n'/\\n}"
+  value="${value//$'\r'/\\r}"
+  value="${value//$'\t'/\\t}"
+  printf '%s' "$value"
+}
+
+xml_escape() {
+  local value="$1"
+  value="${value//&/&amp;}"
+  value="${value//</&lt;}"
+  value="${value//>/&gt;}"
+  value="${value//\"/&quot;}"
+  value="${value//\'/&apos;}"
+  printf '%s' "$value"
+}
+
+parse_env_value() {
+  local raw_value="$1"
+  local line_number="$2"
+
+  if [[ -z "$raw_value" ]]; then
+    printf '%s' ""
+    return 0
+  fi
+
+  if [[ "$raw_value" == \"* ]]; then
+    if [[ ${#raw_value} -lt 2 || "${raw_value: -1}" != '"' ]]; then
+      echo "Invalid env line $line_number in $ENV_FILE: unmatched double quote" >&2
+      exit 1
+    fi
+    printf '%s' "${raw_value:1:${#raw_value}-2}"
+    return 0
+  fi
+
+  if [[ "$raw_value" == \'* ]]; then
+    if [[ ${#raw_value} -lt 2 || "${raw_value: -1}" != "'" ]]; then
+      echo "Invalid env line $line_number in $ENV_FILE: unmatched single quote" >&2
+      exit 1
+    fi
+    printf '%s' "${raw_value:1:${#raw_value}-2}"
+    return 0
+  fi
+
+  printf '%s' "$raw_value"
+}
+
+set_allowed_env_value() {
+  local key="$1"
+  local value="$2"
+
+  case "$key" in
+    ADS_IOS_APP_ID) ADS_IOS_APP_ID="$value" ;;
+    GOOGLE_OAUTH_CLIENT_ID) GOOGLE_OAUTH_CLIENT_ID="$value" ;;
+    FIREBASE_PROJECT_NUMBER) FIREBASE_PROJECT_NUMBER="$value" ;;
+    FIREBASE_ANDROID_API_KEY) FIREBASE_ANDROID_API_KEY="$value" ;;
+    FIREBASE_ANDROID_APP_ID) FIREBASE_ANDROID_APP_ID="$value" ;;
+    FIREBASE_ANDROID_MESSAGING_SENDER_ID)
+      FIREBASE_ANDROID_MESSAGING_SENDER_ID="$value"
+      ;;
+    FIREBASE_ANDROID_PROJECT_ID) FIREBASE_ANDROID_PROJECT_ID="$value" ;;
+    FIREBASE_ANDROID_STORAGE_BUCKET) FIREBASE_ANDROID_STORAGE_BUCKET="$value" ;;
+    FIREBASE_ANDROID_PACKAGE_NAME) FIREBASE_ANDROID_PACKAGE_NAME="$value" ;;
+    FIREBASE_ANDROID_CERT_HASH) FIREBASE_ANDROID_CERT_HASH="$value" ;;
+    FIREBASE_ANDROID_OAUTH_CLIENT_ID) FIREBASE_ANDROID_OAUTH_CLIENT_ID="$value" ;;
+    FIREBASE_IOS_OAUTH_CLIENT_ID) FIREBASE_IOS_OAUTH_CLIENT_ID="$value" ;;
+    FIREBASE_IOS_API_KEY) FIREBASE_IOS_API_KEY="$value" ;;
+    FIREBASE_IOS_APP_ID) FIREBASE_IOS_APP_ID="$value" ;;
+    FIREBASE_IOS_MESSAGING_SENDER_ID) FIREBASE_IOS_MESSAGING_SENDER_ID="$value" ;;
+    FIREBASE_IOS_PROJECT_ID) FIREBASE_IOS_PROJECT_ID="$value" ;;
+    FIREBASE_IOS_STORAGE_BUCKET) FIREBASE_IOS_STORAGE_BUCKET="$value" ;;
+    FIREBASE_IOS_BUNDLE_ID) FIREBASE_IOS_BUNDLE_ID="$value" ;;
+    *) return 1 ;;
+  esac
+
+  return 0
+}
+
+load_env_file() {
+  local raw_line=""
+  local trimmed=""
+  local key=""
+  local raw_value=""
+  local parsed_value=""
+  local line_number=0
+
+  while IFS= read -r raw_line || [[ -n "$raw_line" ]]; do
+    line_number=$((line_number + 1))
+    raw_line="${raw_line%$'\r'}"
+    trimmed="$(trim_whitespace "$raw_line")"
+
+    if [[ -z "$trimmed" || "${trimmed:0:1}" == "#" ]]; then
+      continue
+    fi
+
+    if [[ "$trimmed" == export[[:space:]]* ]]; then
+      trimmed="$(trim_whitespace "${trimmed#export}")"
+    fi
+
+    if [[ ! "$trimmed" =~ ^[A-Za-z_][A-Za-z0-9_]*[[:space:]]*= ]]; then
+      echo "Invalid env line $line_number in $ENV_FILE: expected KEY=VALUE" >&2
+      exit 1
+    fi
+
+    key="$(trim_whitespace "${trimmed%%=*}")"
+    raw_value="$(trim_whitespace "${trimmed#*=}")"
+    parsed_value="$(parse_env_value "$raw_value" "$line_number")"
+    set_allowed_env_value "$key" "$parsed_value" || true
+  done < "$ENV_FILE"
+}
+
+load_env_file
+
+required_vars=(
+  FIREBASE_PROJECT_NUMBER
+  FIREBASE_ANDROID_API_KEY
+  FIREBASE_ANDROID_APP_ID
+  FIREBASE_ANDROID_MESSAGING_SENDER_ID
+  FIREBASE_ANDROID_PROJECT_ID
+  FIREBASE_ANDROID_STORAGE_BUCKET
+  FIREBASE_ANDROID_PACKAGE_NAME
+  FIREBASE_ANDROID_CERT_HASH
+  FIREBASE_ANDROID_OAUTH_CLIENT_ID
+  FIREBASE_IOS_OAUTH_CLIENT_ID
+  FIREBASE_IOS_API_KEY
+  FIREBASE_IOS_APP_ID
+  FIREBASE_IOS_MESSAGING_SENDER_ID
+  FIREBASE_IOS_PROJECT_ID
+  FIREBASE_IOS_STORAGE_BUCKET
+  FIREBASE_IOS_BUNDLE_ID
+)
+
+missing_vars=()
+for var_name in "${required_vars[@]}"; do
+  if [[ -z "${!var_name:-}" ]]; then
+    missing_vars+=("$var_name")
+  fi
+done
+
+if [[ ${#missing_vars[@]} -gt 0 ]]; then
+  echo "Missing required variables in $ENV_FILE:"
+  for var_name in "${missing_vars[@]}"; do
+    echo "  - $var_name"
+  done
+  exit 1
+fi
+
+if [[ "$FIREBASE_ANDROID_MESSAGING_SENDER_ID" != "$FIREBASE_PROJECT_NUMBER" ]]; then
+  echo "Invalid FIREBASE_ANDROID_MESSAGING_SENDER_ID in $ENV_FILE:" >&2
+  echo "  expected it to match FIREBASE_PROJECT_NUMBER ($FIREBASE_PROJECT_NUMBER)" >&2
+  exit 1
+fi
+
+ios_oauth_client_suffix=".apps.googleusercontent.com"
+if [[ "$FIREBASE_IOS_OAUTH_CLIENT_ID" != *"$ios_oauth_client_suffix" ]]; then
+  echo "Invalid FIREBASE_IOS_OAUTH_CLIENT_ID in $ENV_FILE:" >&2
+  echo "  expected a Google OAuth client id ending with $ios_oauth_client_suffix" >&2
+  exit 1
+fi
+FIREBASE_IOS_REVERSED_CLIENT_ID="com.googleusercontent.apps.${FIREBASE_IOS_OAUTH_CLIENT_ID%"$ios_oauth_client_suffix"}"
+
+android_optional_oauth_client_block=""
+android_optional_other_platform_oauth_client_block=""
+if [[ -n "${GOOGLE_OAUTH_CLIENT_ID:-}" ]]; then
+  android_optional_oauth_client_block=$(cat <<EOF
+,
+        {
+          "client_id": "$(json_escape "$GOOGLE_OAUTH_CLIENT_ID")",
+          "client_type": 3
+        }
+EOF
+)
+  android_optional_other_platform_oauth_client_block=$(cat <<EOF
+            {
+              "client_id": "$(json_escape "$GOOGLE_OAUTH_CLIENT_ID")",
+              "client_type": 3
+            },
+EOF
+)
+fi
+
+cat > "$IOS_ENV_XCCONFIG" <<EOF
+// Generated from $(basename "$ENV_FILE"). Do not commit this file.
+ADS_IOS_APP_ID=${ADS_IOS_APP_ID:-}
+EOF
+
+cat > "$ANDROID_GOOGLE_SERVICES_JSON" <<EOF
+{
+  "project_info": {
+    "project_number": "$(json_escape "$FIREBASE_PROJECT_NUMBER")",
+    "project_id": "$(json_escape "$FIREBASE_ANDROID_PROJECT_ID")",
+    "storage_bucket": "$(json_escape "$FIREBASE_ANDROID_STORAGE_BUCKET")"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "$(json_escape "$FIREBASE_ANDROID_APP_ID")",
+        "android_client_info": {
+          "package_name": "$(json_escape "$FIREBASE_ANDROID_PACKAGE_NAME")"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "$(json_escape "$FIREBASE_ANDROID_OAUTH_CLIENT_ID")",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "$(json_escape "$FIREBASE_ANDROID_PACKAGE_NAME")",
+            "certificate_hash": "$(json_escape "$FIREBASE_ANDROID_CERT_HASH")"
+          }
+        }
+${android_optional_oauth_client_block}
+      ],
+      "api_key": [
+        {
+          "current_key": "$(json_escape "$FIREBASE_ANDROID_API_KEY")"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+${android_optional_other_platform_oauth_client_block}
+            {
+              "client_id": "$(json_escape "$FIREBASE_IOS_OAUTH_CLIENT_ID")",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "$(json_escape "$FIREBASE_IOS_BUNDLE_ID")"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
+EOF
+
+cat > "$IOS_GOOGLE_SERVICE_INFO_PLIST" <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>$(xml_escape "$FIREBASE_IOS_OAUTH_CLIENT_ID")</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>$(xml_escape "$FIREBASE_IOS_REVERSED_CLIENT_ID")</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>$(xml_escape "$FIREBASE_ANDROID_OAUTH_CLIENT_ID")</string>
+	<key>API_KEY</key>
+	<string>$(xml_escape "$FIREBASE_IOS_API_KEY")</string>
+	<key>GCM_SENDER_ID</key>
+	<string>$(xml_escape "$FIREBASE_IOS_MESSAGING_SENDER_ID")</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>$(xml_escape "$FIREBASE_IOS_BUNDLE_ID")</string>
+	<key>PROJECT_ID</key>
+	<string>$(xml_escape "$FIREBASE_IOS_PROJECT_ID")</string>
+	<key>STORAGE_BUCKET</key>
+	<string>$(xml_escape "$FIREBASE_IOS_STORAGE_BUCKET")</string>
+	<key>IS_ADS_ENABLED</key>
+	<false/>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false/>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true/>
+	<key>IS_GCM_ENABLED</key>
+	<true/>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true/>
+	<key>GOOGLE_APP_ID</key>
+	<string>$(xml_escape "$FIREBASE_IOS_APP_ID")</string>
+</dict>
+</plist>
+EOF
+
+echo "Synced iOS env config: $IOS_ENV_XCCONFIG"
+echo "Synced Android Firebase config: $ANDROID_GOOGLE_SERVICES_JSON"
+echo "Synced iOS Firebase config: $IOS_GOOGLE_SERVICE_INFO_PLIST"

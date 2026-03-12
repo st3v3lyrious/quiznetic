@@ -324,6 +324,11 @@ class _ResultScreenState extends State<ResultScreen> {
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (ad) {
           loadedAd = ad;
+          debugPrint(
+            'Result interstitial loaded '
+            'unit=${AdsService.maskAdUnitId(adUnitId)} '
+            '${AdsService.summarizeResponseInfo(ad.responseInfo)}',
+          );
           var showed = false;
           var hadImpression = false;
           var finalized = false;
@@ -374,14 +379,23 @@ class _ResultScreenState extends State<ResultScreen> {
             },
             onAdFailedToShowFullScreenContent: (ad, error) {
               ad.dispose();
-              debugPrint('Result interstitial failed to show: $error');
+              debugPrint(
+                AdsService.summarizeAdError(
+                  format: 'interstitial',
+                  placement: AdsService.placementResult,
+                  adUnitId: adUnitId,
+                  error: error,
+                ),
+              );
               unawaited(
                 _safeLogAnalyticsEvent(
                   'ad_result_interstitial_show_failed',
-                  parameters: {
-                    'error_code': error.code,
-                    'error_domain': error.domain,
-                  },
+                  parameters: AdsService.adErrorAnalyticsParameters(
+                    placement: AdsService.placementResult,
+                    format: 'interstitial',
+                    adUnitId: adUnitId,
+                    error: error,
+                  ),
                 ),
               );
               finalize(false);
@@ -391,14 +405,23 @@ class _ResultScreenState extends State<ResultScreen> {
         },
         onAdFailedToLoad: (error) {
           watchdog?.cancel();
-          debugPrint('Result interstitial failed to load: $error');
+          debugPrint(
+            AdsService.summarizeLoadAdError(
+              format: 'interstitial',
+              placement: AdsService.placementResult,
+              adUnitId: adUnitId,
+              error: error,
+            ),
+          );
           unawaited(
             _safeLogAnalyticsEvent(
               'ad_result_interstitial_load_failed',
-              parameters: {
-                'error_code': error.code,
-                'error_domain': error.domain,
-              },
+              parameters: AdsService.loadAdErrorAnalyticsParameters(
+                placement: AdsService.placementResult,
+                format: 'interstitial',
+                adUnitId: adUnitId,
+                error: error,
+              ),
             ),
           );
           if (!completer.isCompleted) {

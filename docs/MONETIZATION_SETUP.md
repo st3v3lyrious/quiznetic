@@ -62,10 +62,14 @@ Add AdMob app id metadata inside `<application>`:
 ```xml
 <meta-data
     android:name="com.google.android.gms.ads.APPLICATION_ID"
-    android:value="ca-app-pub-9485263915698875~7236935415" />
+    android:value="${ADMOB_APP_ID}" />
 ```
 
 - Use your AdMob **app id** (`~` separator), not an ad unit id (`/` separator).
+- In this repo, the value comes from `.env` key `ADS_ANDROID_APP_ID`.
+  `android/app/build.gradle.kts` reads `ADS_ANDROID_APP_ID` and injects it into
+  the manifest placeholder `ADMOB_APP_ID`, which is then consumed by
+  `android:value="${ADMOB_APP_ID}"`.
 
 ### iOS (`ios/Runner/Info.plist`)
 
@@ -73,7 +77,7 @@ Add AdMob app id:
 
 ```xml
 <key>GADApplicationIdentifier</key>
-<string>ca-app-pub-9485263915698875~4795109481</string>
+<string>$(ADS_IOS_APP_ID)</string>
 ```
 
 Add required SKAdNetwork IDs:
@@ -109,18 +113,26 @@ Defined in `lib/config/app_config.dart`:
 - `ENABLE_ADS` (default: `false`)
 - `ENABLE_RESULT_INTERSTITIAL_ADS` (default: `false`)
 - `ALLOW_LIVE_AD_UNITS_IN_DEBUG` (default: `false`)
+- `ADS_ANDROID_TEST_DEVICE_IDS` (default: empty comma-separated list)
+- `ADS_IOS_TEST_DEVICE_IDS` (default: empty comma-separated list)
 - `ENABLE_IAP` (default: `false`)
 - `IAP_REMOVE_ADS_PRODUCT_ID` (default: `quiznetic.remove_ads_lifetime`)
-- `ADS_ANDROID_HOME_BANNER_UNIT_ID` (default: `ca-app-pub-9485263915698875/3297690403`)
-- `ADS_IOS_HOME_BANNER_UNIT_ID` (default: `ca-app-pub-9485263915698875/8503108567`)
+- `ADS_ANDROID_HOME_BANNER_UNIT_ID` (default: empty)
+- `ADS_IOS_HOME_BANNER_UNIT_ID` (default: empty)
 - `ADS_ANDROID_RESULT_BANNER_UNIT_ID` (default: empty)
 - `ADS_IOS_RESULT_BANNER_UNIT_ID` (default: empty)
-- `ADS_ANDROID_RESULT_INTERSTITIAL_UNIT_ID` (default: `ca-app-pub-9485263915698875/2360517831`)
-- `ADS_IOS_RESULT_INTERSTITIAL_UNIT_ID` (default: `ca-app-pub-9485263915698875/6662220346`)
+- `ADS_ANDROID_RESULT_INTERSTITIAL_UNIT_ID` (default: empty)
+- `ADS_IOS_RESULT_INTERSTITIAL_UNIT_ID` (default: empty)
 - `ADS_ANDROID_BANNER_UNIT_ID` (default: empty fallback for any placement)
 - `ADS_IOS_BANNER_UNIT_ID` (default: empty fallback for any placement)
-- `ADS_ANDROID_REWARDED_HINT_UNIT_ID` (default: `ca-app-pub-9485263915698875/3186009767`)
-- `ADS_IOS_REWARDED_HINT_UNIT_ID` (default: `ca-app-pub-9485263915698875/8542782807`)
+- `ADS_ANDROID_REWARDED_HINT_UNIT_ID` (default: empty)
+- `ADS_IOS_REWARDED_HINT_UNIT_ID` (default: empty)
+- `ADS_ANDROID_TEST_BANNER_UNIT_ID` (default: empty)
+- `ADS_IOS_TEST_BANNER_UNIT_ID` (default: empty)
+- `ADS_ANDROID_TEST_INTERSTITIAL_UNIT_ID` (default: empty)
+- `ADS_IOS_TEST_INTERSTITIAL_UNIT_ID` (default: empty)
+- `ADS_ANDROID_TEST_REWARDED_UNIT_ID` (default: empty)
+- `ADS_IOS_TEST_REWARDED_UNIT_ID` (default: empty)
 - `ENABLE_REWARDED_HINTS` (default: `false`)
 - `REWARDED_HINTS_PER_SESSION` (default: `3`)
 - `ENABLE_PAID_HINTS` (default: `false`)
@@ -139,9 +151,31 @@ Enable monetization only when all are true:
 6. Privacy policy/store metadata disclose ads + IAP behavior.
 7. Hint flow QA passes when enabled (rewarded hint -> session cap -> paid fallback).
 8. Non-release QA builds use Google test ids (or explicitly set `ALLOW_LIVE_AD_UNITS_IN_DEBUG=true` for tightly controlled internal validation only).
-9. `ENABLE_RESULT_INTERSTITIAL_ADS` is enabled only after result flow QA passes (show + failure fallback + no-regression checks).
+9. If Ad Inspector or test-mode behavior is inconsistent, set `ADS_ANDROID_TEST_DEVICE_IDS` / `ADS_IOS_TEST_DEVICE_IDS` so the app registers test devices programmatically before initializing the SDK.
+10. `ENABLE_RESULT_INTERSTITIAL_ADS` is enabled only after result flow QA passes (show + failure fallback + no-regression checks).
+
+When using Google test units in non-release builds, provide them through env:
+
+- `ADS_ANDROID_TEST_BANNER_UNIT_ID`
+- `ADS_IOS_TEST_BANNER_UNIT_ID`
+- `ADS_ANDROID_TEST_INTERSTITIAL_UNIT_ID`
+- `ADS_IOS_TEST_INTERSTITIAL_UNIT_ID`
+- `ADS_ANDROID_TEST_REWARDED_UNIT_ID`
+- `ADS_IOS_TEST_REWARDED_UNIT_ID`
+- `ADS_ANDROID_TEST_DEVICE_IDS`
+- `ADS_IOS_TEST_DEVICE_IDS`
 
 ## Build Examples
+
+Populate `.env` first, then run with:
+
+```bash
+./tools/sync_env.sh
+flutter run --dart-define-from-file=.env
+```
+
+`tools/sync_env.sh` expects a plain `KEY=VALUE` `.env` file. Keep comments on
+their own lines and do not use shell expressions in env values.
 
 ### Safe baseline (no monetization)
 
@@ -158,16 +192,18 @@ flutter run \
   --dart-define=ENABLE_ADS=true \
   --dart-define=ENABLE_RESULT_INTERSTITIAL_ADS=false \
   --dart-define=ALLOW_LIVE_AD_UNITS_IN_DEBUG=false \
+  --dart-define=ADS_ANDROID_TEST_DEVICE_IDS=$ADS_ANDROID_TEST_DEVICE_IDS \
+  --dart-define=ADS_IOS_TEST_DEVICE_IDS=$ADS_IOS_TEST_DEVICE_IDS \
   --dart-define=ENABLE_IAP=true \
   --dart-define=ENABLE_REWARDED_HINTS=false \
   --dart-define=ENABLE_PAID_HINTS=false \
   --dart-define=IAP_REMOVE_ADS_PRODUCT_ID=quiznetic.remove_ads_lifetime \
-  --dart-define=ADS_ANDROID_HOME_BANNER_UNIT_ID=ca-app-pub-3940256099942544/6300978111 \
-  --dart-define=ADS_IOS_HOME_BANNER_UNIT_ID=ca-app-pub-3940256099942544/2934735716 \
-  --dart-define=ADS_ANDROID_RESULT_BANNER_UNIT_ID=ca-app-pub-3940256099942544/6300978111 \
-  --dart-define=ADS_IOS_RESULT_BANNER_UNIT_ID=ca-app-pub-3940256099942544/2934735716 \
-  --dart-define=ADS_ANDROID_RESULT_INTERSTITIAL_UNIT_ID=ca-app-pub-3940256099942544/1033173712 \
-  --dart-define=ADS_IOS_RESULT_INTERSTITIAL_UNIT_ID=ca-app-pub-3940256099942544/4411468910
+  --dart-define=ADS_ANDROID_HOME_BANNER_UNIT_ID=$ADS_ANDROID_TEST_BANNER_UNIT_ID \
+  --dart-define=ADS_IOS_HOME_BANNER_UNIT_ID=$ADS_IOS_TEST_BANNER_UNIT_ID \
+  --dart-define=ADS_ANDROID_RESULT_BANNER_UNIT_ID=$ADS_ANDROID_TEST_BANNER_UNIT_ID \
+  --dart-define=ADS_IOS_RESULT_BANNER_UNIT_ID=$ADS_IOS_TEST_BANNER_UNIT_ID \
+  --dart-define=ADS_ANDROID_RESULT_INTERSTITIAL_UNIT_ID=$ADS_ANDROID_TEST_INTERSTITIAL_UNIT_ID \
+  --dart-define=ADS_IOS_RESULT_INTERSTITIAL_UNIT_ID=$ADS_IOS_TEST_INTERSTITIAL_UNIT_ID
 ```
 
 ### Hint monetization QA build (rewarded + paid fallback)
@@ -177,14 +213,16 @@ flutter run \
   --dart-define=ENABLE_ADS=true \
   --dart-define=ENABLE_RESULT_INTERSTITIAL_ADS=false \
   --dart-define=ALLOW_LIVE_AD_UNITS_IN_DEBUG=false \
+  --dart-define=ADS_ANDROID_TEST_DEVICE_IDS=$ADS_ANDROID_TEST_DEVICE_IDS \
+  --dart-define=ADS_IOS_TEST_DEVICE_IDS=$ADS_IOS_TEST_DEVICE_IDS \
   --dart-define=ENABLE_IAP=true \
   --dart-define=ENABLE_REWARDED_HINTS=true \
   --dart-define=ENABLE_PAID_HINTS=true \
   --dart-define=REWARDED_HINTS_PER_SESSION=3 \
   --dart-define=IAP_HINT_CONSUMABLE_PRODUCT_ID=quiznetic.hint_single \
   --dart-define=PAID_HINT_PRICE_USD_CENTS=50 \
-  --dart-define=ADS_ANDROID_REWARDED_HINT_UNIT_ID=ca-app-pub-3940256099942544/5224354917 \
-  --dart-define=ADS_IOS_REWARDED_HINT_UNIT_ID=ca-app-pub-3940256099942544/1712485313
+  --dart-define=ADS_ANDROID_REWARDED_HINT_UNIT_ID=$ADS_ANDROID_TEST_REWARDED_UNIT_ID \
+  --dart-define=ADS_IOS_REWARDED_HINT_UNIT_ID=$ADS_IOS_TEST_REWARDED_UNIT_ID
 ```
 
 ### Result hybrid ad QA build (interstitial-first + banner fallback)
@@ -194,10 +232,12 @@ flutter run \
   --dart-define=ENABLE_ADS=true \
   --dart-define=ENABLE_RESULT_INTERSTITIAL_ADS=true \
   --dart-define=ALLOW_LIVE_AD_UNITS_IN_DEBUG=false \
-  --dart-define=ADS_ANDROID_RESULT_INTERSTITIAL_UNIT_ID=ca-app-pub-3940256099942544/1033173712 \
-  --dart-define=ADS_IOS_RESULT_INTERSTITIAL_UNIT_ID=ca-app-pub-3940256099942544/4411468910 \
-  --dart-define=ADS_ANDROID_RESULT_BANNER_UNIT_ID=ca-app-pub-3940256099942544/6300978111 \
-  --dart-define=ADS_IOS_RESULT_BANNER_UNIT_ID=ca-app-pub-3940256099942544/2934735716
+  --dart-define=ADS_ANDROID_TEST_DEVICE_IDS=$ADS_ANDROID_TEST_DEVICE_IDS \
+  --dart-define=ADS_IOS_TEST_DEVICE_IDS=$ADS_IOS_TEST_DEVICE_IDS \
+  --dart-define=ADS_ANDROID_RESULT_INTERSTITIAL_UNIT_ID=$ADS_ANDROID_TEST_INTERSTITIAL_UNIT_ID \
+  --dart-define=ADS_IOS_RESULT_INTERSTITIAL_UNIT_ID=$ADS_IOS_TEST_INTERSTITIAL_UNIT_ID \
+  --dart-define=ADS_ANDROID_RESULT_BANNER_UNIT_ID=$ADS_ANDROID_TEST_BANNER_UNIT_ID \
+  --dart-define=ADS_IOS_RESULT_BANNER_UNIT_ID=$ADS_IOS_TEST_BANNER_UNIT_ID
 ```
 
 ## app-ads.txt Baseline

@@ -73,6 +73,30 @@ void main() {
 
     expect(find.text('home-screen'), findsOneWidget);
   });
+
+  testWidgets(
+    'routes to entry choice when current user lookup throws',
+    (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          routes: {
+            SplashScreen.routeName: (_) => SplashScreen(
+              startupDelay: Duration.zero,
+              currentUserProvider: () => throw StateError('auth-failure'),
+            ),
+            EntryChoiceScreen.routeName: (_) => const _EntryProbe(),
+            HomeScreen.routeName: (_) => const _HomeProbe(),
+          },
+          initialRoute: SplashScreen.routeName,
+        ),
+      );
+
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      expect(find.text('entry-screen'), findsOneWidget);
+    },
+  );
 }
 
 User? _nullUser() => null;

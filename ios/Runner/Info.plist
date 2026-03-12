@@ -25,7 +25,7 @@
 		<key>LSRequiresIPhoneOS</key>
 		<true/>
 		<key>GADApplicationIdentifier</key>
-		<string>ca-app-pub-9485263915698875~4795109481</string>
+		<string>$(ADS_IOS_APP_ID)</string>
 		<key>SKAdNetworkItems</key>
 		<array>
 			<dict>

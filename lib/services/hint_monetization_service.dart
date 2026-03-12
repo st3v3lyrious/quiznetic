@@ -213,6 +213,11 @@ class HintMonetizationService implements HintMonetizationGateway {
       rewardedAdLoadCallback: RewardedAdLoadCallback(
         onAdLoaded: (ad) {
           loadedAd = ad;
+          debugPrint(
+            'Rewarded ad loaded '
+            'unit=${AdsService.maskAdUnitId(adUnitId)} '
+            '${AdsService.summarizeResponseInfo(ad.responseInfo)}',
+          );
           var rewardEarned = false;
           var finalized = false;
           var dismissed = false;
@@ -244,14 +249,23 @@ class HintMonetizationService implements HintMonetizationGateway {
             },
             onAdFailedToShowFullScreenContent: (ad, error) {
               dismissed = true;
-              debugPrint('Rewarded ad failed to show: $error');
+              debugPrint(
+                AdsService.summarizeAdError(
+                  format: 'rewarded',
+                  placement: 'hint',
+                  adUnitId: adUnitId,
+                  error: error,
+                ),
+              );
               unawaited(
                 _safeStaticLogEvent(
                   'ad_rewarded_show_failed',
-                  parameters: {
-                    'error_code': error.code,
-                    'error_domain': error.domain,
-                  },
+                  parameters: AdsService.adErrorAnalyticsParameters(
+                    placement: 'hint',
+                    format: 'rewarded',
+                    adUnitId: adUnitId,
+                    error: error,
+                  ),
                 ),
               );
               ad.dispose();
@@ -282,14 +296,23 @@ class HintMonetizationService implements HintMonetizationGateway {
         onAdFailedToLoad: (error) {
           showWatchdog?.cancel();
           postRewardWatchdog?.cancel();
-          debugPrint('Rewarded ad failed to load: $error');
+          debugPrint(
+            AdsService.summarizeLoadAdError(
+              format: 'rewarded',
+              placement: 'hint',
+              adUnitId: adUnitId,
+              error: error,
+            ),
+          );
           unawaited(
             _safeStaticLogEvent(
               'ad_rewarded_load_failed',
-              parameters: {
-                'error_code': error.code,
-                'error_domain': error.domain,
-              },
+              parameters: AdsService.loadAdErrorAnalyticsParameters(
+                placement: 'hint',
+                format: 'rewarded',
+                adUnitId: adUnitId,
+                error: error,
+              ),
             ),
           );
           if (!completer.isCompleted) {

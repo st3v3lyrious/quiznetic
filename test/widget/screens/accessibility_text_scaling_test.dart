@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:quiznetic_flutter/config/brand_config.dart';
 import 'package:quiznetic_flutter/screens/about_screen.dart';
 import 'package:quiznetic_flutter/screens/difficulty_screen.dart';
 import 'package:quiznetic_flutter/screens/entry_choice_screen.dart';
@@ -51,8 +52,8 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('QuizNetic'), findsOneWidget);
-    expect(find.text('Train your world trivia reflexes.'), findsOneWidget);
+    expect(find.text(BrandConfig.appName), findsOneWidget);
+    expect(find.text(BrandConfig.tagline), findsOneWidget);
   });
 
   testWidgets('difficulty actions remain present with large text scaling', (

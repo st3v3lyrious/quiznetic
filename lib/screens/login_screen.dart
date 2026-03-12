@@ -24,6 +24,13 @@ import 'package:quiznetic_flutter/widgets/legal_consent_notice.dart';
 class LoginScreen extends StatelessWidget {
   static const routeName = '/login';
   static const logoAssetPath = 'assets/images/logo-no-background.png';
+  static const _headerCompactHeightThreshold = 140.0;
+  static const _headerDefaultVerticalPadding = 20.0;
+  static const _headerCompactVerticalPadding = 12.0;
+  static const _headerTextReservation = 96.0;
+  static const _headerLogoSpacing = 8.0;
+  static const _headerLogoMaxHeight = 180.0;
+  static const _headerLogoMinVisibleHeight = 72.0;
   final String? googleOAuthClientId;
 
   const LoginScreen({super.key, this.googleOAuthClientId});
@@ -91,6 +98,56 @@ class LoginScreen extends StatelessWidget {
     return AuthUiHelper.authFailureReason(exception);
   }
 
+  @visibleForTesting
+  static Widget buildHeader({
+    required BuildContext context,
+    required BoxConstraints constraints,
+  }) {
+    final theme = Theme.of(context);
+    final verticalPadding =
+        constraints.maxHeight < _headerCompactHeightThreshold
+            ? _headerCompactVerticalPadding
+            : _headerDefaultVerticalPadding;
+    final rawLogoHeight =
+        constraints.maxHeight - (verticalPadding * 2) - _headerTextReservation;
+    final logoHeight =
+        rawLogoHeight.clamp(0.0, _headerLogoMaxHeight).toDouble();
+    final showLogo = logoHeight >= _headerLogoMinVisibleHeight;
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(20, verticalPadding, 20, verticalPadding),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (showLogo)
+            SizedBox(
+              height: logoHeight,
+              child: Image.asset(
+                logoAssetPath,
+                fit: BoxFit.contain,
+                semanticLabel: BrandConfig.logoSemanticLabel,
+              ),
+            ),
+          if (showLogo) const SizedBox(height: _headerLogoSpacing),
+          Text(
+            BrandConfig.appName,
+            style: theme.textTheme.headlineMedium,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          Text(
+            BrandConfig.tagline,
+            style: theme.textTheme.bodyLarge,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+
   /// Builds provider sign-in and account-creation actions.
   @override
   Widget build(BuildContext context) {
@@ -109,32 +166,8 @@ class LoginScreen extends StatelessWidget {
           ),
 
           // Header
-          headerBuilder: (context, constraints, shrinkOffset) {
-            final theme = Theme.of(context);
-            return Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  AspectRatio(
-                    aspectRatio: 1,
-                    child: Image.asset(
-                      logoAssetPath,
-                      semanticLabel: BrandConfig.logoSemanticLabel,
-                    ),
-                  ),
-                  Text(
-                    'QuizNetic',
-                    style: theme.textTheme.headlineMedium,
-                    textAlign: TextAlign.center,
-                  ),
-                  Text(
-                    'Test your knowledge of world flags!',
-                    style: theme.textTheme.bodyLarge,
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            );
+          headerBuilder: (context, constraints, _) {
+            return buildHeader(context: context, constraints: constraints);
           },
 
           // Subtitle

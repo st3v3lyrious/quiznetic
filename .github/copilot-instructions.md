@@ -14,52 +14,19 @@ Firestore & patterns (use these exact paths)
 
 AdMob setup & patterns
 - Add to pubspec.yaml: `google_mobile_ads: ^x.y.z`
-- Android setup in android/app/src/main/AndroidManifest.xml:
-  ```xml
-  <manifest>
-    <application>
-      <meta-data
-          android:name="com.google.android.gms.ads.APPLICATION_ID"
-          android:value="ca-app-pub-xxxxxxxxxxxxxxxx~yyyyyyyyyy"/>
-    </application>
-  </manifest>
-  ```
-- iOS setup in ios/Runner/Info.plist:
-  ```xml
-  <dict>
-    <key>GADApplicationIdentifier</key>
-    <string>ca-app-pub-xxxxxxxxxxxxxxxx~yyyyyyyyyy</string>
-    <key>SKAdNetworkItems</key>
-    <array>
-      <dict>
-        <key>SKAdNetworkIdentifier</key>
-        <string>cstr6suwn9.skadnetwork</string>
-      </dict>
-    </array>
-  </dict>
-  ```
-- Initialize in main.dart:
-  ```dart
-  import 'package:google_mobile_ads/google_mobile_ads.dart';
-  
-  void main() {
-    WidgetsFlutterBinding.ensureInitialized();
-    MobileAds.instance.initialize();
-    // ... rest of initialization
-  }
-  ```
-- Banner ad example (use test IDs during development):
-  ```dart
-  BannerAd(
-    adUnitId: 'ca-app-pub-3940256099942544/6300978111', // test ID
-    size: AdSize.banner,
-    request: AdRequest(),
-    listener: BannerAdListener(),
-  )..load();
-  ```
+- AdMob app ids and ad unit ids are env-driven in this repo. Do not hardcode
+  raw `ca-app-pub-*` values in tracked source.
+- Android app id is injected through `android/app/build.gradle.kts` into
+  `android/app/src/main/AndroidManifest.xml`.
+- iOS app id is injected through `ios/Flutter/Env.xcconfig` into
+  `ios/Runner/Info.plist`.
+- Dart-side ad units come from `lib/config/app_config.dart` via
+  `--dart-define-from-file=.env`.
+- Non-release ad policy is enforced in `lib/services/ads_service.dart`.
+- For setup/runbook details, follow `docs/MONETIZATION_SETUP.md`.
 
 Integration files to check before editing Firebase code
-- `firebase_options.dart` (generated)
+- `lib/firebase_env_options.dart` (app-owned env-driven FirebaseOptions)
 - `android/app/google-services.json`
 - `ios/Runner/GoogleService-Info.plist`
 
@@ -73,7 +40,9 @@ Developer workflows (quick commands)
 Debugging tips specific to this project
 - Use hot reload (`r` in `flutter run`) frequently — screens are small and self-contained.
 - Check `debugPrint` calls in `lib/main.dart` (auth success/failure) as primary checkpoints.
-- If Firebase behaves oddly, confirm the platform config files above and that `firebase_options.dart` matches them.
+- If Firebase behaves oddly, confirm the platform config files above, that
+  `lib/firebase_env_options.dart` matches the intended env values, and that
+  `./tools/sync_env.sh` has regenerated the native Firebase files.
 - For ads: use test ad unit IDs in development, check logcat/Console for ad load failures.
 
 Files to inspect when making changes
@@ -94,7 +63,8 @@ This file gives focused, actionable guidance for working in the Quiznetic Flutte
 - UI is split into screens under `lib/screens/` (e.g. `home_screen.dart`, `quiz_screen.dart`, `result_screen.dart`, `user_profile_screen.dart`). Navigation uses `routes` in `main.dart`.
 
 ### Key integration points & files (use these as anchors)
-- Firebase config: `firebase_options.dart` (generated) + `android/app/google-services.json` + `ios/Runner/GoogleService-Info.plist`.
+- Firebase config: `lib/firebase_env_options.dart` (app-owned env-driven FirebaseOptions)
+  + `android/app/google-services.json` + `ios/Runner/GoogleService-Info.plist`.
 - App entry & init: `lib/main.dart` — handles Firebase init, anonymous sign-in, app Theme (ColorScheme), and route table.
 - Data & assets: `lib/data/flag_loader.dart`, `lib/data/flag_list.dart`, `lib/models/flag_question.dart` and assets under `assets/flags/` and `assets/images/`.
 - Screens: `lib/screens/*` — each screen is a self-contained Stateful/Stateless widget and registered by route name in `main.dart`.
@@ -103,7 +73,8 @@ This file gives focused, actionable guidance for working in the Quiznetic Flutte
 - Keep UI logic inside screen widgets in `lib/screens/`; business logic is lightweight and found near related screens (no global state management libraries present).
 - Routing: use named routes defined in `main.dart` (e.g. `SplashScreen.routeName`, `HomeScreen.routeName`). Follow that pattern when adding screens.
 - Firebase usage:
-  - Initialize once in `main()` via `Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform)`.
+  - Initialize once in `main()` via
+    `Firebase.initializeApp(options: AppFirebaseOptions.currentPlatform)`.
   - The app uses anonymous sign-in by default; handle auth failures gracefully (see `main.dart` try/catch example).
 - Assets: flags are stored in `assets/flags/` and referenced by the loader in `lib/data/`; add new flags by adding files and updating the loader/list if necessary.
 
@@ -118,7 +89,13 @@ This file gives focused, actionable guidance for working in the Quiznetic Flutte
 ### Debugging hints
 - Hot reload is supported; use `r` in `flutter run` or IDE hot reload.
 - Look at debug prints emitted in `main.dart` during auth (`debugPrint('✅ Signed in as ...')`, auth error prints) as helpful checkpoints.
-- For Firebase issues, confirm platform config files are present (`google-services.json` for Android, `GoogleService-Info.plist` for iOS) and that `firebase_options.dart` matches the project.
+- For Firebase issues, confirm platform config files are present
+  (`google-services.json` for Android, `GoogleService-Info.plist` for iOS),
+  that `lib/firebase_env_options.dart` matches the intended env values, and
+  that `./tools/sync_env.sh` has been run after env changes.
+- For ad issues, inspect `AdsService`, `MonetizedBannerAd`, runtime device logs,
+  and the env-driven AdMob setup in `docs/MONETIZATION_SETUP.md` instead of
+  introducing hardcoded unit values.
 
 ### Code examples to reference
 - Firebase init + anonymous auth (exact location): `lib/main.dart` top of `main()`.

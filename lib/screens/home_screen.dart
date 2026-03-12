@@ -51,7 +51,7 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false, // Disable back button
-        title: const Text('Quiznetic'),
+        title: const Text(BrandConfig.appName),
         actions: [
           IconButton(
             icon: const Icon(Icons.leaderboard),

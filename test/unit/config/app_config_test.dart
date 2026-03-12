@@ -59,32 +59,24 @@ void main() {
     test('banner ad unit ids default to safe values for no-op startup', () {
       expect(AppConfig.adsAndroidBannerUnitId, isEmpty);
       expect(AppConfig.adsIosBannerUnitId, isEmpty);
-      expect(
-        AppConfig.adsAndroidHomeBannerUnitId,
-        'ca-app-pub-9485263915698875/3297690403',
-      );
-      expect(
-        AppConfig.adsIosHomeBannerUnitId,
-        'ca-app-pub-9485263915698875/8503108567',
-      );
+      expect(AppConfig.adsAndroidHomeBannerUnitId, isEmpty);
+      expect(AppConfig.adsIosHomeBannerUnitId, isEmpty);
       expect(AppConfig.adsAndroidResultBannerUnitId, isEmpty);
       expect(AppConfig.adsIosResultBannerUnitId, isEmpty);
-      expect(
-        AppConfig.adsAndroidResultInterstitialUnitId,
-        'ca-app-pub-9485263915698875/2360517831',
-      );
-      expect(
-        AppConfig.adsIosResultInterstitialUnitId,
-        'ca-app-pub-9485263915698875/6662220346',
-      );
-      expect(
-        AppConfig.adsAndroidRewardedHintUnitId,
-        'ca-app-pub-9485263915698875/3186009767',
-      );
-      expect(
-        AppConfig.adsIosRewardedHintUnitId,
-        'ca-app-pub-9485263915698875/8542782807',
-      );
+      expect(AppConfig.adsAndroidResultInterstitialUnitId, isEmpty);
+      expect(AppConfig.adsIosResultInterstitialUnitId, isEmpty);
+      expect(AppConfig.adsAndroidRewardedHintUnitId, isEmpty);
+      expect(AppConfig.adsIosRewardedHintUnitId, isEmpty);
+      expect(AppConfig.adsAndroidTestBannerUnitId, isEmpty);
+      expect(AppConfig.adsIosTestBannerUnitId, isEmpty);
+      expect(AppConfig.adsAndroidTestInterstitialUnitId, isEmpty);
+      expect(AppConfig.adsIosTestInterstitialUnitId, isEmpty);
+      expect(AppConfig.adsAndroidTestRewardedUnitId, isEmpty);
+      expect(AppConfig.adsIosTestRewardedUnitId, isEmpty);
+      expect(AppConfig.adsAndroidTestDeviceIdsCsv, isEmpty);
+      expect(AppConfig.adsIosTestDeviceIdsCsv, isEmpty);
+      expect(AppConfig.adsAndroidTestDeviceIds, isEmpty);
+      expect(AppConfig.adsIosTestDeviceIds, isEmpty);
     });
   });
 }
