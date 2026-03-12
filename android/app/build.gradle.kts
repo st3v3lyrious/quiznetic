@@ -1,5 +1,3 @@
-import java.util.Properties
-
 plugins {
     id("com.android.application")
     // START: FlutterFire Configuration
@@ -19,10 +17,67 @@ val localEnv: Map<String, String> = run {
     if (envFile == null) {
         emptyMap()
     } else {
-        val properties = Properties()
-        envFile.inputStream().use { properties.load(it) }
-        properties.stringPropertyNames().associateWith {
-            properties.getProperty(it).trim()
+        fun parseEnvValue(rawValue: String, lineNumber: Int): String {
+            if (rawValue.isEmpty()) {
+                return ""
+            }
+
+            val hasDoubleQuotes =
+                rawValue.startsWith("\"") || rawValue.endsWith("\"")
+            val hasSingleQuotes =
+                rawValue.startsWith("'") || rawValue.endsWith("'")
+            if (hasDoubleQuotes) {
+                if (rawValue.length < 2 || !rawValue.endsWith("\"")) {
+                    throw GradleException(
+                        "Invalid env line $lineNumber in ${envFile.path}: unmatched double quote",
+                    )
+                }
+                return rawValue.substring(1, rawValue.length - 1)
+            }
+            if (hasSingleQuotes) {
+                if (rawValue.length < 2 || !rawValue.endsWith("'")) {
+                    throw GradleException(
+                        "Invalid env line $lineNumber in ${envFile.path}: unmatched single quote",
+                    )
+                }
+                return rawValue.substring(1, rawValue.length - 1)
+            }
+            return rawValue
+        }
+
+        buildMap {
+            envFile.useLines { lines ->
+                lines.forEachIndexed { index, rawLine ->
+                    val lineNumber = index + 1
+                    val trimmedLine = rawLine.removeSuffix("\r").trim()
+                    if (trimmedLine.isEmpty() || trimmedLine.startsWith("#")) {
+                        return@forEachIndexed
+                    }
+
+                    val normalizedLine = if (trimmedLine.startsWith("export ")) {
+                        trimmedLine.removePrefix("export").trimStart()
+                    } else {
+                        trimmedLine
+                    }
+
+                    val separatorIndex = normalizedLine.indexOf('=')
+                    if (separatorIndex <= 0) {
+                        throw GradleException(
+                            "Invalid env line $lineNumber in ${envFile.path}: expected KEY=VALUE",
+                        )
+                    }
+
+                    val key = normalizedLine.substring(0, separatorIndex).trim()
+                    if (!key.matches(Regex("[A-Za-z_][A-Za-z0-9_]*"))) {
+                        throw GradleException(
+                            "Invalid env line $lineNumber in ${envFile.path}: invalid key \"$key\"",
+                        )
+                    }
+
+                    val rawValue = normalizedLine.substring(separatorIndex + 1).trim()
+                    put(key, parseEnvValue(rawValue, lineNumber))
+                }
+            }
         }
     }
 }

@@ -66,6 +66,10 @@ Add AdMob app id metadata inside `<application>`:
 ```
 
 - Use your AdMob **app id** (`~` separator), not an ad unit id (`/` separator).
+- In this repo, the value comes from `.env` key `ADS_ANDROID_APP_ID`.
+  `android/app/build.gradle.kts` reads `ADS_ANDROID_APP_ID` and injects it into
+  the manifest placeholder `ADMOB_APP_ID`, which is then consumed by
+  `android:value="${ADMOB_APP_ID}"`.
 
 ### iOS (`ios/Runner/Info.plist`)
 

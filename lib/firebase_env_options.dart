@@ -12,6 +12,10 @@ import 'package:flutter/foundation.dart'
 /// This file is intentionally maintained by the app, not by FlutterFire CLI.
 /// Keep it separate from `lib/firebase_options.dart` so future FlutterFire
 /// regeneration cannot overwrite the env-based configuration path.
+///
+/// Web builds used for CI/e2e still need `FIREBASE_WEB_*` defines. The
+/// Playwright workflow injects stub values so validation remains strict for
+/// normal builds without requiring production web Firebase credentials.
 class AppFirebaseOptions {
   static const _webApiKey = String.fromEnvironment(
     'FIREBASE_WEB_API_KEY',
