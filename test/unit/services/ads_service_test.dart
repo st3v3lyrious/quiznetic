@@ -429,5 +429,57 @@ void main() {
       expect(report, contains('test_device_count=1'));
       expect(report, contains('test_devices=***1234'));
     });
+
+    test(
+      'diagnostics initialization is attempted once when SDK returns null status',
+      () async {
+        var initializeCalls = 0;
+        final service = AdsService(
+          enabled: true,
+          androidHomeBannerUnitId: _fakeTestBannerUnitId,
+          iosHomeBannerUnitId: '',
+          debugBannerTestUnitIds: const {_fakeTestBannerUnitId},
+          looksLikeAdMobUnitId: _looksLikeAdMobUnitId,
+          supportsAds: () => true,
+          getSdkVersion: () async => 'sdk-version',
+          updateRequestConfiguration: (_) async {},
+          initializeAdsSdk: () async {
+            initializeCalls++;
+            return null;
+          },
+        );
+
+        await service.buildDiagnosticsReport();
+        await service.buildDiagnosticsReport();
+
+        expect(initializeCalls, 1);
+      },
+    );
+
+    test(
+      'diagnostics initialization is attempted once when SDK initialization throws',
+      () async {
+        var initializeCalls = 0;
+        final service = AdsService(
+          enabled: true,
+          androidHomeBannerUnitId: _fakeTestBannerUnitId,
+          iosHomeBannerUnitId: '',
+          debugBannerTestUnitIds: const {_fakeTestBannerUnitId},
+          looksLikeAdMobUnitId: _looksLikeAdMobUnitId,
+          supportsAds: () => true,
+          getSdkVersion: () async => 'sdk-version',
+          updateRequestConfiguration: (_) async {},
+          initializeAdsSdk: () async {
+            initializeCalls++;
+            throw Exception('diagnostics init failed');
+          },
+        );
+
+        await service.buildDiagnosticsReport();
+        await service.openInspector();
+
+        expect(initializeCalls, 1);
+      },
+    );
   });
 }

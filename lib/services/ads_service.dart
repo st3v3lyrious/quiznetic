@@ -155,6 +155,7 @@ class AdsService {
 
   bool _initialized = false;
   Future<void>? _initializationFuture;
+  Future<InitializationStatus?>? _diagnosticsInitializationFuture;
   InitializationStatus? _initializationStatus;
   final Set<String> _policyWarningsLogged = <String>{};
 
@@ -613,7 +614,25 @@ class AdsService {
   _ensureInitializationStatusForDiagnostics() async {
     if (!_supportsAds()) return null;
     if (_initializationStatus != null) return _initializationStatus;
+    if (_initialized) return _initializationStatus;
 
+    final existingInitialization = _initializationFuture;
+    if (existingInitialization != null) {
+      await existingInitialization;
+      return _initializationStatus;
+    }
+
+    final existingDiagnosticsInitialization = _diagnosticsInitializationFuture;
+    if (existingDiagnosticsInitialization != null) {
+      return existingDiagnosticsInitialization;
+    }
+
+    final diagnosticsInitialization = _runDiagnosticsInitialize();
+    _diagnosticsInitializationFuture = diagnosticsInitialization;
+    return diagnosticsInitialization;
+  }
+
+  Future<InitializationStatus?> _runDiagnosticsInitialize() async {
     try {
       await _configureTestDevices();
       _initializationStatus = await _initializeAdsSdk();
