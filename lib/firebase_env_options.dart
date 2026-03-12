@@ -10,7 +10,7 @@ import 'package:flutter/foundation.dart'
 /// Runtime [FirebaseOptions] resolved from compile-time env values.
 ///
 /// This file is intentionally maintained by the app, not by FlutterFire CLI.
-/// Keep it separate from `lib/firebase_options.dart` so future FlutterFire
+/// Keep it separate from any FlutterFire-generated options file so future
 /// regeneration cannot overwrite the env-based configuration path.
 ///
 /// Web builds used for CI/e2e still need `FIREBASE_WEB_*` defines. The
