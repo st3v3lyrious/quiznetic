@@ -641,6 +641,8 @@ class AdsService {
       debugPrint('AdsService diagnostics initialization failed: $e');
       debugPrintStack(stackTrace: stackTrace);
       return null;
+    } finally {
+      _diagnosticsInitializationFuture = null;
     }
   }
 

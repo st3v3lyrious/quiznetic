@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quiznetic_flutter/services/ads_service.dart';
 
@@ -431,7 +433,7 @@ void main() {
     });
 
     test(
-      'diagnostics initialization is attempted once when SDK returns null status',
+      'diagnostics initialization retries when SDK returns null status',
       () async {
         var initializeCalls = 0;
         final service = AdsService(
@@ -452,14 +454,42 @@ void main() {
         await service.buildDiagnosticsReport();
         await service.buildDiagnosticsReport();
 
-        expect(initializeCalls, 1);
+        expect(initializeCalls, 2);
       },
     );
 
     test(
-      'diagnostics initialization is attempted once when SDK initialization throws',
+      'diagnostics initialization retries when SDK initialization throws',
       () async {
         var initializeCalls = 0;
+        final service = AdsService(
+          enabled: true,
+          androidHomeBannerUnitId: _fakeTestBannerUnitId,
+          iosHomeBannerUnitId: '',
+          debugBannerTestUnitIds: const {_fakeTestBannerUnitId},
+          looksLikeAdMobUnitId: _looksLikeAdMobUnitId,
+          supportsAds: () => true,
+          getSdkVersion: () async => 'sdk-version',
+          openAdInspector: () async => null,
+          updateRequestConfiguration: (_) async {},
+          initializeAdsSdk: () async {
+            initializeCalls++;
+            throw Exception('diagnostics init failed');
+          },
+        );
+
+        await service.buildDiagnosticsReport();
+        await service.openInspector();
+
+        expect(initializeCalls, 2);
+      },
+    );
+
+    test(
+      'concurrent diagnostics requests share the same in-flight initialization',
+      () async {
+        var initializeCalls = 0;
+        final completer = Completer<void>();
         final service = AdsService(
           enabled: true,
           androidHomeBannerUnitId: _fakeTestBannerUnitId,
@@ -471,12 +501,15 @@ void main() {
           updateRequestConfiguration: (_) async {},
           initializeAdsSdk: () async {
             initializeCalls++;
-            throw Exception('diagnostics init failed');
+            await completer.future;
+            return null;
           },
         );
 
-        await service.buildDiagnosticsReport();
-        await service.openInspector();
+        final firstCall = service.buildDiagnosticsReport();
+        final secondCall = service.buildDiagnosticsReport();
+        completer.complete();
+        await Future.wait([firstCall, secondCall]);
 
         expect(initializeCalls, 1);
       },
