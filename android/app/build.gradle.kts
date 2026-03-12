@@ -22,20 +22,28 @@ val localEnv: Map<String, String> = run {
                 return ""
             }
 
-            val hasDoubleQuotes =
-                rawValue.startsWith("\"") || rawValue.endsWith("\"")
-            val hasSingleQuotes =
-                rawValue.startsWith("'") || rawValue.endsWith("'")
-            if (hasDoubleQuotes) {
-                if (rawValue.length < 2 || !rawValue.endsWith("\"")) {
+            val startsWithDoubleQuote = rawValue.startsWith("\"")
+            val endsWithDoubleQuote = rawValue.endsWith("\"")
+            val startsWithSingleQuote = rawValue.startsWith("'")
+            val endsWithSingleQuote = rawValue.endsWith("'")
+            if (startsWithDoubleQuote || endsWithDoubleQuote) {
+                if (
+                    !startsWithDoubleQuote ||
+                        !endsWithDoubleQuote ||
+                        rawValue.length < 2
+                ) {
                     throw GradleException(
                         "Invalid env line $lineNumber in ${envFile.path}: unmatched double quote",
                     )
                 }
                 return rawValue.substring(1, rawValue.length - 1)
             }
-            if (hasSingleQuotes) {
-                if (rawValue.length < 2 || !rawValue.endsWith("'")) {
+            if (startsWithSingleQuote || endsWithSingleQuote) {
+                if (
+                    !startsWithSingleQuote ||
+                        !endsWithSingleQuote ||
+                        rawValue.length < 2
+                ) {
                     throw GradleException(
                         "Invalid env line $lineNumber in ${envFile.path}: unmatched single quote",
                     )
