@@ -657,10 +657,11 @@ class _QuizScreenState extends State<QuizScreen> {
                             ),
                           ),
                           const SizedBox(height: 20),
-                          KeyedSubtree(
-                            key: QuizScreen.nextActionButtonKey,
+                          SizedBox(
+                            key: _nextActionKey,
+                            width: double.infinity,
                             child: ElevatedButton(
-                              key: _nextActionKey,
+                              key: QuizScreen.nextActionButtonKey,
                               onPressed: _nextQuestion,
                               child: Text(nextActionLabel),
                             ),
