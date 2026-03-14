@@ -298,6 +298,16 @@ class _ResultScreenState extends State<ResultScreen> {
 
   Future<void> _attemptResultInterstitial(String adUnitId) async {
     await _safeLogEvent('result_interstitial_requested');
+    final ready = await _adsService.ensureInitializedForAdRequests();
+    if (!mounted) return;
+    if (!ready) {
+      await _safeLogEvent('result_interstitial_fallback_banner');
+      setState(() {
+        _shouldShowResultBanner = true;
+      });
+      return;
+    }
+
     final shown = await _presentResultInterstitialAd(adUnitId);
     if (!mounted) return;
 

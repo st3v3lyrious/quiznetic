@@ -517,6 +517,49 @@ void main() {
 
     expect(find.byType(MonetizedBannerAd), findsOneWidget);
   });
+
+  testWidgets(
+    'falls back to result banner when ads SDK initialization is not ready',
+    (tester) async {
+      await pumpResult(
+        tester,
+        args: ResultScreenArgs(
+          categoryKey: 'flag',
+          score: 6,
+          total: 10,
+          difficulty: 'easy',
+        ),
+        saveScore:
+            ({
+              required categoryKey,
+              required difficulty,
+              required score,
+              required totalQuestions,
+            }) async => score,
+        getHighScore: (categoryKey, difficulty) async => 9,
+        adsService: AdsService(
+          enabled: true,
+          resultInterstitialEnabled: true,
+          androidBannerUnitId: '',
+          iosBannerUnitId: '',
+          androidHomeBannerUnitId: '',
+          iosHomeBannerUnitId: '',
+          androidResultBannerUnitId: 'android-result-banner',
+          iosResultBannerUnitId: '',
+          androidResultInterstitialUnitId: _fakeResultInterstitialUnitId,
+          iosResultInterstitialUnitId: '',
+          debugInterstitialTestUnitIds: const {_fakeResultInterstitialUnitId},
+          looksLikeAdMobUnitId: _looksLikeAdMobUnitId,
+          supportsAds: () => true,
+          initializeAdsSdk: () async => throw Exception('ads init failed'),
+        ),
+        entitlementService: EntitlementService(initialRemoveAds: false),
+        presentResultInterstitialAd: (_) async => true,
+      );
+
+      expect(find.byType(MonetizedBannerAd), findsOneWidget);
+    },
+  );
 }
 
 class _QuizArgsProbe extends StatelessWidget {

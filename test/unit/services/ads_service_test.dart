@@ -334,6 +334,50 @@ void main() {
     });
 
     test(
+      'ensureInitializedForAdRequests reports success after SDK init',
+      () async {
+        var initializeCalls = 0;
+        final service = AdsService(
+          enabled: true,
+          androidBannerUnitId: 'test-unit',
+          iosBannerUnitId: '',
+          supportsAds: () => true,
+          initializeAdsSdk: () async {
+            initializeCalls++;
+            return null;
+          },
+        );
+
+        final ready = await service.ensureInitializedForAdRequests();
+
+        expect(ready, isTrue);
+        expect(initializeCalls, 1);
+      },
+    );
+
+    test(
+      'ensureInitializedForAdRequests reports failure after SDK init error',
+      () async {
+        var initializeCalls = 0;
+        final service = AdsService(
+          enabled: true,
+          androidBannerUnitId: 'test-unit',
+          iosBannerUnitId: '',
+          supportsAds: () => true,
+          initializeAdsSdk: () async {
+            initializeCalls++;
+            throw Exception('ads init failed');
+          },
+        );
+
+        final ready = await service.ensureInitializedForAdRequests();
+
+        expect(ready, isFalse);
+        expect(initializeCalls, 1);
+      },
+    );
+
+    test(
       'initialize retries after a transient SDK initialization failure',
       () async {
         var initializeCalls = 0;

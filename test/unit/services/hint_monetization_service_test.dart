@@ -126,6 +126,37 @@ void main() {
         storeClient.dispose();
       },
     );
+
+    test(
+      'falls back to paid hint when rewarded ads SDK is not ready',
+      () async {
+        final storeClient = _HintFakeStoreClient(autoCompleteConsumable: true);
+        final hintService = HintMonetizationService(
+          rewardedHintsEnabled: true,
+          paidHintsEnabled: true,
+          rewardedHintsPerSession: 1,
+          paidHintPriceUsdCents: 50,
+          adsService: AdsService(
+            enabled: true,
+            rewardedHintsEnabled: true,
+            androidRewardedHintUnitId: 'android.rewarded.unit',
+            iosRewardedHintUnitId: '',
+            supportsAds: () => true,
+            initializeAdsSdk: () async => throw Exception('ads init failed'),
+          ),
+          iapService: _buildIapService(storeClient: storeClient),
+          presentRewardedHintAd: (_) async => true,
+          logEvent: _noopLogEvent,
+        );
+
+        final result = await hintService.requestHint();
+
+        expect(result.status, HintRequestStatus.granted);
+        expect(result.source, HintGrantSource.paidHint);
+        expect(storeClient.buyConsumableCalls, 1);
+        storeClient.dispose();
+      },
+    );
   });
 }
 
