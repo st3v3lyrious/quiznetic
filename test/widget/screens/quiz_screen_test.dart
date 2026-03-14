@@ -143,6 +143,16 @@ void main() {
     final nextBottomRight = tester.getBottomRight(nextFinder);
     expect(nextTopLeft.dy, lessThan(tester.view.physicalSize.height));
     expect(nextBottomRight.dy, lessThanOrEqualTo(tester.view.physicalSize.height));
+
+    await tester.tap(nextFinder);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Flag Quiz (2/2)'), findsOneWidget);
+    expect(
+      find.text('Which country does this flag belong to?'),
+      findsOneWidget,
+    );
+    expect(find.byKey(QuizScreen.nextActionButtonKey), findsNothing);
   });
 
   testWidgets(

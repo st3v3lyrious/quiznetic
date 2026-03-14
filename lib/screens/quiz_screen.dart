@@ -57,8 +57,6 @@ class _QuizScreenState extends State<QuizScreen> {
   static const double _contentHorizontalPadding = 16;
   static const double _contentTopPadding = 24;
   static const double _contentBottomPadding = 24;
-  static const double _bottomActionTopPadding = 8;
-  static const double _bottomActionBottomPadding = 16;
   List<FlagQuestion> _questions = [];
   bool _isLoading = true;
   int _currentIndex = 0;
@@ -69,6 +67,8 @@ class _QuizScreenState extends State<QuizScreen> {
   bool _showCurrentFlagDescription = false;
   bool _isUnlockingHint = false;
   final Set<String> _eliminatedOptions = <String>{};
+  final ScrollController _scrollController = ScrollController();
+  final GlobalKey _nextActionKey = GlobalKey();
   late final QuizScreenArgs args;
   late final HintMonetizationGateway _hintMonetizationService;
   bool _argsLoaded = false;
@@ -84,6 +84,12 @@ class _QuizScreenState extends State<QuizScreen> {
     _hintMonetizationService =
         widget.hintMonetizationService ?? HintMonetizationService.instance;
     _loadAccessibilityPreferences();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadAccessibilityPreferences() async {
@@ -208,6 +214,18 @@ class _QuizScreenState extends State<QuizScreen> {
           _score++;
         }
       });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final nextContext = _nextActionKey.currentContext;
+        if (nextContext != null) {
+          Scrollable.ensureVisible(
+            nextContext,
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOut,
+            alignment: 1,
+          );
+        }
+      });
     }
   }
 
@@ -219,6 +237,10 @@ class _QuizScreenState extends State<QuizScreen> {
         _answered = false;
         _selectedOption = null;
         _eliminatedOptions.clear();
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || !_scrollController.hasClients) return;
+        _scrollController.jumpTo(0);
       });
     } else {
       // Instead of pushing ResultScreen(score: _score, total: _questions.length),
@@ -432,6 +454,7 @@ class _QuizScreenState extends State<QuizScreen> {
             child: LayoutBuilder(
               builder: (context, constraints) {
                 return SingleChildScrollView(
+                  controller: _scrollController,
                   padding: const EdgeInsets.fromLTRB(
                     _contentHorizontalPadding,
                     _contentTopPadding,
@@ -634,6 +657,15 @@ class _QuizScreenState extends State<QuizScreen> {
                             ),
                           ),
                           const SizedBox(height: 20),
+                          SizedBox(
+                            key: _nextActionKey,
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              key: QuizScreen.nextActionButtonKey,
+                              onPressed: _nextQuestion,
+                              child: Text(nextActionLabel),
+                            ),
+                          ),
                         ],
                       ],
                     ),
@@ -644,29 +676,6 @@ class _QuizScreenState extends State<QuizScreen> {
           ),
         ),
       ),
-      bottomNavigationBar: _answered
-          ? SafeArea(
-              minimum: const EdgeInsets.fromLTRB(
-                _contentHorizontalPadding,
-                _bottomActionTopPadding,
-                _contentHorizontalPadding,
-                _bottomActionBottomPadding,
-              ),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 600),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      key: QuizScreen.nextActionButtonKey,
-                      onPressed: _nextQuestion,
-                      child: Text(nextActionLabel),
-                    ),
-                  ),
-                ),
-              ),
-            )
-          : null,
     );
   }
 }
