@@ -139,27 +139,39 @@ class HintMonetizationService implements HintMonetizationGateway {
           'hint_rewarded_requested',
           parameters: {'remaining_before': rewardedHintsRemaining},
         );
+        final ready = await _adsService.ensureInitializedForAdRequests();
+        if (!ready) {
+          await _safeLogEvent('hint_rewarded_not_ready');
+          if (_paidHintsEnabled) {
+            await _safeLogEvent('hint_rewarded_unavailable_fallback_paid');
+          } else {
+            return const HintRequestResult(
+              status: HintRequestStatus.unavailable,
+              message: 'Rewarded hints are not available right now.',
+            );
+          }
+        } else {
+          final unlocked = await _presentRewardedHintAd(adUnitId);
+          if (!unlocked) {
+            await _safeLogEvent('hint_rewarded_not_granted');
+            return const HintRequestResult(
+              status: HintRequestStatus.failed,
+              message: 'Hint was not unlocked. Please try again.',
+            );
+          }
 
-        final unlocked = await _presentRewardedHintAd(adUnitId);
-        if (!unlocked) {
-          await _safeLogEvent('hint_rewarded_not_granted');
-          return const HintRequestResult(
-            status: HintRequestStatus.failed,
-            message: 'Hint was not unlocked. Please try again.',
+          _rewardedHintsUsed++;
+          await _safeLogEvent(
+            'hint_rewarded_granted',
+            parameters: {'remaining_after': rewardedHintsRemaining},
+          );
+          return HintRequestResult(
+            status: HintRequestStatus.granted,
+            source: HintGrantSource.rewardedAd,
+            message: 'Hint unlocked by rewarded ad.',
+            rewardedHintsRemaining: rewardedHintsRemaining,
           );
         }
-
-        _rewardedHintsUsed++;
-        await _safeLogEvent(
-          'hint_rewarded_granted',
-          parameters: {'remaining_after': rewardedHintsRemaining},
-        );
-        return HintRequestResult(
-          status: HintRequestStatus.granted,
-          source: HintGrantSource.rewardedAd,
-          message: 'Hint unlocked by rewarded ad.',
-          rewardedHintsRemaining: rewardedHintsRemaining,
-        );
       }
 
       if (!_paidHintsEnabled) {

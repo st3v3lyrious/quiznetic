@@ -82,6 +82,8 @@ class _MonetizedBannerAdState extends State<MonetizedBannerAd> {
 
     final adUnitId = _adsService.bannerAdUnitIdForPlacement(widget.placement);
     if (adUnitId == null || adUnitId.isEmpty) return;
+    final ready = await _adsService.ensureInitializedForAdRequests();
+    if (!mounted || !ready || _bannerAd != null) return;
     final adSize = await _resolveBannerAdSize();
     if (!mounted || _bannerAd != null) return;
 

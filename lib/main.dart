@@ -34,9 +34,7 @@ Future<void> _ensureFirebaseInitialized() async {
   if (Firebase.apps.isNotEmpty) return;
 
   try {
-    await Firebase.initializeApp(
-      options: AppFirebaseOptions.currentPlatform,
-    );
+    await Firebase.initializeApp(options: AppFirebaseOptions.currentPlatform);
   } on FirebaseException catch (e) {
     // Guard against duplicate default-app init during debug/runtime re-entry.
     if (e.code != 'duplicate-app') rethrow;
@@ -60,9 +58,8 @@ void main() {
       await analyticsService.initialize();
       await entitlementService.initialize();
       await iapService.initialize();
-      await adsService.initialize();
-
       runApp(const QuizNetic());
+      unawaited(adsService.initialize());
     },
     (error, stackTrace) {
       unawaited(

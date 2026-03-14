@@ -488,6 +488,16 @@ class AdsService {
     return initialization;
   }
 
+  /// Ensures the ad SDK is initialized before an ad request/show path runs.
+  ///
+  /// Returns `true` when initialization completed successfully for this
+  /// runtime. Returns `false` when ads are disabled/unsupported or when the SDK
+  /// initialization attempt failed.
+  Future<bool> ensureInitializedForAdRequests() async {
+    await initialize();
+    return _initialized;
+  }
+
   Future<void> _runInitialize() async {
     try {
       await _configureTestDevices();
