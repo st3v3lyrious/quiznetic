@@ -34,6 +34,7 @@ void main() {
     int? flagsPerSession,
     bool showFlagDescriptions = false,
     HintMonetizationGateway? hintMonetizationService,
+    Size physicalSize = const Size(1200, 2200),
   }) async {
     final questions = injectedQuestions ?? [injectedQuestion ?? question];
     final sessionQuestionCount = flagsPerSession ?? questions.length;
@@ -41,7 +42,7 @@ void main() {
       AccessibilityPreferences.showFlagDescriptionsKey: showFlagDescriptions,
     });
     tester.view.devicePixelRatio = 1.0;
-    tester.view.physicalSize = const Size(1200, 2200);
+    tester.view.physicalSize = physicalSize;
     addTearDown(() {
       tester.view.resetPhysicalSize();
       tester.view.resetDevicePixelRatio();
@@ -119,6 +120,29 @@ void main() {
     expect(find.text('Correct'), findsOneWidget);
     expect(find.text('France is the right answer.'), findsOneWidget);
     expect(find.text('See Results'), findsOneWidget);
+  });
+
+  testWidgets('keeps next action visible on shorter phone heights', (
+    tester,
+  ) async {
+    await pumpQuiz(
+      tester,
+      injectedQuestions: [question, question],
+      flagsPerSession: 2,
+      physicalSize: const Size(800, 1200),
+    );
+
+    await tester.tap(find.text('France'));
+    await tester.pumpAndSettle();
+
+    final nextFinder = find.byKey(QuizScreen.nextActionButtonKey);
+    expect(nextFinder, findsOneWidget);
+    expect(find.text('Next'), findsOneWidget);
+
+    final nextTopLeft = tester.getTopLeft(nextFinder);
+    final nextBottomRight = tester.getBottomRight(nextFinder);
+    expect(nextTopLeft.dy, lessThan(tester.view.physicalSize.height));
+    expect(nextBottomRight.dy, lessThanOrEqualTo(tester.view.physicalSize.height));
   });
 
   testWidgets(

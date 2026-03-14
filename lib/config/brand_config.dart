@@ -26,14 +26,14 @@ class BrandConfig {
   static const logoSemanticLabel = 'Quiznetic logo';
   static const quizQuestionImageSemanticLabel = 'Quiz question image';
 
-  // Current active theme tokens (kept stable until full EIRENYA rollout).
-  static const seedColor = Color(0xFF4A596D);
+  // Active theme tokens for the current EIRENYA rollout.
+  static const seedColor = EirenyaPalette.blueSerenity;
   static const correctAnswerColor = Color(0xFF2E7D32);
   static const wrongAnswerColor = Color(0xFFC62828);
-  static const neutralSurfaceColor = Color(0xFFDBDEE2);
-  static const appBackgroundColor = Color(0xFFF3F4F5);
-  static const webThemeColorHex = '#4A596D';
-  static const webBackgroundColorHex = '#F3F4F5';
+  static const neutralSurfaceColor = EirenyaPalette.linenBeige;
+  static const appBackgroundColor = EirenyaPalette.offWhite;
+  static const webThemeColorHex = '#4A90E2';
+  static const webBackgroundColorHex = '#F9F9F6';
 
   // Suggested semantic mapping for the upcoming EIRENYA visual refresh.
   static const eirenyaPrimary = EirenyaPalette.blueSerenity;

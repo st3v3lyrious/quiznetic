@@ -25,6 +25,7 @@ Use this file as the bug/issue tracker, separate from milestone planning in
 | ISS-010 | P2 | MVP | Done | App branding name mismatch: installed app shows `quiznetic_flutter`/`Quiznetic Flutter` instead of `Quiznetic`. | `You` | `March 2, 2026` |  |
 | ISS-011 | P0 | MVP | Done | Leaderboard appears stale after quiz completion: verify forced pending-score sync + investigate persistent sync failures from diagnostics. | `You` | `March 3, 2026` |  |
 | ISS-012 | P0 | MVP | Done | Security hardening before MVP deploy: rotate exposed Firebase/AdMob/OAuth credentials, then purge leaked credential artifacts from git history and validate no active secrets remain reachable from prior commits/tags. | `You` | `March 6, 2026` |  |
+| ISS-013 | P1 | MVP | Done | Quiz answer flow on common phone heights can hide the post-answer `Next` CTA below the fold; keep the action visible without requiring manual scroll. | `You` | `March 14, 2026` |  |
 
 ### Recommended Execution Order (MVP)
 

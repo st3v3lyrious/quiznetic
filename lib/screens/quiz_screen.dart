@@ -36,6 +36,7 @@ class QuizScreen extends StatefulWidget {
   );
   static const hintActionButtonKey = Key('quiz-hint-action-button');
   static const hintSummaryKey = Key('quiz-hint-summary');
+  static const nextActionButtonKey = Key('quiz-next-action-button');
   final Future<List<FlagQuestion>> Function()? flagsLoader;
   final List<FlagQuestion> Function(List<FlagQuestion>)? quizPreparer;
   final HintMonetizationGateway? hintMonetizationService;
@@ -53,6 +54,11 @@ class QuizScreen extends StatefulWidget {
 }
 
 class _QuizScreenState extends State<QuizScreen> {
+  static const double _contentHorizontalPadding = 16;
+  static const double _contentTopPadding = 24;
+  static const double _contentBottomPadding = 24;
+  static const double _bottomActionTopPadding = 8;
+  static const double _bottomActionBottomPadding = 16;
   List<FlagQuestion> _questions = [];
   bool _isLoading = true;
   int _currentIndex = 0;
@@ -375,6 +381,9 @@ class _QuizScreenState extends State<QuizScreen> {
         .where((option) => !_eliminatedOptions.contains(option))
         .toList(growable: false);
     final cs = Theme.of(context).colorScheme;
+    final nextActionLabel = _currentIndex < _questions.length - 1
+        ? 'Next'
+        : 'See Results';
 
     return Scaffold(
       appBar: AppBar(
@@ -423,9 +432,11 @@ class _QuizScreenState extends State<QuizScreen> {
             child: LayoutBuilder(
               builder: (context, constraints) {
                 return SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 24,
+                  padding: const EdgeInsets.fromLTRB(
+                    _contentHorizontalPadding,
+                    _contentTopPadding,
+                    _contentHorizontalPadding,
+                    _contentBottomPadding,
                   ),
                   child: ConstrainedBox(
                     constraints: BoxConstraints(
@@ -623,14 +634,6 @@ class _QuizScreenState extends State<QuizScreen> {
                             ),
                           ),
                           const SizedBox(height: 20),
-                          ElevatedButton(
-                            onPressed: _nextQuestion,
-                            child: Text(
-                              _currentIndex < _questions.length - 1
-                                  ? 'Next'
-                                  : 'See Results',
-                            ),
-                          ),
                         ],
                       ],
                     ),
@@ -641,6 +644,29 @@ class _QuizScreenState extends State<QuizScreen> {
           ),
         ),
       ),
+      bottomNavigationBar: _answered
+          ? SafeArea(
+              minimum: const EdgeInsets.fromLTRB(
+                _contentHorizontalPadding,
+                _bottomActionTopPadding,
+                _contentHorizontalPadding,
+                _bottomActionBottomPadding,
+              ),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 600),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      key: QuizScreen.nextActionButtonKey,
+                      onPressed: _nextQuestion,
+                      child: Text(nextActionLabel),
+                    ),
+                  ),
+                ),
+              ),
+            )
+          : null,
     );
   }
 }

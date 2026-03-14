@@ -29,11 +29,11 @@ Update brand colors in:
 - `pubspec.yaml` `flutter_native_splash` colors
 - `pubspec.yaml` `flutter_launcher_icons.web.theme_color`
 
-Current active tokens (stable until full EIRENYA rollout):
+Current active tokens:
 
-- Primary: `#4A596D`
-- Surface/background: `#F3F4F5`
-- Neutral surface container: `#DBDEE2`
+- Primary: `#4A90E2`
+- Surface/background: `#F9F9F6`
+- Neutral surface container: `#E6DDC6`
 
 EIRENYA palette swatches (from brand reference):
 
@@ -91,3 +91,37 @@ Mark M12 complete after all are true:
 - Final splash artwork/colors generated for Android and iOS (light and dark).
 - Visual QA passed on at least one real Android device and one iOS device/simulator.
 - Web tab/favicon/manifest colors visually match brand.
+
+## Manual Visual QA Checklist
+
+Run this once on the release-candidate build after asset regeneration.
+
+### Android
+
+- [ ] Installed launcher icon appears updated on the home screen and app switcher.
+- [ ] Cold start splash uses off-white light background (`#F9F9F6`) and centered logo.
+- [ ] Dark-mode cold start splash uses deep-night blue background (`#001B2A`) and white logo.
+- [ ] App bar, primary buttons, progress bar, and key action surfaces use the EIRENYA primary blue consistently.
+- [ ] Card and neutral container backgrounds look intentional and readable against the off-white app background.
+- [ ] No old grey-blue placeholder palette remains visible on the home, quiz, result, settings, and about screens.
+
+### iOS
+
+- [ ] Installed app icon appears updated on the home screen, search, and app switcher.
+- [ ] Launch screen shows the expected light and dark branding assets.
+- [ ] Primary CTA buttons, progress indicators, and selected action states use the new palette consistently.
+- [ ] Safe areas, status bar region, and bottom gesture area do not expose mismatched background colors.
+- [ ] No logo cropping, padding issues, or blurry raster output appears on splash or about/login/home surfaces.
+
+### Web
+
+- [ ] Browser tab title shows `Quiznetic`.
+- [ ] Favicon and PWA icons use the updated logo artwork.
+- [ ] Manifest/theme color surfaces reflect the new primary blue (`#4A90E2`).
+- [ ] Background surfaces match the off-white brand background (`#F9F9F6`).
+
+### Cross-Surface Signoff
+
+- [ ] Logo treatment is visually consistent across splash, home, login, about, and launcher/app-icon surfaces.
+- [ ] Support email displays as `quizneticapp@gmail.com` wherever exposed in-app/legal surfaces.
+- [ ] Screenshots/store artwork exported from the updated branded build are archived for submission use.
