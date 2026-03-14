@@ -54,6 +54,11 @@ class QuizScreen extends StatefulWidget {
 }
 
 class _QuizScreenState extends State<QuizScreen> {
+  static const double _contentHorizontalPadding = 16;
+  static const double _contentTopPadding = 24;
+  static const double _contentBottomPadding = 24;
+  static const double _bottomActionTopPadding = 8;
+  static const double _bottomActionBottomPadding = 16;
   List<FlagQuestion> _questions = [];
   bool _isLoading = true;
   int _currentIndex = 0;
@@ -427,11 +432,11 @@ class _QuizScreenState extends State<QuizScreen> {
             child: LayoutBuilder(
               builder: (context, constraints) {
                 return SingleChildScrollView(
-                  padding: EdgeInsets.fromLTRB(
-                    16,
-                    24,
-                    16,
-                    _answered ? 136 : 24,
+                  padding: const EdgeInsets.fromLTRB(
+                    _contentHorizontalPadding,
+                    _contentTopPadding,
+                    _contentHorizontalPadding,
+                    _contentBottomPadding,
                   ),
                   child: ConstrainedBox(
                     constraints: BoxConstraints(
@@ -641,7 +646,12 @@ class _QuizScreenState extends State<QuizScreen> {
       ),
       bottomNavigationBar: _answered
           ? SafeArea(
-              minimum: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              minimum: const EdgeInsets.fromLTRB(
+                _contentHorizontalPadding,
+                _bottomActionTopPadding,
+                _contentHorizontalPadding,
+                _bottomActionBottomPadding,
+              ),
               child: Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 600),
