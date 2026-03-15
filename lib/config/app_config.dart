@@ -238,6 +238,21 @@ class AppConfig {
     defaultValue: '',
   );
 
+  /// Debug geography override for Google UMP consent QA.
+  ///
+  /// Supported values: `eea`, `regulated_us_state`, `other`, or empty for the
+  /// SDK default.
+  static const adsConsentDebugGeography = String.fromEnvironment(
+    'ADS_CONSENT_DEBUG_GEOGRAPHY',
+    defaultValue: '',
+  );
+
+  /// Tags the consent request as directed to under-age users when enabled.
+  static const adsTagForUnderAgeOfConsent = bool.fromEnvironment(
+    'ADS_TAG_FOR_UNDER_AGE_OF_CONSENT',
+    defaultValue: false,
+  );
+
   /// Android test device ids parsed from a comma-separated env string.
   static List<String> get adsAndroidTestDeviceIds =>
       _splitCommaSeparatedValues(adsAndroidTestDeviceIdsCsv);
