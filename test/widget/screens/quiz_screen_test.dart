@@ -136,6 +136,9 @@ void main() {
     await tester.pumpAndSettle();
 
     final nextFinder = find.byKey(QuizScreen.nextActionButtonKey);
+    final scrollableState = tester.state<ScrollableState>(
+      find.byType(Scrollable),
+    );
     expect(nextFinder, findsOneWidget);
     expect(find.text('Next'), findsOneWidget);
 
@@ -153,6 +156,42 @@ void main() {
       findsOneWidget,
     );
     expect(find.byKey(QuizScreen.nextActionButtonKey), findsNothing);
+    expect(
+      scrollableState.position.pixels,
+      0,
+      reason: 'Advancing to the next question should reset the scroll position.',
+    );
+  });
+
+  testWidgets('advancing to the next question resets scroll to the top', (
+    tester,
+  ) async {
+    await pumpQuiz(
+      tester,
+      injectedQuestions: [question, question],
+      flagsPerSession: 2,
+      physicalSize: const Size(800, 1200),
+    );
+
+    final scrollableFinder = find.byType(Scrollable);
+    final scrollableState = tester.state<ScrollableState>(scrollableFinder);
+
+    await tester.drag(scrollableFinder, const Offset(0, -250));
+    await tester.pumpAndSettle();
+
+    expect(
+      scrollableState.position.pixels,
+      greaterThan(0),
+      reason: 'The test should start from a non-zero scroll position.',
+    );
+
+    await tester.tap(find.text('France'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(QuizScreen.nextActionButtonKey));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Flag Quiz (2/2)'), findsOneWidget);
+    expect(scrollableState.position.pixels, 0);
   });
 
   testWidgets(

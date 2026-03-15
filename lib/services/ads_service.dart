@@ -810,7 +810,7 @@ class AdsService {
     await _safeLogEvent(
       'ad_consent_state',
       parameters: {
-        'can_request_ads': snapshot.canRequestAds,
+        'can_request_ads': snapshot.canRequestAds ? 1 : 0,
         'consent_status': snapshot.consentStatus.name,
         'privacy_options': snapshot.privacyOptionsRequirementStatus.name,
       },
