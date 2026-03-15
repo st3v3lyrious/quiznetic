@@ -385,6 +385,13 @@ class _ResultScreenState extends State<ResultScreen> {
             'unit=${AdsService.maskAdUnitId(adUnitId)} '
             '${AdsService.summarizeResponseInfo(ad.responseInfo)}',
           );
+          void disposeLoadedAd(InterstitialAd ad, {required String reason}) {
+            if (!identical(loadedAd, ad)) return;
+            logLifecycle('dispose', details: 'reason=$reason');
+            loadedAd = null;
+            ad.dispose();
+          }
+
           void finalize(bool shown) {
             if (finalized) return;
             logLifecycle('finalize', details: 'result=$shown');
@@ -419,8 +426,7 @@ class _ResultScreenState extends State<ResultScreen> {
                     'ad_result_interstitial_watchdog_timeout',
                   ),
                 );
-                logLifecycle('dispose', details: 'reason=watchdog_timeout');
-                ad.dispose();
+                disposeLoadedAd(ad, reason: 'watchdog_timeout');
                 unawaited(
                   recoverOverlay('result_interstitial_watchdog_timeout'),
                 );
@@ -434,8 +440,7 @@ class _ResultScreenState extends State<ResultScreen> {
             onAdDismissedFullScreenContent: (ad) {
               dismissed = true;
               logLifecycle('dismissed');
-              logLifecycle('dispose', details: 'reason=dismissed');
-              ad.dispose();
+              disposeLoadedAd(ad, reason: 'dismissed');
               final actuallyShown = showed && hadImpression;
               if (!actuallyShown) {
                 debugTrace(
@@ -459,8 +464,7 @@ class _ResultScreenState extends State<ResultScreen> {
                     'domain=${error.domain} '
                     'message=${error.message}',
               );
-              logLifecycle('dispose', details: 'reason=show_failed');
-              ad.dispose();
+              disposeLoadedAd(ad, reason: 'show_failed');
               debugPrint(
                 AdsService.summarizeAdError(
                   format: 'interstitial',
@@ -535,6 +539,7 @@ class _ResultScreenState extends State<ResultScreen> {
     cancelWatchdogs();
     if (!shown) {
       loadedAd?.dispose();
+      loadedAd = null;
     }
     return shown;
   }

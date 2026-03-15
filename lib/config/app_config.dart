@@ -240,8 +240,8 @@ class AppConfig {
 
   /// Debug geography override for Google UMP consent QA.
   ///
-  /// Supported values: `eea`, `regulated_us_state`, `other`, or empty for the
-  /// SDK default.
+  /// Supported values: `eea`, `uk` (alias of `eea`), `regulated_us_state`,
+  /// `other`, or empty for the SDK default.
   static const adsConsentDebugGeography = String.fromEnvironment(
     'ADS_CONSENT_DEBUG_GEOGRAPHY',
     defaultValue: '',
