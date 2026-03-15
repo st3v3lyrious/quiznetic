@@ -223,8 +223,8 @@ class HintMonetizationService implements HintMonetizationGateway {
     Timer? postRewardWatchdog;
     const loadTimeout = Duration(seconds: 20);
     final fullscreenTimeout = kDebugMode
-        ? const Duration(seconds: 30)
-        : const Duration(seconds: 45);
+        ? const Duration(seconds: 60)
+        : const Duration(seconds: 90);
     void debugTrace(String message) {
       if (!kDebugMode) return;
       debugPrint(message);
