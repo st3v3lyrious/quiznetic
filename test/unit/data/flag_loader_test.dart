@@ -3,6 +3,20 @@ import 'package:quiznetic_flutter/data/flag_loader.dart';
 import 'package:quiznetic_flutter/models/flag_question.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  group('loadAllFlags', () {
+    test('loads flag assets from the compiled asset manifest', () async {
+      final flags = await loadAllFlags();
+
+      expect(flags, isNotEmpty);
+      expect(
+        flags.any((flag) => flag.imagePath.startsWith('assets/flags/')),
+        isTrue,
+      );
+    });
+  });
+
   group('prepareQuiz', () {
     final all = <FlagQuestion>[
       FlagQuestion(

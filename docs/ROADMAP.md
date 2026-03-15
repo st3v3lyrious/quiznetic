@@ -70,6 +70,9 @@ Use this as a short, editable delivery plan.
     - [x] Add iOS AdMob app id (`GADApplicationIdentifier`) in `ios/Runner/Info.plist`.
     - [x] Implement result-screen interstitial runtime flow (load/show/lifecycle + failure fallback) behind a dedicated feature flag (`ENABLE_RESULT_INTERSTITIAL_ADS`, default `false`).
     - [x] Decide and document result placement strategy (hybrid: interstitial-first with banner fallback on failure) and ensure unit-id wiring matches chosen format.
+    - [ ] Add Google UMP/GDPR consent coverage for EEA/UK traffic.
+      - [x] App-side baseline shipped: launch-time UMP consent flow, ad-request gating on consent readiness, settings privacy-options entry point, and consent diagnostics.
+      - [ ] AdMob console setup pending: publish `Privacy & messaging` European regulations message for the current app and provide a public privacy-policy URL.
     - [ ] Add iOS ATT/consent handling path and validate ad behavior when tracking is denied.
       - [ ] Owner assigned: `____________`
       - [ ] Target date: `____________`

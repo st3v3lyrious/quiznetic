@@ -5,6 +5,7 @@
 */
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:quiznetic_flutter/config/brand_config.dart';
 import 'package:quiznetic_flutter/screens/about_screen.dart';
 import 'package:quiznetic_flutter/screens/entry_choice_screen.dart';
@@ -47,8 +48,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _isRestoringPurchases = false;
   bool _isCollectingAdDiagnostics = false;
   bool _isOpeningAdInspector = false;
+  bool _isLoadingAdPrivacyState = false;
+  bool _isOpeningAdPrivacyOptions = false;
   RemoveAdsOffer? _removeAdsOffer;
   String? _monetizationStatusMessage;
+  PrivacyOptionsRequirementStatus _privacyOptionsRequirementStatus =
+      PrivacyOptionsRequirementStatus.unknown;
 
   late final IapService _iapService;
   late final EntitlementService _entitlementService;
@@ -64,6 +69,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _adsService = widget.adsService ?? AdsService.instance;
     _loadAccessibilityPreferences();
     _loadMonetizationState();
+    _loadAdPrivacyState();
   }
 
   Future<void> _loadAccessibilityPreferences() async {
@@ -128,6 +134,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (mounted) {
         setState(() {
           _isLoadingRemoveAdsOffer = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _loadAdPrivacyState() async {
+    if (!_adsService.supportsConsentManagement) return;
+
+    setState(() {
+      _isLoadingAdPrivacyState = true;
+    });
+
+    try {
+      final snapshot = await _adsService.getConsentSnapshot();
+      if (!mounted) return;
+      setState(() {
+        _privacyOptionsRequirementStatus =
+            snapshot.privacyOptionsRequirementStatus;
+      });
+    } catch (e, stackTrace) {
+      debugPrint('Settings ad privacy state load failed: $e');
+      debugPrintStack(stackTrace: stackTrace);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingAdPrivacyState = false;
         });
       }
     }
@@ -403,6 +435,46 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  Future<void> _openAdPrivacyOptions() async {
+    if (_isOpeningAdPrivacyOptions) return;
+
+    setState(() {
+      _isOpeningAdPrivacyOptions = true;
+    });
+
+    try {
+      final error = await _adsService.openPrivacyOptionsForm();
+      if (!mounted) return;
+      if (error != null) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error)));
+      }
+      await _loadAdPrivacyState();
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isOpeningAdPrivacyOptions = false;
+        });
+      }
+    }
+  }
+
+  String _adPrivacySubtitle() {
+    if (_isLoadingAdPrivacyState) {
+      return 'Checking whether ad privacy choices are required';
+    }
+
+    return switch (_privacyOptionsRequirementStatus) {
+      PrivacyOptionsRequirementStatus.required =>
+        'Manage your advertising consent choices',
+      PrivacyOptionsRequirementStatus.notRequired =>
+        'Privacy options are not required right now',
+      PrivacyOptionsRequirementStatus.unknown =>
+        'Refresh or review advertising consent options',
+    };
+  }
+
   Widget _buildDebugAdTools(TextTheme textTheme) {
     if (kReleaseMode || !_adsService.canOpenAdInspector) {
       return const SizedBox.shrink();
@@ -573,6 +645,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     title: const Text('Privacy Policy'),
                     onTap: _openPrivacy,
                   ),
+                  if (_adsService.supportsConsentManagement) ...[
+                    const Divider(height: 1),
+                    ListTile(
+                      key: const Key('settings-ad-privacy-options-button'),
+                      leading: _isOpeningAdPrivacyOptions
+                          ? const SizedBox(
+                              height: 24,
+                              width: 24,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.privacy_tip_outlined),
+                      title: const Text('Ad Privacy Choices'),
+                      subtitle: Text(_adPrivacySubtitle()),
+                      onTap: _isOpeningAdPrivacyOptions
+                          ? null
+                          : _openAdPrivacyOptions,
+                    ),
+                  ],
                 ],
               ),
             ),

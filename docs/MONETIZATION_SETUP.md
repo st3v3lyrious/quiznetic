@@ -20,7 +20,12 @@ This runbook documents how to activate monetization safely for MVP.
 - Core ad control service: `AdsService`.
   - Handles runtime gating and eligibility checks.
   - Resolves platform + placement ad unit IDs.
-  - Initializes Mobile Ads SDK once per app runtime.
+  - Initializes Mobile Ads SDK once per app runtime after ad-consent state is ready.
+- Ad consent/UMP service: `AdConsentService`.
+  - Requests Google UMP consent info on app startup.
+  - Shows the Google consent form when required.
+  - Gates ad requests on `canRequestAds()`.
+  - Exposes privacy-options state to `SettingsScreen`.
 - Banner rendering component: `MonetizedBannerAd`.
   - Used on `HomeScreen` (placement: `home`).
   - Used on `ResultScreen` (placement: `result`).
@@ -106,6 +111,36 @@ Add required SKAdNetwork IDs:
 - If you later enable ATT prompt flow, validate behavior for both
   `authorized` and `denied/restricted` states during monetization QA.
 
+## Ad Consent / Privacy Messaging (Required For Live EEA/UK Ads)
+
+The app-side UMP flow is now implemented, but live EEA/UK ads still require the
+AdMob console side to be configured for the current app.
+
+### AdMob console prerequisites
+
+1. Host a public privacy-policy URL for the app.
+2. In AdMob `Privacy & messaging`, publish a `European regulations` message for
+   the current AdMob app entry.
+3. Re-test on a registered test device after the message is published.
+
+Without that console-side message, the in-app UMP code can still run, but live
+EEA/UK monetization may remain blocked or no-fill.
+
+### App-side baseline now shipped
+
+- Launch-time consent info update + consent-form display when required
+- Ad requests gated on `canRequestAds()`
+- Settings entry point for privacy options (`Ad Privacy Choices`)
+- Consent status included in ad diagnostics report
+
+### Consent QA env helpers
+
+- `ADS_ANDROID_TEST_DEVICE_IDS`
+- `ADS_IOS_TEST_DEVICE_IDS`
+- `ADS_CONSENT_DEBUG_GEOGRAPHY`
+  - supported values: `eea`, `uk` (alias of `eea`), `regulated_us_state`, `us` (alias of `regulated_us_state`), `other`, `not_eea` (alias of `other`), `disabled`, or empty for SDK default
+- `ADS_TAG_FOR_UNDER_AGE_OF_CONSENT`
+
 ## Feature Flags
 
 Defined in `lib/config/app_config.dart`:
@@ -115,6 +150,8 @@ Defined in `lib/config/app_config.dart`:
 - `ALLOW_LIVE_AD_UNITS_IN_DEBUG` (default: `false`)
 - `ADS_ANDROID_TEST_DEVICE_IDS` (default: empty comma-separated list)
 - `ADS_IOS_TEST_DEVICE_IDS` (default: empty comma-separated list)
+- `ADS_CONSENT_DEBUG_GEOGRAPHY` (default: empty / SDK default)
+- `ADS_TAG_FOR_UNDER_AGE_OF_CONSENT` (default: `false`)
 - `ENABLE_IAP` (default: `false`)
 - `IAP_REMOVE_ADS_PRODUCT_ID` (default: `quiznetic.remove_ads_lifetime`)
 - `ADS_ANDROID_HOME_BANNER_UNIT_ID` (default: empty)
@@ -152,7 +189,8 @@ Enable monetization only when all are true:
 7. Hint flow QA passes when enabled (rewarded hint -> session cap -> paid fallback).
 8. Non-release QA builds use Google test ids (or explicitly set `ALLOW_LIVE_AD_UNITS_IN_DEBUG=true` for tightly controlled internal validation only).
 9. If Ad Inspector or test-mode behavior is inconsistent, set `ADS_ANDROID_TEST_DEVICE_IDS` / `ADS_IOS_TEST_DEVICE_IDS` so the app registers test devices programmatically before initializing the SDK.
-10. `ENABLE_RESULT_INTERSTITIAL_ADS` is enabled only after result flow QA passes (show + failure fallback + no-regression checks).
+10. AdMob `Privacy & messaging` is published for the current app, with a public privacy-policy URL configured for the message.
+11. `ENABLE_RESULT_INTERSTITIAL_ADS` is enabled only after result flow QA passes (show + failure fallback + no-regression checks).
 
 When using Google test units in non-release builds, provide them through env:
 

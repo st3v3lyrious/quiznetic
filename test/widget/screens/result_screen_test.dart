@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:quiznetic_flutter/screens/difficulty_screen.dart';
 import 'package:quiznetic_flutter/screens/home_screen.dart';
 import 'package:quiznetic_flutter/screens/leaderboard_screen.dart';
@@ -7,6 +8,7 @@ import 'package:quiznetic_flutter/screens/quiz_screen.dart';
 import 'package:quiznetic_flutter/screens/result_screen.dart';
 import 'package:quiznetic_flutter/screens/upgrade_account_screen.dart';
 import 'package:quiznetic_flutter/screens/user_profile_screen.dart';
+import 'package:quiznetic_flutter/services/ad_consent_service.dart';
 import 'package:quiznetic_flutter/services/ads_service.dart';
 import 'package:quiznetic_flutter/services/auth_service.dart';
 import 'package:quiznetic_flutter/services/entitlement_service.dart';
@@ -17,6 +19,21 @@ import 'package:firebase_auth/firebase_auth.dart';
 const _fakeResultInterstitialUnitId = 'admob-test-interstitial';
 
 bool _looksLikeAdMobUnitId(String adUnitId) => adUnitId.startsWith('admob-');
+
+AdConsentService _allowingConsentService() {
+  return AdConsentService(
+    enabled: true,
+    supportsAds: () => true,
+    requestConsentInfoUpdate: (_) async => null,
+    loadAndShowConsentFormIfRequired: () async => null,
+    getConsentStatus: () async => ConsentStatus.obtained,
+    canRequestAds: () async => true,
+    isConsentFormAvailable: () async => false,
+    getPrivacyOptionsRequirementStatus: () async =>
+        PrivacyOptionsRequirementStatus.notRequired,
+    showPrivacyOptionsForm: () async => null,
+  );
+}
 
 void main() {
   Future<void> pumpResult(
@@ -467,6 +484,7 @@ void main() {
           looksLikeAdMobUnitId: _looksLikeAdMobUnitId,
           supportsAds: () => true,
           initializeAdsSdk: () async => null,
+          consentService: _allowingConsentService(),
         ),
         entitlementService: EntitlementService(initialRemoveAds: false),
         presentResultInterstitialAd: (_) async => true,
@@ -510,6 +528,7 @@ void main() {
         looksLikeAdMobUnitId: _looksLikeAdMobUnitId,
         supportsAds: () => true,
         initializeAdsSdk: () async => null,
+        consentService: _allowingConsentService(),
       ),
       entitlementService: EntitlementService(initialRemoveAds: false),
       presentResultInterstitialAd: (_) async => false,
@@ -552,6 +571,7 @@ void main() {
           looksLikeAdMobUnitId: _looksLikeAdMobUnitId,
           supportsAds: () => true,
           initializeAdsSdk: () async => throw Exception('ads init failed'),
+          consentService: _allowingConsentService(),
         ),
         entitlementService: EntitlementService(initialRemoveAds: false),
         presentResultInterstitialAd: (_) async => true,

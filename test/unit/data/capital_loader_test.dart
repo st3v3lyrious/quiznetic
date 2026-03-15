@@ -3,6 +3,22 @@ import 'package:quiznetic_flutter/data/capital_loader.dart';
 import 'package:quiznetic_flutter/models/flag_question.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  group('loadAllCapitals', () {
+    test('loads capital questions from the compiled asset manifest', () async {
+      final capitals = await loadAllCapitals();
+
+      expect(capitals, isNotEmpty);
+      expect(
+        capitals.every(
+          (question) => question.imagePath.startsWith('assets/flags/'),
+        ),
+        isTrue,
+      );
+    });
+  });
+
   group('normalizeCountryKey', () {
     test('normalizes mixed separators and casing for lookups', () {
       expect(normalizeCountryKey('United-States'), equals('united states'));

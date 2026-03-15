@@ -8,6 +8,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:quiznetic_flutter/config/app_config.dart';
+import 'package:quiznetic_flutter/services/ad_consent_service.dart';
 import 'package:quiznetic_flutter/services/analytics_service.dart';
 
 typedef AdsSupportResolver = bool Function();
@@ -52,6 +53,7 @@ class AdsService {
     AdsSupportResolver? supportsAds,
     AdsSdkInitializer? initializeAdsSdk,
     AdsAnalyticsLogger? logEvent,
+    AdConsentService? consentService,
   }) : _enabled = enabled ?? AppConfig.enableAds,
        _resultInterstitialEnabled =
            resultInterstitialEnabled ?? AppConfig.enableResultInterstitialAds,
@@ -122,7 +124,17 @@ class AdsService {
        _supportsAds = supportsAds ?? _defaultSupportsAds,
        _initializeAdsSdk =
            initializeAdsSdk ?? (() => MobileAds.instance.initialize()),
-       _logEvent = logEvent ?? AnalyticsService.instance.logEvent;
+       _logEvent = logEvent ?? AnalyticsService.instance.logEvent,
+       _consentService =
+           consentService ??
+           AdConsentService(
+             enabled: enabled ?? AppConfig.enableAds,
+             androidTestDeviceIds:
+                 androidTestDeviceIds ?? AppConfig.adsAndroidTestDeviceIds,
+             iosTestDeviceIds:
+                 iosTestDeviceIds ?? AppConfig.adsIosTestDeviceIds,
+             supportsAds: supportsAds ?? _defaultSupportsAds,
+           );
 
   static final AdsService instance = AdsService();
 
@@ -152,8 +164,11 @@ class AdsService {
   final AdsSupportResolver _supportsAds;
   final AdsSdkInitializer _initializeAdsSdk;
   final AdsAnalyticsLogger _logEvent;
+  final AdConsentService _consentService;
 
   bool _initialized = false;
+  bool _fullscreenAdsBlockedForSession = false;
+  String? _fullscreenAdsBlockReason;
   Future<void>? _initializationFuture;
   Future<InitializationStatus?>? _diagnosticsInitializationFuture;
   InitializationStatus? _initializationStatus;
@@ -167,6 +182,7 @@ class AdsService {
 
   bool get isRewardedHintsEnabled {
     return _rewardedHintsEnabled &&
+        !_fullscreenAdsBlockedForSession &&
         _supportsAds() &&
         rewardedHintAdUnitId != null;
   }
@@ -174,9 +190,14 @@ class AdsService {
   bool get isResultInterstitialEnabled {
     return _enabled &&
         _resultInterstitialEnabled &&
+        !_fullscreenAdsBlockedForSession &&
         _supportsAds() &&
         resultInterstitialAdUnitId != null;
   }
+
+  bool get isFullscreenAdsBlockedForSession => _fullscreenAdsBlockedForSession;
+
+  String? get fullscreenAdsBlockReason => _fullscreenAdsBlockReason;
 
   static bool _defaultSupportsAds() {
     if (kIsWeb) return false;
@@ -237,6 +258,8 @@ class AdsService {
   }
 
   bool get canOpenAdInspector => !kReleaseMode && _supportsAds();
+
+  bool get supportsConsentManagement => _enabled && _supportsAds();
 
   static String maskAdUnitId(String? adUnitId) {
     if (adUnitId == null || adUnitId.isEmpty) return 'unset';
@@ -498,8 +521,48 @@ class AdsService {
     return _initialized;
   }
 
+  void reportFullscreenAdHang({
+    required String format,
+    required String reason,
+  }) {
+    if (_fullscreenAdsBlockedForSession) {
+      return;
+    }
+    _fullscreenAdsBlockedForSession = true;
+    _fullscreenAdsBlockReason = '$format:$reason';
+    debugPrint(
+      'AdsService blocked fullscreen ads for this session '
+      'format=$format reason=$reason. '
+      'Banners remain enabled.',
+    );
+    unawaited(
+      _safeLogEvent(
+        'ad_fullscreen_blocked_session',
+        parameters: {'format': format, 'reason': reason},
+      ),
+    );
+  }
+
   Future<void> _runInitialize() async {
     try {
+      final consentSnapshot = await _consentService
+          .ensureConsentFlowCompleted();
+      await _logConsentTelemetry(consentSnapshot);
+      if (!consentSnapshot.canRequestAds) {
+        _initialized = false;
+        debugPrint(
+          'AdsService skipped SDK initialization because consent is not ready.',
+        );
+        await _safeLogEvent(
+          'ad_consent_blocked_request',
+          parameters: {
+            'consent_status': consentSnapshot.consentStatus.name,
+            'privacy_options':
+                consentSnapshot.privacyOptionsRequirementStatus.name,
+          },
+        );
+        return;
+      }
       await _configureTestDevices();
       _initializationStatus = await _initializeAdsSdk();
       _initialized = true;
@@ -523,6 +586,7 @@ class AdsService {
 
   Future<String> buildDiagnosticsReport() async {
     final sdkVersion = await _resolveSdkVersion();
+    final consentSnapshot = await _consentService.currentSnapshot();
     final initializationStatus =
         await _ensureInitializationStatusForDiagnostics();
     final configuredTestDeviceIds = _currentPlatformTestDeviceIds;
@@ -533,6 +597,33 @@ class AdsService {
       ..writeln('ads_enabled=$_enabled')
       ..writeln('supports_ads=${_supportsAds()}')
       ..writeln('allow_live_in_debug=$_allowLiveAdUnitsInDebug')
+      ..writeln(
+        'fullscreen_ads_blocked_for_session=$_fullscreenAdsBlockedForSession',
+      )
+      ..writeln(
+        'fullscreen_ads_block_reason=${_fullscreenAdsBlockReason ?? 'none'}',
+      )
+      ..writeln('consent_flow_enabled=$supportsConsentManagement')
+      ..writeln('consent_status=${consentSnapshot.consentStatus.name}')
+      ..writeln('consent_can_request_ads=${consentSnapshot.canRequestAds}')
+      ..writeln(
+        'consent_form_available=${consentSnapshot.isConsentFormAvailable}',
+      )
+      ..writeln(
+        'consent_did_attempt_update=${consentSnapshot.didAttemptInfoUpdate}',
+      )
+      ..writeln(
+        'consent_privacy_options=${consentSnapshot.privacyOptionsRequirementStatus.name}',
+      )
+      ..writeln(
+        'consent_debug_geography=${consentSnapshot.debugGeographyLabel}',
+      )
+      ..writeln(
+        'consent_under_age_tag=${consentSnapshot.tagForUnderAgeOfConsent}',
+      )
+      ..writeln(
+        'consent_last_error=${consentSnapshot.lastErrorMessage ?? 'none'}',
+      )
       ..writeln('result_interstitial_enabled=$_resultInterstitialEnabled')
       ..writeln('rewarded_hints_enabled=$_rewardedHintsEnabled')
       ..writeln('sdk_version=${sdkVersion.isEmpty ? 'unknown' : sdkVersion}')
@@ -596,6 +687,10 @@ class AdsService {
       return 'Ad Inspector is unavailable on this build.';
     }
 
+    final consentSnapshot = await _consentService.currentSnapshot();
+    if (supportsConsentManagement && !consentSnapshot.canRequestAds) {
+      return 'Ad Inspector is unavailable until ad consent is ready.';
+    }
     await _ensureInitializationStatusForDiagnostics();
     try {
       final error = await _openAdInspector();
@@ -623,6 +718,10 @@ class AdsService {
   Future<InitializationStatus?>
   _ensureInitializationStatusForDiagnostics() async {
     if (!_supportsAds()) return null;
+    final consentSnapshot = await _consentService.currentSnapshot();
+    if (supportsConsentManagement && !consentSnapshot.canRequestAds) {
+      return null;
+    }
     if (_initializationStatus != null) return _initializationStatus;
     if (_initialized) return _initializationStatus;
 
@@ -664,6 +763,23 @@ class AdsService {
       debugPrintStack(stackTrace: stackTrace);
       return '';
     }
+  }
+
+  Future<AdConsentSnapshot> getConsentSnapshot() {
+    return _consentService.currentSnapshot();
+  }
+
+  Future<String?> openPrivacyOptionsForm() async {
+    final result = await _consentService.showPrivacyOptionsForm();
+    if (result == null) {
+      await _safeLogEvent('ad_privacy_options_closed');
+      return null;
+    }
+    await _safeLogEvent(
+      'ad_privacy_options_failed',
+      parameters: {'error_message': result},
+    );
+    return result;
   }
 
   List<String> get _currentPlatformTestDeviceIds {
@@ -714,6 +830,27 @@ class AdsService {
         )
         .join(', ');
     return 'AdsService initialization adapters: $summaries';
+  }
+
+  Future<void> _logConsentTelemetry(AdConsentSnapshot snapshot) async {
+    if (snapshot.lastErrorMessage != null) {
+      await _safeLogEvent(
+        'ad_consent_flow_error',
+        parameters: {
+          'consent_status': snapshot.consentStatus.name,
+          'privacy_options': snapshot.privacyOptionsRequirementStatus.name,
+        },
+      );
+    }
+
+    await _safeLogEvent(
+      'ad_consent_state',
+      parameters: {
+        'can_request_ads': snapshot.canRequestAds ? 1 : 0,
+        'consent_status': snapshot.consentStatus.name,
+        'privacy_options': snapshot.privacyOptionsRequirementStatus.name,
+      },
+    );
   }
 
   String? _rawBannerUnitIdForPlacement(String placement) {

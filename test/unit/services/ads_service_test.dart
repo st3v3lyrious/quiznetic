@@ -1,6 +1,8 @@
 import 'dart:async';
 
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:quiznetic_flutter/services/ad_consent_service.dart';
 import 'package:quiznetic_flutter/services/ads_service.dart';
 
 const _fakeLiveBannerUnitId = 'admob-live-banner';
@@ -11,6 +13,23 @@ const _fakeLiveInterstitialUnitId = 'admob-live-interstitial';
 const _fakeTestInterstitialUnitId = 'admob-test-interstitial';
 
 bool _looksLikeAdMobUnitId(String adUnitId) => adUnitId.startsWith('admob-');
+
+AdConsentService _allowingConsentService({bool canRequestAds = true}) {
+  return AdConsentService(
+    enabled: true,
+    supportsAds: () => true,
+    requestConsentInfoUpdate: (_) async => null,
+    loadAndShowConsentFormIfRequired: () async => null,
+    getConsentStatus: () async =>
+        canRequestAds ? ConsentStatus.obtained : ConsentStatus.required,
+    canRequestAds: () async => canRequestAds,
+    isConsentFormAvailable: () async => !canRequestAds,
+    getPrivacyOptionsRequirementStatus: () async => canRequestAds
+        ? PrivacyOptionsRequirementStatus.notRequired
+        : PrivacyOptionsRequirementStatus.required,
+    showPrivacyOptionsForm: () async => null,
+  );
+}
 
 void main() {
   group('AdsService', () {
@@ -313,6 +332,7 @@ void main() {
         enabled: true,
         androidBannerUnitId: 'test-unit',
         iosBannerUnitId: '',
+        consentService: _allowingConsentService(),
         androidTestDeviceIds: const ['android-test-device-1234'],
         supportsAds: () => true,
         updateRequestConfiguration: (configuration) async {
@@ -341,6 +361,7 @@ void main() {
           enabled: true,
           androidBannerUnitId: 'test-unit',
           iosBannerUnitId: '',
+          consentService: _allowingConsentService(),
           supportsAds: () => true,
           initializeAdsSdk: () async {
             initializeCalls++;
@@ -363,6 +384,7 @@ void main() {
           enabled: true,
           androidBannerUnitId: 'test-unit',
           iosBannerUnitId: '',
+          consentService: _allowingConsentService(),
           supportsAds: () => true,
           initializeAdsSdk: () async {
             initializeCalls++;
@@ -378,6 +400,69 @@ void main() {
     );
 
     test(
+      'ensureInitializedForAdRequests reports failure when consent blocks ads',
+      () async {
+        var initializeCalls = 0;
+        final service = AdsService(
+          enabled: true,
+          androidBannerUnitId: 'test-unit',
+          iosBannerUnitId: '',
+          supportsAds: () => true,
+          consentService: _allowingConsentService(canRequestAds: false),
+          initializeAdsSdk: () async {
+            initializeCalls++;
+            return null;
+          },
+        );
+
+        final ready = await service.ensureInitializedForAdRequests();
+
+        expect(ready, isFalse);
+        expect(initializeCalls, 0);
+      },
+    );
+
+    test(
+      'fullscreen ad hang blocks rewarded and interstitials for the session but keeps banners',
+      () {
+        final service = AdsService(
+          enabled: true,
+          resultInterstitialEnabled: true,
+          rewardedHintsEnabled: true,
+          androidHomeBannerUnitId: _fakeTestBannerUnitId,
+          iosHomeBannerUnitId: '',
+          androidResultInterstitialUnitId: _fakeTestInterstitialUnitId,
+          iosResultInterstitialUnitId: '',
+          androidRewardedHintUnitId: _fakeTestRewardedUnitId,
+          iosRewardedHintUnitId: '',
+          debugBannerTestUnitIds: const {_fakeTestBannerUnitId},
+          debugInterstitialTestUnitIds: const {_fakeTestInterstitialUnitId},
+          debugRewardedTestUnitIds: const {_fakeTestRewardedUnitId},
+          looksLikeAdMobUnitId: _looksLikeAdMobUnitId,
+          supportsAds: () => true,
+          initializeAdsSdk: () async => null,
+          consentService: _allowingConsentService(),
+        );
+
+        expect(service.isEnabled, isTrue);
+        expect(service.isResultInterstitialEnabled, isTrue);
+        expect(service.isRewardedHintsEnabled, isTrue);
+        expect(service.isFullscreenAdsBlockedForSession, isFalse);
+
+        service.reportFullscreenAdHang(
+          format: 'rewarded',
+          reason: 'watchdog_timeout',
+        );
+
+        expect(service.isEnabled, isTrue);
+        expect(service.isResultInterstitialEnabled, isFalse);
+        expect(service.isRewardedHintsEnabled, isFalse);
+        expect(service.isFullscreenAdsBlockedForSession, isTrue);
+        expect(service.fullscreenAdsBlockReason, 'rewarded:watchdog_timeout');
+      },
+    );
+
+    test(
       'initialize retries after a transient SDK initialization failure',
       () async {
         var initializeCalls = 0;
@@ -385,6 +470,7 @@ void main() {
           enabled: true,
           androidBannerUnitId: 'test-unit',
           iosBannerUnitId: '',
+          consentService: _allowingConsentService(),
           supportsAds: () => true,
           initializeAdsSdk: () async {
             initializeCalls++;
@@ -411,6 +497,7 @@ void main() {
           rewardedHintsEnabled: true,
           androidBannerUnitId: '',
           iosBannerUnitId: '',
+          consentService: _allowingConsentService(),
           androidRewardedHintUnitId: 'android-rewarded',
           iosRewardedHintUnitId: 'ios-rewarded',
           supportsAds: () => true,
@@ -435,6 +522,7 @@ void main() {
         resultInterstitialEnabled: true,
         androidBannerUnitId: '',
         iosBannerUnitId: '',
+        consentService: _allowingConsentService(),
         androidHomeBannerUnitId: '',
         iosHomeBannerUnitId: '',
         androidResultBannerUnitId: '',
@@ -461,6 +549,7 @@ void main() {
         enabled: true,
         androidHomeBannerUnitId: _fakeTestBannerUnitId,
         iosHomeBannerUnitId: '',
+        consentService: _allowingConsentService(),
         debugBannerTestUnitIds: const {_fakeTestBannerUnitId},
         androidTestDeviceIds: const ['android-test-device-1234'],
         looksLikeAdMobUnitId: _looksLikeAdMobUnitId,
@@ -474,6 +563,8 @@ void main() {
 
       expect(report, contains('test_device_count=1'));
       expect(report, contains('test_devices=***1234'));
+      expect(report, contains('consent_status=obtained'));
+      expect(report, contains('consent_can_request_ads=true'));
     });
 
     test(
@@ -484,6 +575,7 @@ void main() {
           enabled: true,
           androidHomeBannerUnitId: _fakeTestBannerUnitId,
           iosHomeBannerUnitId: '',
+          consentService: _allowingConsentService(),
           debugBannerTestUnitIds: const {_fakeTestBannerUnitId},
           looksLikeAdMobUnitId: _looksLikeAdMobUnitId,
           supportsAds: () => true,
@@ -510,6 +602,7 @@ void main() {
           enabled: true,
           androidHomeBannerUnitId: _fakeTestBannerUnitId,
           iosHomeBannerUnitId: '',
+          consentService: _allowingConsentService(),
           debugBannerTestUnitIds: const {_fakeTestBannerUnitId},
           looksLikeAdMobUnitId: _looksLikeAdMobUnitId,
           supportsAds: () => true,
@@ -538,6 +631,7 @@ void main() {
           enabled: true,
           androidHomeBannerUnitId: _fakeTestBannerUnitId,
           iosHomeBannerUnitId: '',
+          consentService: _allowingConsentService(),
           debugBannerTestUnitIds: const {_fakeTestBannerUnitId},
           looksLikeAdMobUnitId: _looksLikeAdMobUnitId,
           supportsAds: () => true,

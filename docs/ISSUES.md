@@ -26,12 +26,18 @@ Use this file as the bug/issue tracker, separate from milestone planning in
 | ISS-011 | P0 | MVP | Done | Leaderboard appears stale after quiz completion: verify forced pending-score sync + investigate persistent sync failures from diagnostics. | `You` | `March 3, 2026` |  |
 | ISS-012 | P0 | MVP | Done | Security hardening before MVP deploy: rotate exposed Firebase/AdMob/OAuth credentials, then purge leaked credential artifacts from git history and validate no active secrets remain reachable from prior commits/tags. | `You` | `March 6, 2026` |  |
 | ISS-013 | P1 | MVP | Done | Quiz answer flow on common phone heights can hide the post-answer `Next` CTA below the fold; keep the action visible without requiring manual scroll. | `You` | `March 14, 2026` |  |
+| ISS-014 | P1 | MVP | In Progress | Monetization gap: app-side Google UMP/GDPR consent flow is now shipped, but AdMob `Privacy & messaging` still needs a published European regulations message + public privacy-policy URL for live EEA/UK validation. | `You` | `March 16, 2026` |  |
 
 ### Recommended Execution Order (MVP)
 
-1. `ISS-007` by **March 2, 2026** (blocked pending monetization direction and release-mode/live-serving validation).
-2. `ISS-008` by **March 3, 2026** (blocked pending monetization direction and release-mode/live-serving validation).
-3. `ISS-009` by **March 3, 2026** (blocked pending monetization direction and release-mode/live-serving validation).
+The dates below keep the original target dates for historical tracking. Steps
+2-4 are currently past due and remain blocked pending monetization direction
+and validation.
+
+1. `ISS-014` by **March 16, 2026** (app-side consent gap is closed; remaining work is AdMob console privacy-message setup and live EEA/UK validation).
+2. `ISS-007` original target **March 2, 2026** (past due; blocked pending monetization direction and release-mode/live-serving validation).
+3. `ISS-008` original target **March 3, 2026** (past due; blocked pending monetization direction and release-mode/live-serving validation).
+4. `ISS-009` original target **March 3, 2026** (past due; blocked pending monetization direction and release-mode/live-serving validation).
 
 ## MVP+1 Backlog
 
