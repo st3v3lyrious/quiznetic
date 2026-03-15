@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:quiznetic_flutter/services/ad_consent_service.dart';
 import 'package:quiznetic_flutter/services/ads_service.dart';
 import 'package:quiznetic_flutter/services/entitlement_service.dart';
 import 'package:quiznetic_flutter/services/hint_monetization_service.dart';
@@ -22,6 +24,7 @@ void main() {
             iosRewardedHintUnitId: 'ios.rewarded.unit',
             supportsAds: () => true,
             initializeAdsSdk: () async => null,
+            consentService: _allowingConsentService(),
           ),
           iapService: _buildIapService(),
           presentRewardedHintAd: (_) async => true,
@@ -51,6 +54,7 @@ void main() {
             iosRewardedHintUnitId: 'ios.rewarded.unit',
             supportsAds: () => true,
             initializeAdsSdk: () async => null,
+            consentService: _allowingConsentService(),
           ),
           iapService: _buildIapService(),
           presentRewardedHintAd: (_) async => true,
@@ -79,6 +83,7 @@ void main() {
           iosRewardedHintUnitId: 'ios.rewarded.unit',
           supportsAds: () => true,
           initializeAdsSdk: () async => null,
+          consentService: _allowingConsentService(),
         ),
         iapService: _buildIapService(storeClient: storeClient),
         presentRewardedHintAd: (_) async => true,
@@ -112,6 +117,7 @@ void main() {
             iosRewardedHintUnitId: '',
             supportsAds: () => true,
             initializeAdsSdk: () async => null,
+            consentService: _allowingConsentService(),
           ),
           iapService: _buildIapService(storeClient: storeClient),
           presentRewardedHintAd: (_) async => true,
@@ -143,6 +149,7 @@ void main() {
             iosRewardedHintUnitId: '',
             supportsAds: () => true,
             initializeAdsSdk: () async => throw Exception('ads init failed'),
+            consentService: _allowingConsentService(),
           ),
           iapService: _buildIapService(storeClient: storeClient),
           presentRewardedHintAd: (_) async => true,
@@ -164,6 +171,21 @@ Future<void> _noopLogEvent(
   String name, {
   Map<String, Object?>? parameters,
 }) async {}
+
+AdConsentService _allowingConsentService() {
+  return AdConsentService(
+    enabled: true,
+    supportsAds: () => true,
+    requestConsentInfoUpdate: (_) async => null,
+    loadAndShowConsentFormIfRequired: () async => null,
+    getConsentStatus: () async => ConsentStatus.obtained,
+    canRequestAds: () async => true,
+    isConsentFormAvailable: () async => false,
+    getPrivacyOptionsRequirementStatus: () async =>
+        PrivacyOptionsRequirementStatus.notRequired,
+    showPrivacyOptionsForm: () async => null,
+  );
+}
 
 IapService _buildIapService({_HintFakeStoreClient? storeClient}) {
   final client = storeClient ?? _HintFakeStoreClient();
