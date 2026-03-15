@@ -138,7 +138,7 @@ EEA/UK monetization may remain blocked or no-fill.
 - `ADS_ANDROID_TEST_DEVICE_IDS`
 - `ADS_IOS_TEST_DEVICE_IDS`
 - `ADS_CONSENT_DEBUG_GEOGRAPHY`
-  - supported values: `eea`, `uk` (alias of `eea`), `regulated_us_state`, `other`
+  - supported values: `eea`, `uk` (alias of `eea`), `regulated_us_state`, `us` (alias of `regulated_us_state`), `other`, `not_eea` (alias of `other`), `disabled`, or empty for SDK default
 - `ADS_TAG_FOR_UNDER_AGE_OF_CONSENT`
 
 ## Feature Flags

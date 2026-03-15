@@ -401,7 +401,8 @@ class AdConsentService {
       default:
         debugPrint(
           'AdConsentService ignoring unknown ADS_CONSENT_DEBUG_GEOGRAPHY='
-          '"$raw". Supported values: eea, regulated_us_state, other.',
+          '"$raw". Supported values: eea, uk, regulated_us_state, us, '
+          'other, not_eea, disabled, or empty.',
         );
         return null;
     }
