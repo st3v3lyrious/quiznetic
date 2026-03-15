@@ -167,6 +167,8 @@ class AdsService {
   final AdConsentService _consentService;
 
   bool _initialized = false;
+  bool _fullscreenAdsBlockedForSession = false;
+  String? _fullscreenAdsBlockReason;
   Future<void>? _initializationFuture;
   Future<InitializationStatus?>? _diagnosticsInitializationFuture;
   InitializationStatus? _initializationStatus;
@@ -180,6 +182,7 @@ class AdsService {
 
   bool get isRewardedHintsEnabled {
     return _rewardedHintsEnabled &&
+        !_fullscreenAdsBlockedForSession &&
         _supportsAds() &&
         rewardedHintAdUnitId != null;
   }
@@ -187,9 +190,14 @@ class AdsService {
   bool get isResultInterstitialEnabled {
     return _enabled &&
         _resultInterstitialEnabled &&
+        !_fullscreenAdsBlockedForSession &&
         _supportsAds() &&
         resultInterstitialAdUnitId != null;
   }
+
+  bool get isFullscreenAdsBlockedForSession => _fullscreenAdsBlockedForSession;
+
+  String? get fullscreenAdsBlockReason => _fullscreenAdsBlockReason;
 
   static bool _defaultSupportsAds() {
     if (kIsWeb) return false;
@@ -513,6 +521,28 @@ class AdsService {
     return _initialized;
   }
 
+  void reportFullscreenAdHang({
+    required String format,
+    required String reason,
+  }) {
+    if (_fullscreenAdsBlockedForSession) {
+      return;
+    }
+    _fullscreenAdsBlockedForSession = true;
+    _fullscreenAdsBlockReason = '$format:$reason';
+    debugPrint(
+      'AdsService blocked fullscreen ads for this session '
+      'format=$format reason=$reason. '
+      'Banners remain enabled.',
+    );
+    unawaited(
+      _safeLogEvent(
+        'ad_fullscreen_blocked_session',
+        parameters: {'format': format, 'reason': reason},
+      ),
+    );
+  }
+
   Future<void> _runInitialize() async {
     try {
       final consentSnapshot = await _consentService
@@ -567,6 +597,12 @@ class AdsService {
       ..writeln('ads_enabled=$_enabled')
       ..writeln('supports_ads=${_supportsAds()}')
       ..writeln('allow_live_in_debug=$_allowLiveAdUnitsInDebug')
+      ..writeln(
+        'fullscreen_ads_blocked_for_session=$_fullscreenAdsBlockedForSession',
+      )
+      ..writeln(
+        'fullscreen_ads_block_reason=${_fullscreenAdsBlockReason ?? 'none'}',
+      )
       ..writeln('consent_flow_enabled=$supportsConsentManagement')
       ..writeln('consent_status=${consentSnapshot.consentStatus.name}')
       ..writeln('consent_can_request_ads=${consentSnapshot.canRequestAds}')

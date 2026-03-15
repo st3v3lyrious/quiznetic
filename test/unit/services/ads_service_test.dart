@@ -423,6 +423,46 @@ void main() {
     );
 
     test(
+      'fullscreen ad hang blocks rewarded and interstitials for the session but keeps banners',
+      () {
+        final service = AdsService(
+          enabled: true,
+          resultInterstitialEnabled: true,
+          rewardedHintsEnabled: true,
+          androidHomeBannerUnitId: _fakeTestBannerUnitId,
+          iosHomeBannerUnitId: '',
+          androidResultInterstitialUnitId: _fakeTestInterstitialUnitId,
+          iosResultInterstitialUnitId: '',
+          androidRewardedHintUnitId: _fakeTestRewardedUnitId,
+          iosRewardedHintUnitId: '',
+          debugBannerTestUnitIds: const {_fakeTestBannerUnitId},
+          debugInterstitialTestUnitIds: const {_fakeTestInterstitialUnitId},
+          debugRewardedTestUnitIds: const {_fakeTestRewardedUnitId},
+          looksLikeAdMobUnitId: _looksLikeAdMobUnitId,
+          supportsAds: () => true,
+          initializeAdsSdk: () async => null,
+          consentService: _allowingConsentService(),
+        );
+
+        expect(service.isEnabled, isTrue);
+        expect(service.isResultInterstitialEnabled, isTrue);
+        expect(service.isRewardedHintsEnabled, isTrue);
+        expect(service.isFullscreenAdsBlockedForSession, isFalse);
+
+        service.reportFullscreenAdHang(
+          format: 'rewarded',
+          reason: 'watchdog_timeout',
+        );
+
+        expect(service.isEnabled, isTrue);
+        expect(service.isResultInterstitialEnabled, isFalse);
+        expect(service.isRewardedHintsEnabled, isFalse);
+        expect(service.isFullscreenAdsBlockedForSession, isTrue);
+        expect(service.fullscreenAdsBlockReason, 'rewarded:watchdog_timeout');
+      },
+    );
+
+    test(
       'initialize retries after a transient SDK initialization failure',
       () async {
         var initializeCalls = 0;

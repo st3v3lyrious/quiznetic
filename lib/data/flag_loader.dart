@@ -3,9 +3,10 @@
  Title: Flag Loader
  Purpose: Loads flag assets and builds randomized quiz question sets.
 */
-import 'dart:convert';
 import 'dart:math';
-import 'package:flutter/services.dart' show rootBundle;
+
+import 'package:flutter/services.dart' show AssetManifest, rootBundle;
+
 import 'flag_description_loader.dart';
 import '../models/flag_question.dart';
 
@@ -14,12 +15,12 @@ import '../models/flag_question.dart';
 /// 2) Build a “bare” FlagQuestion (no options yet)
 Future<List<FlagQuestion>> loadAllFlags() async {
   // 1) Load the generated manifest
-  final manifestJson = await rootBundle.loadString('AssetManifest.json');
-  final Map<String, dynamic> manifestMap = json.decode(manifestJson);
+  final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
   final descriptions = await loadFlagDescriptions();
 
   // 2) Filter for your flags folder
-  final flagPaths = manifestMap.keys
+  final flagPaths = manifest
+      .listAssets()
       .where((path) => path.startsWith('assets/flags/'))
       .toList();
 

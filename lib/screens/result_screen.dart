@@ -5,10 +5,12 @@
 */
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:quiznetic_flutter/screens/upgrade_account_screen.dart';
+import 'package:quiznetic_flutter/services/ad_overlay_recovery_service.dart';
 import 'package:quiznetic_flutter/services/ads_service.dart';
 import 'package:quiznetic_flutter/services/analytics_service.dart';
 import 'package:quiznetic_flutter/services/auth_service.dart';
@@ -95,7 +97,7 @@ class _ResultScreenState extends State<ResultScreen> {
         widget.entitlementService ?? EntitlementService.instance;
     _presentResultInterstitialAd =
         widget.presentResultInterstitialAd ??
-        _defaultPresentResultInterstitialAd;
+        _presentResultInterstitialAdDefault;
   }
 
   /// Loads args once, saves score, and resolves the displayed high score.
@@ -322,60 +324,121 @@ class _ResultScreenState extends State<ResultScreen> {
     });
   }
 
-  static Future<bool> _defaultPresentResultInterstitialAd(
-    String adUnitId,
-  ) async {
+  Future<bool> _presentResultInterstitialAdDefault(String adUnitId) async {
     final completer = Completer<bool>();
     InterstitialAd? loadedAd;
-    Timer? watchdog;
+    Timer? loadWatchdog;
+    Timer? showWatchdog;
+    const loadTimeout = Duration(seconds: 20);
+    final fullscreenTimeout = kDebugMode
+        ? const Duration(seconds: 30)
+        : const Duration(seconds: 45);
+    void debugTrace(String message) {
+      if (!kDebugMode) return;
+      debugPrint(message);
+    }
+
+    void cancelWatchdogs() {
+      loadWatchdog?.cancel();
+      showWatchdog?.cancel();
+    }
+
+    Future<void> recoverOverlay(String reason) async {
+      await AdOverlayRecoveryService.finishStuckAdActivity(reason: reason);
+    }
+
+    var showed = false;
+    var hadImpression = false;
+    var dismissed = false;
+    var finalized = false;
+
+    void logLifecycle(String event, {String? details}) {
+      final buffer = StringBuffer(
+        'Result interstitial lifecycle '
+        'event=$event '
+        'unit=${AdsService.maskAdUnitId(adUnitId)} '
+        'showed=$showed '
+        'impression=$hadImpression '
+        'dismissed=$dismissed '
+        'finalized=$finalized',
+      );
+      if (details != null && details.isNotEmpty) {
+        buffer.write(' $details');
+      }
+      debugTrace(buffer.toString());
+    }
+
     InterstitialAd.load(
       adUnitId: adUnitId,
       request: const AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (ad) {
+          loadWatchdog?.cancel();
+          if (completer.isCompleted) {
+            logLifecycle('loaded_after_timeout');
+            ad.dispose();
+            return;
+          }
           loadedAd = ad;
-          debugPrint(
+          debugTrace(
             'Result interstitial loaded '
             'unit=${AdsService.maskAdUnitId(adUnitId)} '
             '${AdsService.summarizeResponseInfo(ad.responseInfo)}',
           );
-          var showed = false;
-          var hadImpression = false;
-          var finalized = false;
           void finalize(bool shown) {
             if (finalized) return;
+            logLifecycle('finalize', details: 'result=$shown');
             finalized = true;
-            watchdog?.cancel();
+            cancelWatchdogs();
             if (!completer.isCompleted) {
               completer.complete(shown);
             }
           }
 
-          // Defensive fallback for rare SDK callback stalls that can leave a
-          // dark overlay. Treat as not shown so the banner fallback can render.
-          watchdog = Timer(const Duration(seconds: 30), () {
-            debugPrint(
-              'Result interstitial watchdog timeout; forcing cleanup.',
-            );
-            unawaited(
-              _safeLogAnalyticsEvent('ad_result_interstitial_watchdog_timeout'),
-            );
-            ad.dispose();
-            finalize(false);
-          });
-
           ad.fullScreenContentCallback = FullScreenContentCallback(
             onAdShowedFullScreenContent: (ad) {
               showed = true;
+              logLifecycle(
+                'shown',
+                details:
+                    'fullscreen_timeout_seconds='
+                    '${fullscreenTimeout.inSeconds}',
+              );
+              showWatchdog = Timer(fullscreenTimeout, () {
+                if (dismissed) return;
+                logLifecycle('watchdog_timeout');
+                debugTrace(
+                  'Result interstitial watchdog timeout; forcing cleanup.',
+                );
+                _adsService.reportFullscreenAdHang(
+                  format: 'interstitial',
+                  reason: 'watchdog_timeout',
+                );
+                unawaited(
+                  _safeLogAnalyticsEvent(
+                    'ad_result_interstitial_watchdog_timeout',
+                  ),
+                );
+                logLifecycle('dispose', details: 'reason=watchdog_timeout');
+                ad.dispose();
+                unawaited(
+                  recoverOverlay('result_interstitial_watchdog_timeout'),
+                );
+                finalize(false);
+              });
             },
             onAdImpression: (ad) {
               hadImpression = true;
+              logLifecycle('impression');
             },
             onAdDismissedFullScreenContent: (ad) {
+              dismissed = true;
+              logLifecycle('dismissed');
+              logLifecycle('dispose', details: 'reason=dismissed');
               ad.dispose();
               final actuallyShown = showed && hadImpression;
               if (!actuallyShown) {
-                debugPrint(
+                debugTrace(
                   'Result interstitial dismissed without impression; '
                   'treating as fallback.',
                 );
@@ -388,6 +451,15 @@ class _ResultScreenState extends State<ResultScreen> {
               finalize(actuallyShown);
             },
             onAdFailedToShowFullScreenContent: (ad, error) {
+              dismissed = true;
+              logLifecycle(
+                'show_failed',
+                details:
+                    'code=${error.code} '
+                    'domain=${error.domain} '
+                    'message=${error.message}',
+              );
+              logLifecycle('dispose', details: 'reason=show_failed');
               ad.dispose();
               debugPrint(
                 AdsService.summarizeAdError(
@@ -411,10 +483,18 @@ class _ResultScreenState extends State<ResultScreen> {
               finalize(false);
             },
           );
+          logLifecycle('show_requested');
           ad.show();
         },
         onAdFailedToLoad: (error) {
-          watchdog?.cancel();
+          cancelWatchdogs();
+          logLifecycle(
+            'load_failed',
+            details:
+                'code=${error.code} '
+                'domain=${error.domain} '
+                'message=${error.message}',
+          );
           debugPrint(
             AdsService.summarizeLoadAdError(
               format: 'interstitial',
@@ -441,16 +521,21 @@ class _ResultScreenState extends State<ResultScreen> {
       ),
     );
 
-    final shown = await completer.future.timeout(
-      const Duration(seconds: 20),
-      onTimeout: () {
-        debugPrint('Result interstitial load/show timed out.');
-        unawaited(_safeLogAnalyticsEvent('ad_result_interstitial_timeout'));
-        loadedAd?.dispose();
-        return false;
-      },
-    );
-    watchdog?.cancel();
+    loadWatchdog = Timer(loadTimeout, () {
+      if (loadedAd != null || completer.isCompleted) return;
+      logLifecycle('load_timeout');
+      debugTrace('Result interstitial load timed out.');
+      unawaited(_safeLogAnalyticsEvent('ad_result_interstitial_timeout'));
+      if (!completer.isCompleted) {
+        completer.complete(false);
+      }
+    });
+
+    final shown = await completer.future;
+    cancelWatchdogs();
+    if (!shown) {
+      loadedAd?.dispose();
+    }
     return shown;
   }
 

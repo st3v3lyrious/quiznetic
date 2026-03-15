@@ -3,10 +3,9 @@
  Title: Capital Loader
  Purpose: Loads capital-quiz questions from flag assets and capital mappings.
 */
-import 'dart:convert';
 import 'dart:math';
 
-import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter/services.dart' show AssetManifest, rootBundle;
 
 import 'flag_description_loader.dart';
 import '../models/flag_question.dart';
@@ -178,11 +177,11 @@ const Map<String, String> _countryCapitalByNormalizedKey = {
 
 /// Loads capital questions by pairing known capitals with available flag assets.
 Future<List<FlagQuestion>> loadAllCapitals() async {
-  final manifestJson = await rootBundle.loadString('AssetManifest.json');
-  final Map<String, dynamic> manifestMap = json.decode(manifestJson);
+  final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
   final descriptions = await loadFlagDescriptions();
 
-  final flagPaths = manifestMap.keys
+  final flagPaths = manifest
+      .listAssets()
       .where((path) => path.startsWith('assets/flags/'))
       .toList();
 

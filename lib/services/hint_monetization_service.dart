@@ -9,6 +9,7 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:quiznetic_flutter/config/app_config.dart';
+import 'package:quiznetic_flutter/services/ad_overlay_recovery_service.dart';
 import 'package:quiznetic_flutter/services/ads_service.dart';
 import 'package:quiznetic_flutter/services/analytics_service.dart';
 import 'package:quiznetic_flutter/services/iap_service.dart';
@@ -67,9 +68,9 @@ class HintMonetizationService implements HintMonetizationGateway {
            paidHintPriceUsdCents ?? AppConfig.paidHintPriceUsdCents,
        _adsService = adsService ?? AdsService.instance,
        _iapService = iapService ?? IapService.instance,
-       _presentRewardedHintAd =
-           presentRewardedHintAd ?? _defaultPresentRewardedHintAd,
-       _logEvent = logEvent ?? AnalyticsService.instance.logEvent;
+       _logEvent = logEvent ?? AnalyticsService.instance.logEvent {
+    _presentRewardedHintAd = presentRewardedHintAd ?? _presentRewardedHint;
+  }
 
   static final HintMonetizationService instance = HintMonetizationService();
 
@@ -79,7 +80,7 @@ class HintMonetizationService implements HintMonetizationGateway {
   final int _paidHintPriceUsdCents;
   final AdsService _adsService;
   final IapService _iapService;
-  final RewardedHintPresenter _presentRewardedHintAd;
+  late final RewardedHintPresenter _presentRewardedHintAd;
   final HintAnalyticsLogger _logEvent;
 
   int _rewardedHintsUsed = 0;
@@ -214,18 +215,44 @@ class HintMonetizationService implements HintMonetizationGateway {
     );
   }
 
-  static Future<bool> _defaultPresentRewardedHintAd(String adUnitId) async {
+  Future<bool> _presentRewardedHint(String adUnitId) async {
     final completer = Completer<bool>();
     RewardedAd? loadedAd;
+    Timer? loadWatchdog;
     Timer? showWatchdog;
     Timer? postRewardWatchdog;
+    const loadTimeout = Duration(seconds: 20);
+    final fullscreenTimeout = kDebugMode
+        ? const Duration(seconds: 30)
+        : const Duration(seconds: 45);
+    void debugTrace(String message) {
+      if (!kDebugMode) return;
+      debugPrint(message);
+    }
+
+    void cancelAllWatchdogs() {
+      loadWatchdog?.cancel();
+      showWatchdog?.cancel();
+      postRewardWatchdog?.cancel();
+    }
+
     RewardedAd.load(
       adUnitId: adUnitId,
       request: const AdRequest(),
       rewardedAdLoadCallback: RewardedAdLoadCallback(
         onAdLoaded: (ad) {
+          loadWatchdog?.cancel();
+          if (completer.isCompleted) {
+            debugTrace(
+              'Rewarded ad lifecycle '
+              'event=loaded_after_timeout '
+              'unit=${AdsService.maskAdUnitId(adUnitId)}',
+            );
+            ad.dispose();
+            return;
+          }
           loadedAd = ad;
-          debugPrint(
+          debugTrace(
             'Rewarded ad loaded '
             'unit=${AdsService.maskAdUnitId(adUnitId)} '
             '${AdsService.summarizeResponseInfo(ad.responseInfo)}',
@@ -233,34 +260,96 @@ class HintMonetizationService implements HintMonetizationGateway {
           var rewardEarned = false;
           var finalized = false;
           var dismissed = false;
+          var showed = false;
+          var hadImpression = false;
+          void logLifecycle(String event, {String? details}) {
+            final buffer = StringBuffer(
+              'Rewarded ad lifecycle '
+              'event=$event '
+              'unit=${AdsService.maskAdUnitId(adUnitId)} '
+              'showed=$showed '
+              'impression=$hadImpression '
+              'rewardEarned=$rewardEarned '
+              'dismissed=$dismissed '
+              'finalized=$finalized',
+            );
+            if (details != null && details.isNotEmpty) {
+              buffer.write(' $details');
+            }
+            debugTrace(buffer.toString());
+          }
+
           void completeIfPending(bool value) {
             if (finalized) return;
+            logLifecycle('finalize', details: 'result=$value');
             finalized = true;
-            showWatchdog?.cancel();
-            postRewardWatchdog?.cancel();
+            cancelAllWatchdogs();
             if (!completer.isCompleted) {
               completer.complete(value);
             }
           }
 
-          // Defensive watchdog for rare callback stalls that can leave the ad
-          // overlay stuck on screen.
-          showWatchdog = Timer(const Duration(seconds: 60), () {
-            if (dismissed) return;
-            debugPrint('Rewarded ad watchdog timeout; forcing cleanup.');
-            unawaited(_safeStaticLogEvent('ad_rewarded_watchdog_timeout'));
-            ad.dispose();
-            completeIfPending(rewardEarned);
-          });
+          Future<void> recoverOverlay(String reason) async {
+            final recovered =
+                await AdOverlayRecoveryService.finishStuckAdActivity(
+                  reason: reason,
+                );
+            if (!recovered) {
+              debugTrace(
+                'Rewarded ad recovery did not finish an ad activity '
+                'reason=$reason '
+                'unit=${AdsService.maskAdUnitId(adUnitId)}',
+              );
+            }
+          }
 
           ad.fullScreenContentCallback = FullScreenContentCallback(
+            onAdShowedFullScreenContent: (ad) {
+              showed = true;
+              logLifecycle(
+                'shown',
+                details:
+                    'fullscreen_timeout_seconds='
+                    '${fullscreenTimeout.inSeconds}',
+              );
+              // Once the ad is on screen, allow a much longer fullscreen
+              // watchdog instead of timing out the entire request. Disposing a
+              // rewarded ad mid-overlay can leave the native ad activity stuck.
+              showWatchdog = Timer(fullscreenTimeout, () {
+                if (dismissed) return;
+                logLifecycle('watchdog_timeout');
+                debugTrace('Rewarded ad watchdog timeout; forcing cleanup.');
+                unawaited(_safeStaticLogEvent('ad_rewarded_watchdog_timeout'));
+                _adsService.reportFullscreenAdHang(
+                  format: 'rewarded',
+                  reason: 'watchdog_timeout',
+                );
+                logLifecycle('dispose', details: 'reason=watchdog_timeout');
+                ad.dispose();
+                unawaited(recoverOverlay('watchdog_timeout'));
+                completeIfPending(rewardEarned);
+              });
+            },
+            onAdImpression: (ad) {
+              hadImpression = true;
+              logLifecycle('impression');
+            },
             onAdDismissedFullScreenContent: (ad) {
               dismissed = true;
+              logLifecycle('dismissed');
+              logLifecycle('dispose', details: 'reason=dismissed');
               ad.dispose();
               completeIfPending(rewardEarned);
             },
             onAdFailedToShowFullScreenContent: (ad, error) {
               dismissed = true;
+              logLifecycle(
+                'show_failed',
+                details:
+                    'code=${error.code} '
+                    'domain=${error.domain} '
+                    'message=${error.message}',
+              );
               debugPrint(
                 AdsService.summarizeAdError(
                   format: 'rewarded',
@@ -280,13 +369,21 @@ class HintMonetizationService implements HintMonetizationGateway {
                   ),
                 ),
               );
+              logLifecycle('dispose', details: 'reason=show_failed');
               ad.dispose();
               completeIfPending(false);
             },
           );
+          logLifecycle('show_requested');
           ad.show(
             onUserEarnedReward: (adWithoutView, rewardItem) {
               rewardEarned = true;
+              logLifecycle(
+                'reward_earned',
+                details:
+                    'amount=${rewardItem.amount} '
+                    'type=${rewardItem.type}',
+              );
               // Reward should be granted as soon as SDK confirms earn event,
               // even if full-screen dismissal callback is delayed or missed.
               completeIfPending(true);
@@ -294,20 +391,34 @@ class HintMonetizationService implements HintMonetizationGateway {
               // cleanup shortly after reward is earned so gameplay can resume.
               postRewardWatchdog = Timer(const Duration(seconds: 8), () {
                 if (dismissed) return;
-                debugPrint(
+                logLifecycle('post_reward_forced_close');
+                debugTrace(
                   'Rewarded ad did not dismiss after reward; forcing cleanup.',
                 );
                 unawaited(
                   _safeStaticLogEvent('ad_rewarded_postreward_forced_close'),
                 );
+                _adsService.reportFullscreenAdHang(
+                  format: 'rewarded',
+                  reason: 'post_reward_forced_close',
+                );
+                logLifecycle('dispose', details: 'reason=post_reward_watchdog');
                 ad.dispose();
+                unawaited(recoverOverlay('post_reward_watchdog'));
               });
             },
           );
         },
         onAdFailedToLoad: (error) {
-          showWatchdog?.cancel();
-          postRewardWatchdog?.cancel();
+          cancelAllWatchdogs();
+          debugTrace(
+            'Rewarded ad lifecycle '
+            'event=load_failed '
+            'unit=${AdsService.maskAdUnitId(adUnitId)} '
+            'code=${error.code} '
+            'domain=${error.domain} '
+            'message=${error.message}',
+          );
           debugPrint(
             AdsService.summarizeLoadAdError(
               format: 'rewarded',
@@ -334,17 +445,22 @@ class HintMonetizationService implements HintMonetizationGateway {
       ),
     );
 
-    final unlocked = await completer.future.timeout(
-      const Duration(seconds: 45),
-      onTimeout: () {
-        debugPrint('Rewarded ad timed out.');
-        unawaited(_safeStaticLogEvent('ad_rewarded_timeout'));
-        loadedAd?.dispose();
-        return false;
-      },
-    );
-    showWatchdog?.cancel();
-    postRewardWatchdog?.cancel();
+    loadWatchdog = Timer(loadTimeout, () {
+      if (loadedAd != null || completer.isCompleted) return;
+      debugTrace(
+        'Rewarded ad lifecycle '
+        'event=load_timeout '
+        'unit=${AdsService.maskAdUnitId(adUnitId)}',
+      );
+      debugTrace('Rewarded ad load timed out.');
+      unawaited(_safeStaticLogEvent('ad_rewarded_load_timeout'));
+      if (!completer.isCompleted) {
+        completer.complete(false);
+      }
+    });
+
+    final unlocked = await completer.future;
+    cancelAllWatchdogs();
     return unlocked;
   }
 
