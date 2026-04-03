@@ -244,16 +244,22 @@ class HintMonetizationService implements HintMonetizationGateway {
           }
           loadedAd = ad;
           var rewardEarned = false;
-          var finalized = false;
+          var resultCompleted = false;
+          var lifecycleClosed = false;
           var dismissed = false;
 
           void completeIfPending(bool value) {
-            if (finalized) return;
-            finalized = true;
-            cancelAllWatchdogs();
+            if (resultCompleted) return;
+            resultCompleted = true;
             if (!completer.isCompleted) {
               completer.complete(value);
             }
+          }
+
+          void closeLifecycle() {
+            if (lifecycleClosed) return;
+            lifecycleClosed = true;
+            cancelAllWatchdogs();
           }
 
           Future<void> recoverOverlay(String reason) async {
@@ -268,7 +274,7 @@ class HintMonetizationService implements HintMonetizationGateway {
               FullScreenContentCallback<RewardedInterstitialAd>(
                 onAdShowedFullScreenContent: (ad) {
                   showWatchdog = Timer(fullscreenTimeout, () {
-                    if (dismissed) return;
+                    if (dismissed || lifecycleClosed) return;
                     unawaited(
                       _safeStaticLogEvent(
                         'ad_rewarded_interstitial_watchdog_timeout',
@@ -278,6 +284,7 @@ class HintMonetizationService implements HintMonetizationGateway {
                       format: 'rewarded_interstitial',
                       reason: 'watchdog_timeout',
                     );
+                    closeLifecycle();
                     ad.dispose();
                     unawaited(recoverOverlay('watchdog_timeout'));
                     completeIfPending(rewardEarned);
@@ -286,11 +293,13 @@ class HintMonetizationService implements HintMonetizationGateway {
                 onAdImpression: (_) {},
                 onAdDismissedFullScreenContent: (ad) {
                   dismissed = true;
+                  closeLifecycle();
                   ad.dispose();
                   completeIfPending(rewardEarned);
                 },
                 onAdFailedToShowFullScreenContent: (ad, error) {
                   dismissed = true;
+                  closeLifecycle();
                   debugPrint(
                     AdsService.summarizeAdError(
                       format: 'rewarded_interstitial',
@@ -316,10 +325,16 @@ class HintMonetizationService implements HintMonetizationGateway {
               );
           ad.show(
             onUserEarnedReward: (adWithoutView, rewardItem) {
+              if (lifecycleClosed) return;
               rewardEarned = true;
-              completeIfPending(true);
+              loadWatchdog?.cancel();
+              showWatchdog?.cancel();
+              // If the SDK grants the reward but never dismisses, give the app
+              // a short grace period before forcing the stuck overlay closed.
+              postRewardWatchdog?.cancel();
               postRewardWatchdog = Timer(const Duration(seconds: 8), () {
-                if (dismissed) return;
+                if (dismissed || lifecycleClosed) return;
+                closeLifecycle();
                 unawaited(
                   _safeStaticLogEvent(
                     'ad_rewarded_interstitial_postreward_forced_close',
@@ -332,6 +347,7 @@ class HintMonetizationService implements HintMonetizationGateway {
                 ad.dispose();
                 unawaited(recoverOverlay('post_reward_watchdog'));
               });
+              completeIfPending(true);
             },
           );
         },
@@ -372,7 +388,6 @@ class HintMonetizationService implements HintMonetizationGateway {
     });
 
     final unlocked = await completer.future;
-    cancelAllWatchdogs();
     return unlocked;
   }
 
