@@ -26,7 +26,7 @@ void main() {
       enabled: true,
       androidHomeBannerUnitId: 'unit-home-123456',
       androidResultInterstitialUnitId: 'unit-result-654321',
-      androidRewardedHintUnitId: 'unit-rewarded-987654',
+      androidRewardedInterstitialUnitId: 'unit-rewarded-interstitial-987654',
       supportsAds: () => true,
       consentService: AdConsentService(
         enabled: true,

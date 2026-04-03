@@ -39,8 +39,8 @@ class AdsService {
     String? iosResultBannerUnitId,
     String? androidResultInterstitialUnitId,
     String? iosResultInterstitialUnitId,
-    String? androidRewardedHintUnitId,
-    String? iosRewardedHintUnitId,
+    String? androidRewardedInterstitialUnitId,
+    String? iosRewardedInterstitialUnitId,
     Iterable<String>? debugBannerTestUnitIds,
     Iterable<String>? debugInterstitialTestUnitIds,
     Iterable<String>? debugRewardedTestUnitIds,
@@ -83,11 +83,14 @@ class AdsService {
            (iosResultInterstitialUnitId ??
                    AppConfig.adsIosResultInterstitialUnitId)
                .trim(),
-       _androidRewardedHintUnitId =
-           (androidRewardedHintUnitId ?? AppConfig.adsAndroidRewardedHintUnitId)
+       _androidRewardedInterstitialUnitId =
+           (androidRewardedInterstitialUnitId ??
+                   AppConfig.adsAndroidRewardedInterstitialUnitId)
                .trim(),
-       _iosRewardedHintUnitId =
-           (iosRewardedHintUnitId ?? AppConfig.adsIosRewardedHintUnitId).trim(),
+       _iosRewardedInterstitialUnitId =
+           (iosRewardedInterstitialUnitId ??
+                   AppConfig.adsIosRewardedInterstitialUnitId)
+               .trim(),
        _debugBannerTestUnitIds = _normalizedUnitIdSet(
          debugBannerTestUnitIds ??
              const [
@@ -105,8 +108,8 @@ class AdsService {
        _debugRewardedTestUnitIds = _normalizedUnitIdSet(
          debugRewardedTestUnitIds ??
              const [
-               AppConfig.adsAndroidTestRewardedUnitId,
-               AppConfig.adsIosTestRewardedUnitId,
+               AppConfig.adsAndroidTestRewardedInterstitialUnitId,
+               AppConfig.adsIosTestRewardedInterstitialUnitId,
              ],
        ),
        _androidTestDeviceIds = _normalizedStringList(
@@ -150,8 +153,8 @@ class AdsService {
   final String _iosResultBannerUnitId;
   final String _androidResultInterstitialUnitId;
   final String _iosResultInterstitialUnitId;
-  final String _androidRewardedHintUnitId;
-  final String _iosRewardedHintUnitId;
+  final String _androidRewardedInterstitialUnitId;
+  final String _iosRewardedInterstitialUnitId;
   final Set<String> _debugBannerTestUnitIds;
   final Set<String> _debugInterstitialTestUnitIds;
   final Set<String> _debugRewardedTestUnitIds;
@@ -414,18 +417,7 @@ class AdsService {
 
   String? get rewardedHintAdUnitId {
     if (!_enabled || !_rewardedHintsEnabled || !_supportsAds()) return null;
-    final rawUnitId = switch (defaultTargetPlatform) {
-      TargetPlatform.android =>
-        _androidRewardedHintUnitId.isEmpty ? null : _androidRewardedHintUnitId,
-      TargetPlatform.iOS =>
-        _iosRewardedHintUnitId.isEmpty ? null : _iosRewardedHintUnitId,
-      _ => null,
-    };
-    return _enforceAdUnitPolicy(
-      adUnitId: rawUnitId,
-      format: _AdUnitFormat.rewarded,
-      placementLabel: 'hint',
-    );
+    return _resolvedRewardedInterstitialHintAdUnitId;
   }
 
   String get _rawBannerFallbackUnitId {
@@ -649,7 +641,12 @@ class AdsService {
       ..writeln(
         'result_interstitial_resolved=${maskAdUnitId(resultInterstitialAdUnitId)}',
       )
-      ..writeln('rewarded_raw=${maskAdUnitId(_rawRewardedHintAdUnitId)}')
+      ..writeln(
+        'rewarded_interstitial_raw=${maskAdUnitId(_rawRewardedInterstitialHintAdUnitId)}',
+      )
+      ..writeln(
+        'rewarded_interstitial_resolved=${maskAdUnitId(_resolvedRewardedInterstitialHintAdUnitId)}',
+      )
       ..writeln('rewarded_resolved=${maskAdUnitId(rewardedHintAdUnitId)}');
 
     if (initializationStatus == null) {
@@ -886,14 +883,26 @@ class AdsService {
     };
   }
 
-  String? get _rawRewardedHintAdUnitId {
+  String? get _rawRewardedInterstitialHintAdUnitId {
     return switch (defaultTargetPlatform) {
       TargetPlatform.android =>
-        _androidRewardedHintUnitId.isEmpty ? null : _androidRewardedHintUnitId,
+        _androidRewardedInterstitialUnitId.isEmpty
+            ? null
+            : _androidRewardedInterstitialUnitId,
       TargetPlatform.iOS =>
-        _iosRewardedHintUnitId.isEmpty ? null : _iosRewardedHintUnitId,
+        _iosRewardedInterstitialUnitId.isEmpty
+            ? null
+            : _iosRewardedInterstitialUnitId,
       _ => null,
     };
+  }
+
+  String? get _resolvedRewardedInterstitialHintAdUnitId {
+    return _enforceAdUnitPolicy(
+      adUnitId: _rawRewardedInterstitialHintAdUnitId,
+      format: _AdUnitFormat.rewarded,
+      placementLabel: 'hint_rewarded_interstitial',
+    );
   }
 
   Future<void> _safeLogEvent(

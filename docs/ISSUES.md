@@ -19,7 +19,7 @@ Use this file as the bug/issue tracker, separate from milestone planning in
 | ISS-003 | P0 | MVP | Done | Best-score update regression for same user + same difficulty scope. | `You` | `February 25, 2026` | #139 |
 | ISS-004 | P1 | MVP | Done | `Describe Flag` toggle should persist for the rest of the current game session until user hides it again. | `You` | `February 28, 2026` | #140 |
 | ISS-006 | P0 | MVP | Done | Android real device: Google sign-in fails from login/upgrade flow with unknown error state. | `You` | `March 2, 2026` |  |
-| ISS-007 | P1 | MVP | Blocked | Android real device: rewarded hint flow can fail to grant hint after ad reward/close sequence. | `You` | `March 2, 2026` |  |
+| ISS-007 | P1 | MVP | Done | Rewarded hint flow migrated from classic rewarded ads to rewarded interstitial after real-device reward delivery proved unreliable with the old format. | `You` | `March 2, 2026` |  |
 | ISS-008 | P1 | MVP | Blocked | Android real device: home banner ad renders as broken/blank test creative. | `You` | `March 3, 2026` |  |
 | ISS-009 | P1 | MVP | Blocked | Android real device: result interstitial appears visually broken/blank during QA. | `You` | `March 3, 2026` |  |
 | ISS-010 | P2 | MVP | Done | App branding name mismatch: installed app shows `quiznetic_flutter`/`Quiznetic Flutter` instead of `Quiznetic`. | `You` | `March 2, 2026` |  |
@@ -32,14 +32,13 @@ Use this file as the bug/issue tracker, separate from milestone planning in
 ### Recommended Execution Order (MVP)
 
 The dates below keep the original target dates for historical tracking. Steps
-2-4 are currently past due and remain blocked pending monetization direction
+3-4 are currently past due and remain blocked pending monetization direction
 and validation.
 
 1. `ISS-014` by **March 16, 2026** (app-side consent gap is closed; remaining work is AdMob console privacy-message setup and live EEA/UK validation).
 2. `ISS-015` by **April 6, 2026** (Google sign-in should handle existing-account/provider collisions without dropping the user into a dead-end auth error).
-3. `ISS-007` original target **March 2, 2026** (past due; blocked pending monetization direction and release-mode/live-serving validation).
-4. `ISS-008` original target **March 3, 2026** (past due; blocked pending monetization direction and release-mode/live-serving validation).
-5. `ISS-009` original target **March 3, 2026** (past due; blocked pending monetization direction and release-mode/live-serving validation).
+3. `ISS-008` original target **March 3, 2026** (past due; blocked pending monetization direction and release-mode/live-serving validation).
+4. `ISS-009` original target **March 3, 2026** (past due; blocked pending monetization direction and release-mode/live-serving validation).
 
 ## MVP+1 Backlog
 

@@ -20,8 +20,9 @@ void main() {
           adsService: AdsService(
             enabled: true,
             rewardedHintsEnabled: true,
-            androidRewardedHintUnitId: 'android.rewarded.unit',
-            iosRewardedHintUnitId: 'ios.rewarded.unit',
+            androidRewardedInterstitialUnitId:
+                'android.rewarded.interstitial.unit',
+            iosRewardedInterstitialUnitId: 'ios.rewarded.interstitial.unit',
             supportsAds: () => true,
             initializeAdsSdk: () async => null,
             consentService: _allowingConsentService(),
@@ -50,8 +51,9 @@ void main() {
           adsService: AdsService(
             enabled: true,
             rewardedHintsEnabled: true,
-            androidRewardedHintUnitId: 'android.rewarded.unit',
-            iosRewardedHintUnitId: 'ios.rewarded.unit',
+            androidRewardedInterstitialUnitId:
+                'android.rewarded.interstitial.unit',
+            iosRewardedInterstitialUnitId: 'ios.rewarded.interstitial.unit',
             supportsAds: () => true,
             initializeAdsSdk: () async => null,
             consentService: _allowingConsentService(),
@@ -79,8 +81,9 @@ void main() {
         adsService: AdsService(
           enabled: true,
           rewardedHintsEnabled: true,
-          androidRewardedHintUnitId: 'android.rewarded.unit',
-          iosRewardedHintUnitId: 'ios.rewarded.unit',
+          androidRewardedInterstitialUnitId:
+              'android.rewarded.interstitial.unit',
+          iosRewardedInterstitialUnitId: 'ios.rewarded.interstitial.unit',
           supportsAds: () => true,
           initializeAdsSdk: () async => null,
           consentService: _allowingConsentService(),
@@ -113,8 +116,8 @@ void main() {
           adsService: AdsService(
             enabled: true,
             rewardedHintsEnabled: true,
-            androidRewardedHintUnitId: '',
-            iosRewardedHintUnitId: '',
+            androidRewardedInterstitialUnitId: '',
+            iosRewardedInterstitialUnitId: '',
             supportsAds: () => true,
             initializeAdsSdk: () async => null,
             consentService: _allowingConsentService(),
@@ -145,8 +148,9 @@ void main() {
           adsService: AdsService(
             enabled: true,
             rewardedHintsEnabled: true,
-            androidRewardedHintUnitId: 'android.rewarded.unit',
-            iosRewardedHintUnitId: '',
+            androidRewardedInterstitialUnitId:
+                'android.rewarded.interstitial.unit',
+            iosRewardedInterstitialUnitId: '',
             supportsAds: () => true,
             initializeAdsSdk: () async => throw Exception('ads init failed'),
             consentService: _allowingConsentService(),
@@ -164,6 +168,39 @@ void main() {
         storeClient.dispose();
       },
     );
+
+    test('uses rewarded interstitial presenter for rewarded hints', () async {
+      var rewardedHintCalls = 0;
+      final hintService = HintMonetizationService(
+        rewardedHintsEnabled: true,
+        paidHintsEnabled: false,
+        rewardedHintsPerSession: 1,
+        adsService: AdsService(
+          enabled: true,
+          rewardedHintsEnabled: true,
+          androidRewardedInterstitialUnitId:
+              'android.rewarded.interstitial.unit',
+          iosRewardedInterstitialUnitId: '',
+          debugRewardedTestUnitIds: const {
+            'android.rewarded.interstitial.unit',
+          },
+          supportsAds: () => true,
+          initializeAdsSdk: () async => null,
+          consentService: _allowingConsentService(),
+        ),
+        iapService: _buildIapService(),
+        presentRewardedHintAd: (_) async {
+          rewardedHintCalls++;
+          return true;
+        },
+        logEvent: _noopLogEvent,
+      );
+
+      final result = await hintService.requestHint();
+
+      expect(result.status, HintRequestStatus.granted);
+      expect(rewardedHintCalls, 1);
+    });
   });
 }
 

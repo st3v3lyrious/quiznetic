@@ -46,7 +46,7 @@ This runbook documents how to activate monetization safely for MVP.
 - Rewarded ad usage (hints):
   - Controlled by `ENABLE_REWARDED_HINTS`.
   - Managed by hint monetization flow (`HintMonetizationService`) via `AdsService`.
-  - Uses `ADS_ANDROID_REWARDED_HINT_UNIT_ID` / `ADS_IOS_REWARDED_HINT_UNIT_ID`.
+  - Uses rewarded interstitial with `ADS_ANDROID_REWARDED_INTERSTITIAL_UNIT_ID` / `ADS_IOS_REWARDED_INTERSTITIAL_UNIT_ID`.
 - Result interstitial status:
   - Result interstitial runtime flow is implemented behind `ENABLE_RESULT_INTERSTITIAL_ADS` (default `false`).
   - Hybrid strategy is active when enabled: attempt result interstitial first, then fall back to result banner if load/show fails.
@@ -162,14 +162,14 @@ Defined in `lib/config/app_config.dart`:
 - `ADS_IOS_RESULT_INTERSTITIAL_UNIT_ID` (default: empty)
 - `ADS_ANDROID_BANNER_UNIT_ID` (default: empty fallback for any placement)
 - `ADS_IOS_BANNER_UNIT_ID` (default: empty fallback for any placement)
-- `ADS_ANDROID_REWARDED_HINT_UNIT_ID` (default: empty)
-- `ADS_IOS_REWARDED_HINT_UNIT_ID` (default: empty)
+- `ADS_ANDROID_REWARDED_INTERSTITIAL_UNIT_ID` (default: empty)
+- `ADS_IOS_REWARDED_INTERSTITIAL_UNIT_ID` (default: empty)
 - `ADS_ANDROID_TEST_BANNER_UNIT_ID` (default: empty)
 - `ADS_IOS_TEST_BANNER_UNIT_ID` (default: empty)
 - `ADS_ANDROID_TEST_INTERSTITIAL_UNIT_ID` (default: empty)
 - `ADS_IOS_TEST_INTERSTITIAL_UNIT_ID` (default: empty)
-- `ADS_ANDROID_TEST_REWARDED_UNIT_ID` (default: empty)
-- `ADS_IOS_TEST_REWARDED_UNIT_ID` (default: empty)
+- `ADS_ANDROID_TEST_REWARDED_INTERSTITIAL_UNIT_ID` (default: empty)
+- `ADS_IOS_TEST_REWARDED_INTERSTITIAL_UNIT_ID` (default: empty)
 - `ENABLE_REWARDED_HINTS` (default: `false`)
 - `REWARDED_HINTS_PER_SESSION` (default: `3`)
 - `ENABLE_PAID_HINTS` (default: `false`)
@@ -198,8 +198,8 @@ When using Google test units in non-release builds, provide them through env:
 - `ADS_IOS_TEST_BANNER_UNIT_ID`
 - `ADS_ANDROID_TEST_INTERSTITIAL_UNIT_ID`
 - `ADS_IOS_TEST_INTERSTITIAL_UNIT_ID`
-- `ADS_ANDROID_TEST_REWARDED_UNIT_ID`
-- `ADS_IOS_TEST_REWARDED_UNIT_ID`
+- `ADS_ANDROID_TEST_REWARDED_INTERSTITIAL_UNIT_ID`
+- `ADS_IOS_TEST_REWARDED_INTERSTITIAL_UNIT_ID`
 - `ADS_ANDROID_TEST_DEVICE_IDS`
 - `ADS_IOS_TEST_DEVICE_IDS`
 
@@ -259,8 +259,8 @@ flutter run \
   --dart-define=REWARDED_HINTS_PER_SESSION=3 \
   --dart-define=IAP_HINT_CONSUMABLE_PRODUCT_ID=quiznetic.hint_single \
   --dart-define=PAID_HINT_PRICE_USD_CENTS=50 \
-  --dart-define=ADS_ANDROID_REWARDED_HINT_UNIT_ID=$ADS_ANDROID_TEST_REWARDED_UNIT_ID \
-  --dart-define=ADS_IOS_REWARDED_HINT_UNIT_ID=$ADS_IOS_TEST_REWARDED_UNIT_ID
+  --dart-define=ADS_ANDROID_REWARDED_INTERSTITIAL_UNIT_ID=$ADS_ANDROID_TEST_REWARDED_INTERSTITIAL_UNIT_ID \
+  --dart-define=ADS_IOS_REWARDED_INTERSTITIAL_UNIT_ID=$ADS_IOS_TEST_REWARDED_INTERSTITIAL_UNIT_ID
 ```
 
 ### Result hybrid ad QA build (interstitial-first + banner fallback)

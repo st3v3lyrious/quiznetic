@@ -176,15 +176,15 @@ class AppConfig {
     defaultValue: '',
   );
 
-  /// Android rewarded ad unit id used for hint unlock flow.
-  static const adsAndroidRewardedHintUnitId = String.fromEnvironment(
-    'ADS_ANDROID_REWARDED_HINT_UNIT_ID',
+  /// Android rewarded interstitial ad unit id used for hint unlock flow.
+  static const adsAndroidRewardedInterstitialUnitId = String.fromEnvironment(
+    'ADS_ANDROID_REWARDED_INTERSTITIAL_UNIT_ID',
     defaultValue: '',
   );
 
-  /// iOS rewarded ad unit id used for hint unlock flow.
-  static const adsIosRewardedHintUnitId = String.fromEnvironment(
-    'ADS_IOS_REWARDED_HINT_UNIT_ID',
+  /// iOS rewarded interstitial ad unit id used for hint unlock flow.
+  static const adsIosRewardedInterstitialUnitId = String.fromEnvironment(
+    'ADS_IOS_REWARDED_INTERSTITIAL_UNIT_ID',
     defaultValue: '',
   );
 
@@ -212,15 +212,17 @@ class AppConfig {
     defaultValue: '',
   );
 
-  /// Android Google test rewarded id allowed in non-release builds.
-  static const adsAndroidTestRewardedUnitId = String.fromEnvironment(
-    'ADS_ANDROID_TEST_REWARDED_UNIT_ID',
-    defaultValue: '',
-  );
+  /// Android Google test rewarded interstitial id allowed in non-release
+  /// builds.
+  static const adsAndroidTestRewardedInterstitialUnitId =
+      String.fromEnvironment(
+        'ADS_ANDROID_TEST_REWARDED_INTERSTITIAL_UNIT_ID',
+        defaultValue: '',
+      );
 
-  /// iOS Google test rewarded id allowed in non-release builds.
-  static const adsIosTestRewardedUnitId = String.fromEnvironment(
-    'ADS_IOS_TEST_REWARDED_UNIT_ID',
+  /// iOS Google test rewarded interstitial id allowed in non-release builds.
+  static const adsIosTestRewardedInterstitialUnitId = String.fromEnvironment(
+    'ADS_IOS_TEST_REWARDED_INTERSTITIAL_UNIT_ID',
     defaultValue: '',
   );
 
