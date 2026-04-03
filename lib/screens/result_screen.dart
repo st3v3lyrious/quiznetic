@@ -333,10 +333,6 @@ class _ResultScreenState extends State<ResultScreen> {
     final fullscreenTimeout = kDebugMode
         ? const Duration(seconds: 30)
         : const Duration(seconds: 45);
-    void debugTrace(String message) {
-      if (!kDebugMode) return;
-      debugPrint(message);
-    }
 
     void cancelWatchdogs() {
       loadWatchdog?.cancel();
@@ -352,22 +348,6 @@ class _ResultScreenState extends State<ResultScreen> {
     var dismissed = false;
     var finalized = false;
 
-    void logLifecycle(String event, {String? details}) {
-      final buffer = StringBuffer(
-        'Result interstitial lifecycle '
-        'event=$event '
-        'unit=${AdsService.maskAdUnitId(adUnitId)} '
-        'showed=$showed '
-        'impression=$hadImpression '
-        'dismissed=$dismissed '
-        'finalized=$finalized',
-      );
-      if (details != null && details.isNotEmpty) {
-        buffer.write(' $details');
-      }
-      debugTrace(buffer.toString());
-    }
-
     InterstitialAd.load(
       adUnitId: adUnitId,
       request: const AdRequest(),
@@ -375,26 +355,18 @@ class _ResultScreenState extends State<ResultScreen> {
         onAdLoaded: (ad) {
           loadWatchdog?.cancel();
           if (completer.isCompleted) {
-            logLifecycle('loaded_after_timeout');
             ad.dispose();
             return;
           }
           loadedAd = ad;
-          debugTrace(
-            'Result interstitial loaded '
-            'unit=${AdsService.maskAdUnitId(adUnitId)} '
-            '${AdsService.summarizeResponseInfo(ad.responseInfo)}',
-          );
           void disposeLoadedAd(InterstitialAd ad, {required String reason}) {
             if (!identical(loadedAd, ad)) return;
-            logLifecycle('dispose', details: 'reason=$reason');
             loadedAd = null;
             ad.dispose();
           }
 
           void finalize(bool shown) {
             if (finalized) return;
-            logLifecycle('finalize', details: 'result=$shown');
             finalized = true;
             cancelWatchdogs();
             if (!completer.isCompleted) {
@@ -405,18 +377,8 @@ class _ResultScreenState extends State<ResultScreen> {
           ad.fullScreenContentCallback = FullScreenContentCallback(
             onAdShowedFullScreenContent: (ad) {
               showed = true;
-              logLifecycle(
-                'shown',
-                details:
-                    'fullscreen_timeout_seconds='
-                    '${fullscreenTimeout.inSeconds}',
-              );
               showWatchdog = Timer(fullscreenTimeout, () {
                 if (dismissed) return;
-                logLifecycle('watchdog_timeout');
-                debugTrace(
-                  'Result interstitial watchdog timeout; forcing cleanup.',
-                );
                 _adsService.reportFullscreenAdHang(
                   format: 'interstitial',
                   reason: 'watchdog_timeout',
@@ -435,18 +397,12 @@ class _ResultScreenState extends State<ResultScreen> {
             },
             onAdImpression: (ad) {
               hadImpression = true;
-              logLifecycle('impression');
             },
             onAdDismissedFullScreenContent: (ad) {
               dismissed = true;
-              logLifecycle('dismissed');
               disposeLoadedAd(ad, reason: 'dismissed');
               final actuallyShown = showed && hadImpression;
               if (!actuallyShown) {
-                debugTrace(
-                  'Result interstitial dismissed without impression; '
-                  'treating as fallback.',
-                );
                 unawaited(
                   _safeLogAnalyticsEvent(
                     'ad_result_interstitial_no_impression',
@@ -457,13 +413,6 @@ class _ResultScreenState extends State<ResultScreen> {
             },
             onAdFailedToShowFullScreenContent: (ad, error) {
               dismissed = true;
-              logLifecycle(
-                'show_failed',
-                details:
-                    'code=${error.code} '
-                    'domain=${error.domain} '
-                    'message=${error.message}',
-              );
               disposeLoadedAd(ad, reason: 'show_failed');
               debugPrint(
                 AdsService.summarizeAdError(
@@ -487,18 +436,10 @@ class _ResultScreenState extends State<ResultScreen> {
               finalize(false);
             },
           );
-          logLifecycle('show_requested');
           ad.show();
         },
         onAdFailedToLoad: (error) {
           cancelWatchdogs();
-          logLifecycle(
-            'load_failed',
-            details:
-                'code=${error.code} '
-                'domain=${error.domain} '
-                'message=${error.message}',
-          );
           debugPrint(
             AdsService.summarizeLoadAdError(
               format: 'interstitial',
@@ -527,8 +468,6 @@ class _ResultScreenState extends State<ResultScreen> {
 
     loadWatchdog = Timer(loadTimeout, () {
       if (loadedAd != null || completer.isCompleted) return;
-      logLifecycle('load_timeout');
-      debugTrace('Result interstitial load timed out.');
       unawaited(_safeLogAnalyticsEvent('ad_result_interstitial_timeout'));
       if (!completer.isCompleted) {
         completer.complete(false);
