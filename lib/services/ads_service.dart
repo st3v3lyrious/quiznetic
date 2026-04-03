@@ -25,6 +25,18 @@ enum _AdUnitFormat { banner, interstitial, rewarded }
 class AdsService {
   static const placementHome = 'home';
   static const placementResult = 'result';
+  static const Set<String> _officialGoogleBannerTestAdUnitIds = {
+    'ca-app-pub-3940256099942544/6300978111',
+    'ca-app-pub-3940256099942544/2934735716',
+  };
+  static const Set<String> _officialGoogleInterstitialTestAdUnitIds = {
+    'ca-app-pub-3940256099942544/1033173712',
+    'ca-app-pub-3940256099942544/4411468910',
+  };
+  static const Set<String> _officialGoogleRewardedTestAdUnitIds = {
+    'ca-app-pub-3940256099942544/5354046379',
+    'ca-app-pub-3940256099942544/6978759866',
+  };
 
   AdsService({
     bool? enabled,
@@ -442,7 +454,10 @@ class AdsService {
     if (adUnitId == null || adUnitId.isEmpty) return null;
     if (_allowLiveAdUnitsInDebug || kReleaseMode) return adUnitId;
     if (!_looksLikeAdMobUnitId(adUnitId)) return adUnitId;
-    if (_isConfiguredDebugTestAdUnit(adUnitId, format)) return adUnitId;
+    if (_isConfiguredDebugTestAdUnit(adUnitId, format) ||
+        _isOfficialGoogleTestAdUnit(adUnitId, format)) {
+      return adUnitId;
+    }
 
     _logPolicyWarning(
       format: format,
@@ -459,6 +474,19 @@ class AdsService {
         adUnitId,
       ),
       _AdUnitFormat.rewarded => _debugRewardedTestUnitIds.contains(adUnitId),
+    };
+  }
+
+  bool _isOfficialGoogleTestAdUnit(String adUnitId, _AdUnitFormat format) {
+    return switch (format) {
+      _AdUnitFormat.banner => _officialGoogleBannerTestAdUnitIds.contains(
+        adUnitId,
+      ),
+      _AdUnitFormat.interstitial =>
+        _officialGoogleInterstitialTestAdUnitIds.contains(adUnitId),
+      _AdUnitFormat.rewarded => _officialGoogleRewardedTestAdUnitIds.contains(
+        adUnitId,
+      ),
     };
   }
 

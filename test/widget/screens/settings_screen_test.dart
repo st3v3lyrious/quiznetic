@@ -269,7 +269,10 @@ void main() {
     await tester.tap(inspectorFinder);
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('Ad Inspector failed:'), findsOneWidget);
+    expect(
+      find.text('Unable to open Ad Inspector right now.'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('sign out action signs out and routes to entry choice', (

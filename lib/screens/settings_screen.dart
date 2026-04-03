@@ -423,9 +423,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     try {
       final error = await _adsService.openInspector();
       if (!mounted || error == null) return;
+      debugPrint('Settings Ad Inspector unavailable: $error');
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Ad Inspector failed: $error')));
+      ).showSnackBar(
+        const SnackBar(
+          content: Text('Unable to open Ad Inspector right now.'),
+        ),
+      );
     } finally {
       if (mounted) {
         setState(() {

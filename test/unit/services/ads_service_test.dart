@@ -11,6 +11,11 @@ const _fakeLiveRewardedHintUnitId = 'admob-live-rewarded-interstitial';
 const _fakeTestRewardedHintUnitId = 'admob-test-rewarded-interstitial';
 const _fakeLiveInterstitialUnitId = 'admob-live-interstitial';
 const _fakeTestInterstitialUnitId = 'admob-test-interstitial';
+const _officialGoogleTestBannerUnitId = 'ca-app-pub-3940256099942544/6300978111';
+const _officialGoogleTestInterstitialUnitId =
+    'ca-app-pub-3940256099942544/1033173712';
+const _officialGoogleTestRewardedInterstitialUnitId =
+    'ca-app-pub-3940256099942544/5354046379';
 
 bool _looksLikeAdMobUnitId(String adUnitId) => adUnitId.startsWith('admob-');
 
@@ -151,12 +156,10 @@ void main() {
         enabled: true,
         androidBannerUnitId: '',
         iosBannerUnitId: '',
-        androidHomeBannerUnitId: _fakeTestBannerUnitId,
+        androidHomeBannerUnitId: _officialGoogleTestBannerUnitId,
         iosHomeBannerUnitId: '',
         androidResultBannerUnitId: '',
         iosResultBannerUnitId: '',
-        debugBannerTestUnitIds: const {_fakeTestBannerUnitId},
-        looksLikeAdMobUnitId: _looksLikeAdMobUnitId,
         supportsAds: () => true,
         initializeAdsSdk: () async => throw UnimplementedError(),
       );
@@ -164,7 +167,7 @@ void main() {
       expect(service.isEnabled, isTrue);
       expect(
         service.bannerAdUnitIdForPlacement(AdsService.placementHome),
-        _fakeTestBannerUnitId,
+        _officialGoogleTestBannerUnitId,
       );
     });
 
@@ -211,16 +214,18 @@ void main() {
         final service = AdsService(
           enabled: true,
           rewardedHintsEnabled: true,
-          androidRewardedInterstitialUnitId: _fakeTestRewardedHintUnitId,
+          androidRewardedInterstitialUnitId:
+              _officialGoogleTestRewardedInterstitialUnitId,
           iosRewardedInterstitialUnitId: '',
-          debugRewardedTestUnitIds: const {_fakeTestRewardedHintUnitId},
-          looksLikeAdMobUnitId: _looksLikeAdMobUnitId,
           supportsAds: () => true,
           initializeAdsSdk: () async => throw UnimplementedError(),
         );
 
         expect(service.isRewardedHintsEnabled, isTrue);
-        expect(service.rewardedHintAdUnitId, _fakeTestRewardedHintUnitId);
+        expect(
+          service.rewardedHintAdUnitId,
+          _officialGoogleTestRewardedInterstitialUnitId,
+        );
       },
     );
 
@@ -262,15 +267,17 @@ void main() {
         final service = AdsService(
           enabled: true,
           resultInterstitialEnabled: true,
-          androidResultInterstitialUnitId: _fakeTestInterstitialUnitId,
+          androidResultInterstitialUnitId:
+              _officialGoogleTestInterstitialUnitId,
           iosResultInterstitialUnitId: '',
-          debugInterstitialTestUnitIds: const {_fakeTestInterstitialUnitId},
-          looksLikeAdMobUnitId: _looksLikeAdMobUnitId,
           supportsAds: () => true,
           initializeAdsSdk: () async => throw UnimplementedError(),
         );
 
-        expect(service.resultInterstitialAdUnitId, _fakeTestInterstitialUnitId);
+        expect(
+          service.resultInterstitialAdUnitId,
+          _officialGoogleTestInterstitialUnitId,
+        );
       },
     );
 
