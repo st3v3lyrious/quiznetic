@@ -26,7 +26,7 @@ void main() {
       enabled: true,
       androidHomeBannerUnitId: 'unit-home-123456',
       androidResultInterstitialUnitId: 'unit-result-654321',
-      androidRewardedHintUnitId: 'unit-rewarded-987654',
+      androidRewardedInterstitialUnitId: 'unit-rewarded-interstitial-987654',
       supportsAds: () => true,
       consentService: AdConsentService(
         enabled: true,
@@ -269,7 +269,10 @@ void main() {
     await tester.tap(inspectorFinder);
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('Ad Inspector failed:'), findsOneWidget);
+    expect(
+      find.text('Unable to open Ad Inspector right now.'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('sign out action signs out and routes to entry choice', (

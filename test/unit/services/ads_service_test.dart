@@ -7,8 +7,8 @@ import 'package:quiznetic_flutter/services/ads_service.dart';
 
 const _fakeLiveBannerUnitId = 'admob-live-banner';
 const _fakeTestBannerUnitId = 'admob-test-banner';
-const _fakeLiveRewardedUnitId = 'admob-live-rewarded';
-const _fakeTestRewardedUnitId = 'admob-test-rewarded';
+const _fakeLiveRewardedHintUnitId = 'admob-live-rewarded-interstitial';
+const _fakeTestRewardedHintUnitId = 'admob-test-rewarded-interstitial';
 const _fakeLiveInterstitialUnitId = 'admob-live-interstitial';
 const _fakeTestInterstitialUnitId = 'admob-test-interstitial';
 
@@ -146,7 +146,7 @@ void main() {
       );
     });
 
-    test('allows official Google test banner ids in non-release builds', () {
+    test('allows configured debug test banner ids in non-release builds', () {
       final service = AdsService(
         enabled: true,
         androidBannerUnitId: '',
@@ -190,12 +190,12 @@ void main() {
       );
     });
 
-    test('blocks live rewarded ids in non-release builds by default', () {
+    test('blocks live rewarded hint ids in non-release builds by default', () {
       final service = AdsService(
         enabled: false,
         rewardedHintsEnabled: true,
-        androidRewardedHintUnitId: _fakeLiveRewardedUnitId,
-        iosRewardedHintUnitId: '',
+        androidRewardedInterstitialUnitId: _fakeLiveRewardedHintUnitId,
+        iosRewardedInterstitialUnitId: '',
         looksLikeAdMobUnitId: _looksLikeAdMobUnitId,
         supportsAds: () => true,
         initializeAdsSdk: () async => throw UnimplementedError(),
@@ -205,29 +205,36 @@ void main() {
       expect(service.rewardedHintAdUnitId, isNull);
     });
 
-    test('allows official Google test rewarded ids in non-release builds', () {
-      final service = AdsService(
-        enabled: true,
-        rewardedHintsEnabled: true,
-        androidRewardedHintUnitId: _fakeTestRewardedUnitId,
-        iosRewardedHintUnitId: '',
-        debugRewardedTestUnitIds: const {_fakeTestRewardedUnitId},
-        looksLikeAdMobUnitId: _looksLikeAdMobUnitId,
-        supportsAds: () => true,
-        initializeAdsSdk: () async => throw UnimplementedError(),
-      );
+    test(
+      'allows configured debug test rewarded hint ids in non-release builds',
+      () {
+        final service = AdsService(
+          enabled: true,
+          rewardedHintsEnabled: true,
+          androidRewardedInterstitialUnitId: _fakeTestRewardedHintUnitId,
+          iosRewardedInterstitialUnitId: '',
+          debugRewardedInterstitialTestUnitIds: const {
+            _fakeTestRewardedHintUnitId,
+          },
+          looksLikeAdMobUnitId: _looksLikeAdMobUnitId,
+          supportsAds: () => true,
+          initializeAdsSdk: () async => throw UnimplementedError(),
+        );
 
-      expect(service.isRewardedHintsEnabled, isTrue);
-      expect(service.rewardedHintAdUnitId, _fakeTestRewardedUnitId);
-    });
+        expect(service.isRewardedHintsEnabled, isTrue);
+        expect(service.rewardedHintAdUnitId, _fakeTestRewardedHintUnitId);
+      },
+    );
 
     test('rewarded hint unit resolution is blocked when ads are disabled', () {
       final service = AdsService(
         enabled: false,
         rewardedHintsEnabled: true,
-        androidRewardedHintUnitId: _fakeTestRewardedUnitId,
-        iosRewardedHintUnitId: '',
-        debugRewardedTestUnitIds: const {_fakeTestRewardedUnitId},
+        androidRewardedInterstitialUnitId: _fakeTestRewardedHintUnitId,
+        iosRewardedInterstitialUnitId: '',
+        debugRewardedInterstitialTestUnitIds: const {
+          _fakeTestRewardedHintUnitId,
+        },
         looksLikeAdMobUnitId: _looksLikeAdMobUnitId,
         supportsAds: () => true,
         initializeAdsSdk: () async => throw UnimplementedError(),
@@ -254,7 +261,7 @@ void main() {
     );
 
     test(
-      'allows official Google test interstitial ids in non-release builds',
+      'allows configured debug test interstitial ids in non-release builds',
       () {
         final service = AdsService(
           enabled: true,
@@ -313,9 +320,11 @@ void main() {
         final service = AdsService(
           enabled: true,
           rewardedHintsEnabled: false,
-          androidRewardedHintUnitId: _fakeTestRewardedUnitId,
-          iosRewardedHintUnitId: '',
-          debugRewardedTestUnitIds: const {_fakeTestRewardedUnitId},
+          androidRewardedInterstitialUnitId: _fakeTestRewardedHintUnitId,
+          iosRewardedInterstitialUnitId: '',
+          debugRewardedInterstitialTestUnitIds: const {
+            _fakeTestRewardedHintUnitId,
+          },
           looksLikeAdMobUnitId: _looksLikeAdMobUnitId,
           supportsAds: () => true,
           initializeAdsSdk: () async => throw UnimplementedError(),
@@ -433,11 +442,13 @@ void main() {
           iosHomeBannerUnitId: '',
           androidResultInterstitialUnitId: _fakeTestInterstitialUnitId,
           iosResultInterstitialUnitId: '',
-          androidRewardedHintUnitId: _fakeTestRewardedUnitId,
-          iosRewardedHintUnitId: '',
+          androidRewardedInterstitialUnitId: _fakeTestRewardedHintUnitId,
+          iosRewardedInterstitialUnitId: '',
           debugBannerTestUnitIds: const {_fakeTestBannerUnitId},
           debugInterstitialTestUnitIds: const {_fakeTestInterstitialUnitId},
-          debugRewardedTestUnitIds: const {_fakeTestRewardedUnitId},
+          debugRewardedInterstitialTestUnitIds: const {
+            _fakeTestRewardedHintUnitId,
+          },
           looksLikeAdMobUnitId: _looksLikeAdMobUnitId,
           supportsAds: () => true,
           initializeAdsSdk: () async => null,
@@ -498,8 +509,8 @@ void main() {
           androidBannerUnitId: '',
           iosBannerUnitId: '',
           consentService: _allowingConsentService(),
-          androidRewardedHintUnitId: 'android-rewarded',
-          iosRewardedHintUnitId: 'ios-rewarded',
+          androidRewardedInterstitialUnitId: 'android-rewarded-interstitial',
+          iosRewardedInterstitialUnitId: 'ios-rewarded-interstitial',
           supportsAds: () => true,
           initializeAdsSdk: () async {
             initializeCalls++;

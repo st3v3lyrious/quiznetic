@@ -87,9 +87,10 @@ Use this as a short, editable delivery plan.
       - [ ] Publish `https://<domain>/app-ads.txt` and verify public access.
       - [ ] Add the exact `app-ads.txt` URL/domain in Google Play Console and App Store Connect metadata.
     - [x] Validate release define matrix (`ENABLE_ADS`, `ENABLE_RESULT_INTERSTITIAL_ADS`, `ENABLE_REWARDED_HINTS`, `ENABLE_PAID_HINTS`) and keep defaults OFF for safe rollback builds.
-    - [ ] Complete end-to-end monetization QA on physical Android+iOS devices (test ads, rewarded completion path, paid fallback, remove-ads entitlement, restore flow).
+  - [ ] Complete end-to-end monetization QA on physical Android+iOS devices (test ads, rewarded completion path, paid fallback, remove-ads entitlement, restore flow).
   - [ ] Add hint monetization flow:
     - [x] App-side baseline shipped: remove-2-wrong-answers hint action in `QuizScreen` with per-session cap and paid fallback flow.
+    - [x] Reward delivery stabilized by migrating the hint ad format from classic rewarded to rewarded interstitial.
     - [x] Session cap default: `REWARDED_HINTS_PER_SESSION=3`.
     - [x] Paid fallback default: `$0.50` per hint (`PAID_HINT_PRICE_USD_CENTS=50`).
     - [x] Default consumable hint SKU: `quiznetic.hint_single` (`IAP_HINT_CONSUMABLE_PRODUCT_ID`).

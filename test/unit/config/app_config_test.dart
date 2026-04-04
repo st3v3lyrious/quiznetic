@@ -65,14 +65,14 @@ void main() {
       expect(AppConfig.adsIosResultBannerUnitId, isEmpty);
       expect(AppConfig.adsAndroidResultInterstitialUnitId, isEmpty);
       expect(AppConfig.adsIosResultInterstitialUnitId, isEmpty);
-      expect(AppConfig.adsAndroidRewardedHintUnitId, isEmpty);
-      expect(AppConfig.adsIosRewardedHintUnitId, isEmpty);
+      expect(AppConfig.adsAndroidRewardedInterstitialUnitId, isEmpty);
+      expect(AppConfig.adsIosRewardedInterstitialUnitId, isEmpty);
       expect(AppConfig.adsAndroidTestBannerUnitId, isEmpty);
       expect(AppConfig.adsIosTestBannerUnitId, isEmpty);
       expect(AppConfig.adsAndroidTestInterstitialUnitId, isEmpty);
       expect(AppConfig.adsIosTestInterstitialUnitId, isEmpty);
-      expect(AppConfig.adsAndroidTestRewardedUnitId, isEmpty);
-      expect(AppConfig.adsIosTestRewardedUnitId, isEmpty);
+      expect(AppConfig.adsAndroidTestRewardedInterstitialUnitId, isEmpty);
+      expect(AppConfig.adsIosTestRewardedInterstitialUnitId, isEmpty);
       expect(AppConfig.adsAndroidTestDeviceIdsCsv, isEmpty);
       expect(AppConfig.adsIosTestDeviceIdsCsv, isEmpty);
       expect(AppConfig.adsAndroidTestDeviceIds, isEmpty);

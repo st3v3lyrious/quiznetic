@@ -111,6 +111,7 @@ app.*.map.json
 coverage/
 .fvm/
 Thumbs.db
+debug_log/
 
 # Flutter local generated files (platform-specific)
 **/android/local.properties
