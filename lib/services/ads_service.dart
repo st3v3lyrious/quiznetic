@@ -442,7 +442,7 @@ class AdsService {
     if (adUnitId == null || adUnitId.isEmpty) return null;
     if (_allowLiveAdUnitsInDebug || kReleaseMode) return adUnitId;
     if (!_looksLikeAdMobUnitId(adUnitId)) return adUnitId;
-    if (_isOfficialGoogleTestAdUnit(adUnitId, format)) {
+    if (_isAllowedDebugTestAdUnit(adUnitId, format)) {
       return adUnitId;
     }
 
@@ -454,7 +454,7 @@ class AdsService {
     return null;
   }
 
-  bool _isConfiguredDebugTestAdUnit(String adUnitId, _AdUnitFormat format) {
+  bool _isAllowedDebugTestAdUnit(String adUnitId, _AdUnitFormat format) {
     return switch (format) {
       _AdUnitFormat.banner => _debugBannerTestUnitIds.contains(adUnitId),
       _AdUnitFormat.interstitial => _debugInterstitialTestUnitIds.contains(
@@ -463,13 +463,6 @@ class AdsService {
       _AdUnitFormat.rewardedInterstitial =>
         _debugRewardedInterstitialTestUnitIds.contains(adUnitId),
     };
-  }
-
-  bool _isOfficialGoogleTestAdUnit(String adUnitId, _AdUnitFormat format) {
-    // Keep official Google sample ids out of tracked source. If a debug build
-    // should allow them, they must be supplied through AppConfig or constructor
-    // overrides for the existing debug test-unit allowlist.
-    return _isConfiguredDebugTestAdUnit(adUnitId, format);
   }
 
   void _logPolicyWarning({
@@ -484,8 +477,9 @@ class AdsService {
     debugPrint(
       'AdsService blocked live AdMob unit for non-release build '
       '(format: $format, placement: $placementLabel). '
-      'Use Google test ids or set ALLOW_LIVE_AD_UNITS_IN_DEBUG=true for '
-      'explicit internal validation.',
+      'Use configured debug test ids (including official Google sample ids '
+      'supplied through env/config) or set ALLOW_LIVE_AD_UNITS_IN_DEBUG=true '
+      'for explicit internal validation.',
     );
     unawaited(
       _safeLogEvent(

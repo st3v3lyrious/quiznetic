@@ -156,6 +156,7 @@ void main() {
         androidResultBannerUnitId: '',
         iosResultBannerUnitId: '',
         debugBannerTestUnitIds: const {_fakeTestBannerUnitId},
+        looksLikeAdMobUnitId: _looksLikeAdMobUnitId,
         supportsAds: () => true,
         initializeAdsSdk: () async => throw UnimplementedError(),
       );
@@ -215,6 +216,7 @@ void main() {
           debugRewardedInterstitialTestUnitIds: const {
             _fakeTestRewardedHintUnitId,
           },
+          looksLikeAdMobUnitId: _looksLikeAdMobUnitId,
           supportsAds: () => true,
           initializeAdsSdk: () async => throw UnimplementedError(),
         );
@@ -267,6 +269,7 @@ void main() {
           androidResultInterstitialUnitId: _fakeTestInterstitialUnitId,
           iosResultInterstitialUnitId: '',
           debugInterstitialTestUnitIds: const {_fakeTestInterstitialUnitId},
+          looksLikeAdMobUnitId: _looksLikeAdMobUnitId,
           supportsAds: () => true,
           initializeAdsSdk: () async => throw UnimplementedError(),
         );
