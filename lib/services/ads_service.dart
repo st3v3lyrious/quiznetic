@@ -20,23 +20,11 @@ typedef AdsRequestConfigurationUpdater =
 typedef AdsAnalyticsLogger =
     Future<void> Function(String name, {Map<String, Object?>? parameters});
 
-enum _AdUnitFormat { banner, interstitial, rewarded }
+enum _AdUnitFormat { banner, interstitial, rewardedInterstitial }
 
 class AdsService {
   static const placementHome = 'home';
   static const placementResult = 'result';
-  static const Set<String> _officialGoogleBannerTestAdUnitIds = {
-    'ca-app-pub-3940256099942544/6300978111',
-    'ca-app-pub-3940256099942544/2934735716',
-  };
-  static const Set<String> _officialGoogleInterstitialTestAdUnitIds = {
-    'ca-app-pub-3940256099942544/1033173712',
-    'ca-app-pub-3940256099942544/4411468910',
-  };
-  static const Set<String> _officialGoogleRewardedTestAdUnitIds = {
-    'ca-app-pub-3940256099942544/5354046379',
-    'ca-app-pub-3940256099942544/6978759866',
-  };
 
   AdsService({
     bool? enabled,
@@ -55,7 +43,7 @@ class AdsService {
     String? iosRewardedInterstitialUnitId,
     Iterable<String>? debugBannerTestUnitIds,
     Iterable<String>? debugInterstitialTestUnitIds,
-    Iterable<String>? debugRewardedTestUnitIds,
+    Iterable<String>? debugRewardedInterstitialTestUnitIds,
     Iterable<String>? androidTestDeviceIds,
     Iterable<String>? iosTestDeviceIds,
     bool Function(String adUnitId)? looksLikeAdMobUnitId,
@@ -117,8 +105,8 @@ class AdsService {
                AppConfig.adsIosTestInterstitialUnitId,
              ],
        ),
-       _debugRewardedTestUnitIds = _normalizedUnitIdSet(
-         debugRewardedTestUnitIds ??
+       _debugRewardedInterstitialTestUnitIds = _normalizedUnitIdSet(
+         debugRewardedInterstitialTestUnitIds ??
              const [
                AppConfig.adsAndroidTestRewardedInterstitialUnitId,
                AppConfig.adsIosTestRewardedInterstitialUnitId,
@@ -169,7 +157,7 @@ class AdsService {
   final String _iosRewardedInterstitialUnitId;
   final Set<String> _debugBannerTestUnitIds;
   final Set<String> _debugInterstitialTestUnitIds;
-  final Set<String> _debugRewardedTestUnitIds;
+  final Set<String> _debugRewardedInterstitialTestUnitIds;
   final List<String> _androidTestDeviceIds;
   final List<String> _iosTestDeviceIds;
   final bool Function(String adUnitId) _looksLikeAdMobUnitId;
@@ -454,8 +442,7 @@ class AdsService {
     if (adUnitId == null || adUnitId.isEmpty) return null;
     if (_allowLiveAdUnitsInDebug || kReleaseMode) return adUnitId;
     if (!_looksLikeAdMobUnitId(adUnitId)) return adUnitId;
-    if (_isConfiguredDebugTestAdUnit(adUnitId, format) ||
-        _isOfficialGoogleTestAdUnit(adUnitId, format)) {
+    if (_isOfficialGoogleTestAdUnit(adUnitId, format)) {
       return adUnitId;
     }
 
@@ -473,21 +460,16 @@ class AdsService {
       _AdUnitFormat.interstitial => _debugInterstitialTestUnitIds.contains(
         adUnitId,
       ),
-      _AdUnitFormat.rewarded => _debugRewardedTestUnitIds.contains(adUnitId),
+      _AdUnitFormat.rewardedInterstitial =>
+        _debugRewardedInterstitialTestUnitIds.contains(adUnitId),
     };
   }
 
   bool _isOfficialGoogleTestAdUnit(String adUnitId, _AdUnitFormat format) {
-    return switch (format) {
-      _AdUnitFormat.banner => _officialGoogleBannerTestAdUnitIds.contains(
-        adUnitId,
-      ),
-      _AdUnitFormat.interstitial =>
-        _officialGoogleInterstitialTestAdUnitIds.contains(adUnitId),
-      _AdUnitFormat.rewarded => _officialGoogleRewardedTestAdUnitIds.contains(
-        adUnitId,
-      ),
-    };
+    // Keep official Google sample ids out of tracked source. If a debug build
+    // should allow them, they must be supplied through AppConfig or constructor
+    // overrides for the existing debug test-unit allowlist.
+    return _isConfiguredDebugTestAdUnit(adUnitId, format);
   }
 
   void _logPolicyWarning({
@@ -928,7 +910,7 @@ class AdsService {
   String? get _resolvedRewardedInterstitialHintAdUnitId {
     return _enforceAdUnitPolicy(
       adUnitId: _rawRewardedInterstitialHintAdUnitId,
-      format: _AdUnitFormat.rewarded,
+      format: _AdUnitFormat.rewardedInterstitial,
       placementLabel: 'hint_rewarded_interstitial',
     );
   }

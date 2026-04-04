@@ -181,7 +181,7 @@ void main() {
           androidRewardedInterstitialUnitId:
               'android.rewarded.interstitial.unit',
           iosRewardedInterstitialUnitId: '',
-          debugRewardedTestUnitIds: const {
+          debugRewardedInterstitialTestUnitIds: const {
             'android.rewarded.interstitial.unit',
           },
           supportsAds: () => true,
