@@ -94,5 +94,40 @@ void main() {
       expect(result, 'Privacy options are not required right now.');
       expect(privacyOptionsCalls, 0);
     });
+
+    test(
+      'refreshConsentFlow reruns consent update and recaches snapshot',
+      () async {
+        var updateCalls = 0;
+        var canRequestAds = false;
+        final service = AdConsentService(
+          enabled: true,
+          supportsAds: () => true,
+          requestConsentInfoUpdate: (_) async {
+            updateCalls++;
+            return null;
+          },
+          loadAndShowConsentFormIfRequired: () async => null,
+          getConsentStatus: () async =>
+              canRequestAds ? ConsentStatus.obtained : ConsentStatus.required,
+          canRequestAds: () async => canRequestAds,
+          isConsentFormAvailable: () async => !canRequestAds,
+          getPrivacyOptionsRequirementStatus: () async => canRequestAds
+              ? PrivacyOptionsRequirementStatus.notRequired
+              : PrivacyOptionsRequirementStatus.required,
+          showPrivacyOptionsForm: () async => null,
+        );
+
+        final first = await service.ensureConsentFlowCompleted();
+        canRequestAds = true;
+        final refreshed = await service.refreshConsentFlow();
+        final cached = await service.ensureConsentFlowCompleted();
+
+        expect(first.canRequestAds, isFalse);
+        expect(refreshed.canRequestAds, isTrue);
+        expect(cached.canRequestAds, isTrue);
+        expect(updateCalls, 2);
+      },
+    );
   });
 }

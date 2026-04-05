@@ -11,6 +11,35 @@ import 'package:quiznetic_flutter/services/iap_service.dart';
 void main() {
   group('HintMonetizationService', () {
     test(
+      'rewarded hint readiness follows rewarded interstitial probe success',
+      () async {
+        final hintService = HintMonetizationService(
+          rewardedHintsEnabled: true,
+          paidHintsEnabled: false,
+          rewardedHintsPerSession: 1,
+          adsService: AdsService(
+            enabled: true,
+            rewardedHintsEnabled: true,
+            androidRewardedInterstitialUnitId:
+                'android.rewarded.interstitial.unit',
+            iosRewardedInterstitialUnitId: 'ios.rewarded.interstitial.unit',
+            supportsAds: () => true,
+            initializeAdsSdk: () async => null,
+            consentService: _allowingConsentService(),
+          ),
+          iapService: _buildIapService(),
+          preloadRewardedHintAd: (_) async => true,
+          presentRewardedHintAd: (_) async => true,
+          logEvent: _noopLogEvent,
+        );
+
+        final ready = await hintService.refreshRewardedHintReady();
+
+        expect(ready, isTrue);
+      },
+    );
+
+    test(
       'grants rewarded hint and decrements remaining session quota',
       () async {
         final hintService = HintMonetizationService(
@@ -28,9 +57,12 @@ void main() {
             consentService: _allowingConsentService(),
           ),
           iapService: _buildIapService(),
+          preloadRewardedHintAd: (_) async => true,
           presentRewardedHintAd: (_) async => true,
           logEvent: _noopLogEvent,
         );
+
+        await hintService.refreshRewardedHintReady();
 
         final result = await hintService.requestHint();
 
@@ -59,9 +91,12 @@ void main() {
             consentService: _allowingConsentService(),
           ),
           iapService: _buildIapService(),
+          preloadRewardedHintAd: (_) async => true,
           presentRewardedHintAd: (_) async => true,
           logEvent: _noopLogEvent,
         );
+
+        await hintService.refreshRewardedHintReady();
 
         final first = await hintService.requestHint();
         final second = await hintService.requestHint();
@@ -89,9 +124,12 @@ void main() {
           consentService: _allowingConsentService(),
         ),
         iapService: _buildIapService(storeClient: storeClient),
+        preloadRewardedHintAd: (_) async => true,
         presentRewardedHintAd: (_) async => true,
         logEvent: _noopLogEvent,
       );
+
+      await hintService.refreshRewardedHintReady();
 
       final first = await hintService.requestHint();
       final second = await hintService.requestHint();
@@ -156,6 +194,7 @@ void main() {
             consentService: _allowingConsentService(),
           ),
           iapService: _buildIapService(storeClient: storeClient),
+          preloadRewardedHintAd: (_) async => true,
           presentRewardedHintAd: (_) async => true,
           logEvent: _noopLogEvent,
         );
@@ -189,12 +228,15 @@ void main() {
           consentService: _allowingConsentService(),
         ),
         iapService: _buildIapService(),
+        preloadRewardedHintAd: (_) async => true,
         presentRewardedHintAd: (_) async {
           rewardedHintCalls++;
           return true;
         },
         logEvent: _noopLogEvent,
       );
+
+      await hintService.refreshRewardedHintReady();
 
       final result = await hintService.requestHint();
 

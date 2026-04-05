@@ -53,7 +53,7 @@ class QuizScreen extends StatefulWidget {
   State<QuizScreen> createState() => _QuizScreenState();
 }
 
-class _QuizScreenState extends State<QuizScreen> {
+class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
   static const double _contentHorizontalPadding = 16;
   static const double _contentTopPadding = 24;
   static const double _contentBottomPadding = 24;
@@ -73,6 +73,9 @@ class _QuizScreenState extends State<QuizScreen> {
   late final HintMonetizationGateway _hintMonetizationService;
   bool _argsLoaded = false;
   bool _hasLoggedQuizStarted = false;
+  bool _rewardedHintReady = false;
+  bool _refreshingRewardedHintAvailability = false;
+  int _hintRequestEpoch = 0;
 
   static const quizProgressSemanticsKey = Key('quiz-progress-semantics');
   static const answerFeedbackCardKey = Key('quiz-answer-feedback-card');
@@ -81,13 +84,22 @@ class _QuizScreenState extends State<QuizScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _hintMonetizationService =
         widget.hintMonetizationService ?? HintMonetizationService.instance;
     _loadAccessibilityPreferences();
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(_refreshRewardedHintAvailability(forceRefresh: true));
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _scrollController.dispose();
     super.dispose();
   }
@@ -103,6 +115,40 @@ class _QuizScreenState extends State<QuizScreen> {
     } catch (e, stackTrace) {
       debugPrint('QuizScreen accessibility preference load failed: $e');
       debugPrintStack(stackTrace: stackTrace);
+    }
+  }
+
+  Future<void> _refreshRewardedHintAvailability({
+    required bool forceRefresh,
+  }) async {
+    if (!_hintMonetizationService.isEnabled ||
+        !_hintMonetizationService.hasRewardedHintsRemaining) {
+      if (!mounted || !_rewardedHintReady) return;
+      setState(() {
+        _rewardedHintReady = false;
+      });
+      return;
+    }
+    if (_refreshingRewardedHintAvailability) return;
+
+    _refreshingRewardedHintAvailability = true;
+    try {
+      final ready = forceRefresh
+          ? await _hintMonetizationService.refreshRewardedHintReady()
+          : await _hintMonetizationService.isRewardedHintReady();
+      if (!mounted || _rewardedHintReady == ready) return;
+      setState(() {
+        _rewardedHintReady = ready;
+      });
+    } catch (e, stackTrace) {
+      debugPrint('QuizScreen hint availability refresh failed: $e');
+      debugPrintStack(stackTrace: stackTrace);
+      if (!mounted || !_rewardedHintReady) return;
+      setState(() {
+        _rewardedHintReady = false;
+      });
+    } finally {
+      _refreshingRewardedHintAvailability = false;
     }
   }
 
@@ -170,6 +216,7 @@ class _QuizScreenState extends State<QuizScreen> {
       args = ModalRoute.of(context)!.settings.arguments as QuizScreenArgs;
       _argsLoaded = true;
       _hintMonetizationService.resetSession();
+      unawaited(_refreshRewardedHintAvailability(forceRefresh: true));
       final loadQuestions =
           widget.flagsLoader ?? _defaultLoaderForCategory(args.categoryKey);
       final prepare =
@@ -233,16 +280,20 @@ class _QuizScreenState extends State<QuizScreen> {
   void _nextQuestion() {
     if (_currentIndex < _questions.length - 1) {
       setState(() {
+        _hintRequestEpoch++;
         _currentIndex++;
         _answered = false;
         _selectedOption = null;
+        _isUnlockingHint = false;
         _eliminatedOptions.clear();
       });
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted || !_scrollController.hasClients) return;
         _scrollController.jumpTo(0);
       });
+      unawaited(_refreshRewardedHintAvailability(forceRefresh: true));
     } else {
+      _hintRequestEpoch++;
       // Instead of pushing ResultScreen(score: _score, total: _questions.length),
       // do:
       Navigator.pushNamed(
@@ -278,6 +329,8 @@ class _QuizScreenState extends State<QuizScreen> {
 
   Future<void> _requestHint(FlagQuestion question) async {
     if (_isUnlockingHint || !_canApplyHint(question)) return;
+    final requestEpoch = _hintRequestEpoch;
+    final requestedQuestionIndex = _currentIndex;
 
     setState(() {
       _isUnlockingHint = true;
@@ -285,6 +338,13 @@ class _QuizScreenState extends State<QuizScreen> {
 
     final result = await _hintMonetizationService.requestHint();
     if (!mounted) return;
+    final isStale =
+        requestEpoch != _hintRequestEpoch ||
+        requestedQuestionIndex != _currentIndex;
+
+    if (isStale) {
+      return;
+    }
 
     if (result.status == HintRequestStatus.granted) {
       final optionsToEliminate = question.options
@@ -333,6 +393,9 @@ class _QuizScreenState extends State<QuizScreen> {
     if (mounted) {
       setState(() {
         _isUnlockingHint = false;
+        if (!_hintMonetizationService.hasRewardedHintsRemaining) {
+          _rewardedHintReady = false;
+        }
       });
     }
   }
@@ -406,6 +469,27 @@ class _QuizScreenState extends State<QuizScreen> {
     final nextActionLabel = _currentIndex < _questions.length - 1
         ? 'Next'
         : 'See Results';
+    final rewardedHintActionAvailable =
+        _hintMonetizationService.hasRewardedHintsRemaining &&
+        _rewardedHintReady;
+    final hintActionLabel = _isUnlockingHint
+        ? 'Processing hint...'
+        : _hintMonetizationService.hasRewardedHintsRemaining
+        ? rewardedHintActionAvailable
+              ? 'Watch Ad for Hint'
+              : 'Hint Ads Unavailable'
+        : _hintMonetizationService.canOfferPaidHint
+        ? _paidHintLabel()
+        : 'Hints Unavailable';
+    final hintSummaryText =
+        _hintMonetizationService.hasRewardedHintsRemaining &&
+            !rewardedHintActionAvailable
+        ? 'Free hints left: ${_hintMonetizationService.rewardedHintsRemaining}. Ad hints are temporarily unavailable.'
+        : _hintMonetizationService.hasRewardedHintsRemaining
+        ? 'Free hints left: ${_hintMonetizationService.rewardedHintsRemaining}'
+        : _hintMonetizationService.canOfferPaidHint
+        ? 'Free hints used for this session.'
+        : 'No hints left this session.';
 
     return Scaffold(
       appBar: AppBar(
@@ -541,13 +625,7 @@ class _QuizScreenState extends State<QuizScreen> {
                                 children: [
                                   Text(
                                     key: QuizScreen.hintSummaryKey,
-                                    _hintMonetizationService
-                                            .hasRewardedHintsRemaining
-                                        ? 'Free hints left: ${_hintMonetizationService.rewardedHintsRemaining}'
-                                        : _hintMonetizationService
-                                              .canOfferPaidHint
-                                        ? 'Free hints used for this session.'
-                                        : 'No hints left this session.',
+                                    hintSummaryText,
                                   ),
                                   const SizedBox(height: 8),
                                   const Text(
@@ -561,23 +639,15 @@ class _QuizScreenState extends State<QuizScreen> {
                                         ? null
                                         : _hintMonetizationService
                                               .hasRewardedHintsRemaining
-                                        ? () => _requestHint(q)
+                                        ? rewardedHintActionAvailable
+                                              ? () => _requestHint(q)
+                                              : null
                                         : _hintMonetizationService
                                               .canOfferPaidHint
                                         ? () => _requestHint(q)
                                         : null,
                                     icon: const Icon(Icons.lightbulb_outline),
-                                    label: Text(
-                                      _isUnlockingHint
-                                          ? 'Processing hint...'
-                                          : _hintMonetizationService
-                                                .hasRewardedHintsRemaining
-                                          ? 'Watch Ad for Hint'
-                                          : _hintMonetizationService
-                                                .canOfferPaidHint
-                                          ? _paidHintLabel()
-                                          : 'Hints Unavailable',
-                                    ),
+                                    label: Text(hintActionLabel),
                                   ),
                                 ],
                               ),

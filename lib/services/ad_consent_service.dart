@@ -113,11 +113,15 @@ class AdConsentService {
 
   bool get isEnabled => _enabled && _supportsAds();
 
-  Future<AdConsentSnapshot> ensureConsentFlowCompleted() async {
+  Future<AdConsentSnapshot> ensureConsentFlowCompleted({
+    bool forceRefresh = false,
+  }) async {
     if (!isEnabled) {
       return _storeSnapshot(_buildDisabledSnapshot());
     }
-    if (_didCompleteInitialConsentFlow && _lastSnapshot != null) {
+    if (!forceRefresh &&
+        _didCompleteInitialConsentFlow &&
+        _lastSnapshot != null) {
       return _lastSnapshot!;
     }
 
@@ -129,6 +133,10 @@ class AdConsentService {
     final flow = _runConsentFlow();
     _consentFlowFuture = flow;
     return flow;
+  }
+
+  Future<AdConsentSnapshot> refreshConsentFlow() {
+    return ensureConsentFlowCompleted(forceRefresh: true);
   }
 
   Future<AdConsentSnapshot> currentSnapshot() async {

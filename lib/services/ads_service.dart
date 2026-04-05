@@ -517,6 +517,38 @@ class AdsService {
     return _initialized;
   }
 
+  Future<bool> isRewardedHintAdReady() async {
+    if (!isRewardedHintsEnabled || rewardedHintAdUnitId == null) {
+      return false;
+    }
+    if (!supportsConsentManagement) {
+      return true;
+    }
+
+    final consentSnapshot = await _consentService.currentSnapshot();
+    return consentSnapshot.canRequestAds;
+  }
+
+  Future<bool> refreshRewardedHintAdReadiness() async {
+    if (!isRewardedHintsEnabled || rewardedHintAdUnitId == null) {
+      return false;
+    }
+
+    final consentSnapshot = supportsConsentManagement
+        ? await _consentService.refreshConsentFlow()
+        : await _consentService.currentSnapshot();
+    await _logConsentTelemetry(consentSnapshot);
+    if (_looksLikeConnectivityFailure(consentSnapshot.lastErrorMessage)) {
+      return false;
+    }
+    if (!consentSnapshot.canRequestAds) {
+      return false;
+    }
+
+    final initialized = await ensureInitializedForAdRequests();
+    return initialized;
+  }
+
   void reportFullscreenAdHang({
     required String format,
     required String reason,
@@ -919,5 +951,17 @@ class AdsService {
       debugPrint('AdsService analytics event failed for "$name": $e');
       debugPrintStack(stackTrace: stackTrace);
     }
+  }
+
+  static bool _looksLikeConnectivityFailure(String? message) {
+    if (message == null || message.isEmpty) return false;
+    final normalized = message.toLowerCase();
+    return normalized.contains('network') ||
+        normalized.contains('unable to resolve host') ||
+        normalized.contains('failed to connect') ||
+        normalized.contains('connection') ||
+        normalized.contains('timed out') ||
+        normalized.contains('timeout') ||
+        normalized.contains('unreachable');
   }
 }

@@ -77,6 +77,53 @@ class AuthUiHelper {
     return 'Sign-in failed. Please try again.';
   }
 
+  /// Returns true when the error indicates an existing-account collision.
+  static bool isExistingAccountCollision(Exception exception) {
+    if (exception is! fba.FirebaseAuthException) return false;
+    return exception.code == 'account-exists-with-different-credential' ||
+        exception.code == 'credential-already-in-use';
+  }
+
+  /// Returns the best user-facing sign-in method label for a Firebase method list.
+  static String? recommendedExistingAccountMethodLabel(
+    Iterable<String> signInMethods,
+  ) {
+    final methods = signInMethods.map((method) => method.trim()).toSet();
+    if (methods.contains('password') || methods.contains('emailLink')) {
+      return 'email and password';
+    }
+    if (methods.contains('google.com')) {
+      return 'Google';
+    }
+    if (methods.contains('apple.com')) {
+      return 'Apple';
+    }
+    if (methods.contains('phone')) {
+      return 'phone';
+    }
+    return null;
+  }
+
+  /// Builds recovery copy for existing-account collisions on upgrade/sign-in.
+  static String existingAccountRecoveryMessage({
+    String? email,
+    Iterable<String> signInMethods = const <String>[],
+  }) {
+    final methodLabel = recommendedExistingAccountMethodLabel(signInMethods);
+    final normalizedEmail = email?.trim();
+    final emailSuffix = (normalizedEmail != null && normalizedEmail.isNotEmpty)
+        ? ' for $normalizedEmail'
+        : '';
+
+    if (methodLabel == null) {
+      return 'An account already exists$emailSuffix with a different sign-in '
+          'method. Use that method on the sign-in screen to continue.';
+    }
+
+    return 'An account already exists$emailSuffix. Sign in with '
+        '$methodLabel to continue.';
+  }
+
   /// Normalized reason used for analytics segmentation.
   static String authFailureReason(Exception exception) {
     if (isLikelyGoogleConfigIssue(exception)) {

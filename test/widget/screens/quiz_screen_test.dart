@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:collection';
 
 import 'package:flutter/material.dart';
@@ -145,7 +146,10 @@ void main() {
     final nextTopLeft = tester.getTopLeft(nextFinder);
     final nextBottomRight = tester.getBottomRight(nextFinder);
     expect(nextTopLeft.dy, lessThan(tester.view.physicalSize.height));
-    expect(nextBottomRight.dy, lessThanOrEqualTo(tester.view.physicalSize.height));
+    expect(
+      nextBottomRight.dy,
+      lessThanOrEqualTo(tester.view.physicalSize.height),
+    );
 
     await tester.tap(nextFinder);
     await tester.pumpAndSettle();
@@ -159,7 +163,8 @@ void main() {
     expect(
       scrollableState.position.pixels,
       0,
-      reason: 'Advancing to the next question should reset the scroll position.',
+      reason:
+          'Advancing to the next question should reset the scroll position.',
     );
   });
 
@@ -328,6 +333,170 @@ void main() {
       expect(find.text('Buy Hint (\$0.50)'), findsOneWidget);
     },
   );
+
+  testWidgets('disables rewarded hint CTA when ad readiness is unavailable', (
+    tester,
+  ) async {
+    final hintService = _FakeHintMonetizationService(
+      rewardedHintsRemainingValue: 1,
+      canOfferPaidHintValue: false,
+      rewardedHintReadyValue: false,
+      queuedResults: Queue<HintRequestResult>(),
+    );
+
+    await pumpQuiz(tester, hintMonetizationService: hintService);
+
+    final hintButton = tester.widget<ElevatedButton>(
+      find.byKey(QuizScreen.hintActionButtonKey),
+    );
+    expect(find.text('Hint Ads Unavailable'), findsOneWidget);
+    expect(
+      find.text('Free hints left: 1. Ad hints are temporarily unavailable.'),
+      findsOneWidget,
+    );
+    expect(hintButton.onPressed, isNull);
+  });
+
+  testWidgets('uses forced rewarded hint refresh on initial quiz load', (
+    tester,
+  ) async {
+    final hintService = _FakeHintMonetizationService(
+      rewardedHintsRemainingValue: 1,
+      canOfferPaidHintValue: false,
+      rewardedHintReadyValue: true,
+      refreshedReadyStates: Queue<bool>.from([false]),
+      queuedResults: Queue<HintRequestResult>(),
+    );
+
+    await pumpQuiz(tester, hintMonetizationService: hintService);
+
+    final hintButton = tester.widget<ElevatedButton>(
+      find.byKey(QuizScreen.hintActionButtonKey),
+    );
+    expect(find.text('Hint Ads Unavailable'), findsOneWidget);
+    expect(hintButton.onPressed, isNull);
+    expect(hintService.refreshRewardedHintReadyCalls, 1);
+    expect(hintService.isRewardedHintReadyCalls, 0);
+  });
+
+  testWidgets('retries rewarded hint availability on next question', (
+    tester,
+  ) async {
+    final hintService = _FakeHintMonetizationService(
+      rewardedHintsRemainingValue: 1,
+      canOfferPaidHintValue: false,
+      rewardedHintReadyValue: false,
+      refreshedReadyStates: Queue<bool>.from([false, true]),
+      queuedResults: Queue<HintRequestResult>(),
+    );
+
+    await pumpQuiz(
+      tester,
+      injectedQuestions: [question, question],
+      flagsPerSession: 2,
+      hintMonetizationService: hintService,
+    );
+
+    var hintButton = tester.widget<ElevatedButton>(
+      find.byKey(QuizScreen.hintActionButtonKey),
+    );
+    expect(hintButton.onPressed, isNull);
+
+    await tester.tap(find.text('France'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(QuizScreen.nextActionButtonKey));
+    await tester.pumpAndSettle();
+
+    hintButton = tester.widget<ElevatedButton>(
+      find.byKey(QuizScreen.hintActionButtonKey),
+    );
+    expect(find.text('Watch Ad for Hint'), findsOneWidget);
+    expect(hintButton.onPressed, isNotNull);
+    expect(hintService.refreshRewardedHintReadyCalls, greaterThanOrEqualTo(1));
+  });
+
+  testWidgets(
+    'keeps rewarded hint CTA stable while next-question refresh is in flight',
+    (tester) async {
+      final pendingRefresh = Completer<bool>();
+      final hintService = _FakeHintMonetizationService(
+        rewardedHintsRemainingValue: 1,
+        canOfferPaidHintValue: false,
+        rewardedHintReadyValue: true,
+        refreshedReadyStates: Queue<bool>.from([true]),
+        pendingRefreshReadyCompleter: pendingRefresh,
+        queuedResults: Queue<HintRequestResult>(),
+      );
+
+      await pumpQuiz(
+        tester,
+        injectedQuestions: [question, question],
+        flagsPerSession: 2,
+        hintMonetizationService: hintService,
+      );
+
+      await tester.tap(find.text('France'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(QuizScreen.nextActionButtonKey));
+      await tester.pump();
+
+      final hintButton = tester.widget<ElevatedButton>(
+        find.byKey(QuizScreen.hintActionButtonKey),
+      );
+      expect(find.text('Watch Ad for Hint'), findsOneWidget);
+      expect(hintButton.onPressed, isNotNull);
+
+      pendingRefresh.complete(true);
+      await tester.pumpAndSettle();
+
+      final enabledHintButton = tester.widget<ElevatedButton>(
+        find.byKey(QuizScreen.hintActionButtonKey),
+      );
+      expect(find.text('Watch Ad for Hint'), findsOneWidget);
+      expect(enabledHintButton.onPressed, isNotNull);
+    },
+  );
+
+  testWidgets('moving to next question invalidates stale hint request UI', (
+    tester,
+  ) async {
+    final pendingResult = Completer<HintRequestResult>();
+    final hintService = _FakeHintMonetizationService(
+      rewardedHintsRemainingValue: 1,
+      canOfferPaidHintValue: false,
+      queuedResults: Queue<HintRequestResult>(),
+      pendingRequestCompleter: pendingResult,
+    );
+
+    await pumpQuiz(
+      tester,
+      injectedQuestions: [question, question],
+      flagsPerSession: 2,
+      hintMonetizationService: hintService,
+    );
+
+    await tester.tap(find.byKey(QuizScreen.hintActionButtonKey));
+    await tester.pump();
+    expect(find.text('Processing hint...'), findsOneWidget);
+
+    await tester.tap(find.text('France'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(QuizScreen.nextActionButtonKey));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Flag Quiz (2/2)'), findsOneWidget);
+    expect(find.text('Processing hint...'), findsNothing);
+
+    pendingResult.complete(
+      const HintRequestResult(
+        status: HintRequestStatus.failed,
+        message: 'stale hint failure',
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('stale hint failure'), findsNothing);
+  });
 }
 
 class _ResultArgsProbe extends StatelessWidget {
@@ -365,13 +534,23 @@ class _FakeHintMonetizationService implements HintMonetizationGateway {
     required this.canOfferPaidHintValue,
     required this.queuedResults,
     this.paidHintPriceUsdCentsValue = 50,
-  });
+    this.rewardedHintReadyValue = true,
+    Queue<bool>? refreshedReadyStates,
+    this.pendingRequestCompleter,
+    this.pendingRefreshReadyCompleter,
+  }) : refreshedReadyStates = refreshedReadyStates ?? Queue<bool>();
 
   int rewardedHintsRemainingValue;
   final bool canOfferPaidHintValue;
   final int paidHintPriceUsdCentsValue;
   final Queue<HintRequestResult> queuedResults;
+  bool rewardedHintReadyValue;
+  final Queue<bool> refreshedReadyStates;
+  final Completer<HintRequestResult>? pendingRequestCompleter;
+  final Completer<bool>? pendingRefreshReadyCompleter;
   int resetSessionCalls = 0;
+  int isRewardedHintReadyCalls = 0;
+  int refreshRewardedHintReadyCalls = 0;
 
   @override
   bool get isEnabled => true;
@@ -394,7 +573,30 @@ class _FakeHintMonetizationService implements HintMonetizationGateway {
   }
 
   @override
+  Future<bool> isRewardedHintReady() async {
+    isRewardedHintReadyCalls++;
+    return rewardedHintReadyValue;
+  }
+
+  @override
+  Future<bool> refreshRewardedHintReady() async {
+    refreshRewardedHintReadyCalls++;
+    if (refreshedReadyStates.isNotEmpty) {
+      rewardedHintReadyValue = refreshedReadyStates.removeFirst();
+      return rewardedHintReadyValue;
+    }
+    if (pendingRefreshReadyCompleter != null) {
+      rewardedHintReadyValue = await pendingRefreshReadyCompleter!.future;
+      return rewardedHintReadyValue;
+    }
+    return rewardedHintReadyValue;
+  }
+
+  @override
   Future<HintRequestResult> requestHint() async {
+    if (pendingRequestCompleter != null) {
+      return pendingRequestCompleter!.future;
+    }
     if (queuedResults.isNotEmpty) {
       return queuedResults.removeFirst();
     }

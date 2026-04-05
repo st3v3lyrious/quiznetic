@@ -20,8 +20,8 @@ Use this file as the bug/issue tracker, separate from milestone planning in
 | ISS-004 | P1 | MVP | Done | `Describe Flag` toggle should persist for the rest of the current game session until user hides it again. | `You` | `February 28, 2026` | #140 |
 | ISS-006 | P0 | MVP | Done | Android real device: Google sign-in fails from login/upgrade flow with unknown error state. | `You` | `March 2, 2026` |  |
 | ISS-007 | P1 | MVP | Done | Rewarded hint flow migrated from classic rewarded ads to rewarded interstitial after real-device reward delivery proved unreliable with the old format. | `You` | `March 2, 2026` |  |
-| ISS-008 | P1 | MVP | Blocked | Android real device: home banner ad renders as broken/blank test creative. | `You` | `March 3, 2026` |  |
-| ISS-009 | P1 | MVP | Blocked | Android real device: result interstitial appears visually broken/blank during QA. | `You` | `March 3, 2026` |  |
+| ISS-008 | P1 | MVP | Done | Android real device home-banner QA issue was traced to invalid live-unit testing assumptions in non-release builds; sample-unit policy/QA path is now the source of truth for debug validation. | `You` | `March 3, 2026` |  |
+| ISS-009 | P1 | MVP | Done | Android real device result-interstitial QA issue was traced to invalid live-unit testing assumptions in non-release builds; sample-unit policy/QA path is now the source of truth for debug validation. | `You` | `March 3, 2026` |  |
 | ISS-010 | P2 | MVP | Done | App branding name mismatch: installed app shows `quiznetic_flutter`/`Quiznetic Flutter` instead of `Quiznetic`. | `You` | `March 2, 2026` |  |
 | ISS-011 | P0 | MVP | Done | Leaderboard appears stale after quiz completion: verify forced pending-score sync + investigate persistent sync failures from diagnostics. | `You` | `March 3, 2026` |  |
 | ISS-012 | P0 | MVP | Done | Security hardening before MVP deploy: rotate exposed Firebase/AdMob/OAuth credentials, then purge leaked credential artifacts from git history and validate no active secrets remain reachable from prior commits/tags. | `You` | `March 6, 2026` |  |
@@ -31,13 +31,9 @@ Use this file as the bug/issue tracker, separate from milestone planning in
 
 ### Recommended Execution Order (MVP)
 
-The dates below keep the original target dates for historical tracking. Steps
-2-3 are currently past due and remain blocked pending monetization direction
-and validation.
+The dates below keep the original target dates for historical tracking.
 
 1. `ISS-015` by **April 6, 2026** (Google sign-in should handle existing-account/provider collisions without dropping the user into a dead-end auth error).
-2. `ISS-008` original target **March 3, 2026** (past due; blocked pending monetization direction and release-mode/live-serving validation).
-3. `ISS-009` original target **March 3, 2026** (past due; blocked pending monetization direction and release-mode/live-serving validation).
 
 ## MVP+1 Backlog
 

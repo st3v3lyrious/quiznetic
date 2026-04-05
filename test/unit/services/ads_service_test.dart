@@ -432,6 +432,124 @@ void main() {
     );
 
     test(
+      'isRewardedHintAdReady stays false when consent blocks rewarded hint ads',
+      () async {
+        final service = AdsService(
+          enabled: true,
+          rewardedHintsEnabled: true,
+          androidRewardedInterstitialUnitId: _fakeTestRewardedHintUnitId,
+          iosRewardedInterstitialUnitId: '',
+          debugRewardedInterstitialTestUnitIds: const {
+            _fakeTestRewardedHintUnitId,
+          },
+          looksLikeAdMobUnitId: _looksLikeAdMobUnitId,
+          supportsAds: () => true,
+          consentService: _allowingConsentService(canRequestAds: false),
+          initializeAdsSdk: () async => null,
+        );
+
+        final ready = await service.isRewardedHintAdReady();
+
+        expect(ready, isFalse);
+      },
+    );
+
+    test(
+      'refreshRewardedHintAdReadiness reruns consent flow and initializes ads once ready',
+      () async {
+        var canRequestAds = false;
+        var initializeCalls = 0;
+        final consentService = AdConsentService(
+          enabled: true,
+          supportsAds: () => true,
+          requestConsentInfoUpdate: (_) async => null,
+          loadAndShowConsentFormIfRequired: () async => null,
+          getConsentStatus: () async =>
+              canRequestAds ? ConsentStatus.obtained : ConsentStatus.required,
+          canRequestAds: () async => canRequestAds,
+          isConsentFormAvailable: () async => !canRequestAds,
+          getPrivacyOptionsRequirementStatus: () async => canRequestAds
+              ? PrivacyOptionsRequirementStatus.notRequired
+              : PrivacyOptionsRequirementStatus.required,
+          showPrivacyOptionsForm: () async => null,
+        );
+        final service = AdsService(
+          enabled: true,
+          rewardedHintsEnabled: true,
+          androidRewardedInterstitialUnitId: _fakeTestRewardedHintUnitId,
+          iosRewardedInterstitialUnitId: '',
+          debugRewardedInterstitialTestUnitIds: const {
+            _fakeTestRewardedHintUnitId,
+          },
+          looksLikeAdMobUnitId: _looksLikeAdMobUnitId,
+          supportsAds: () => true,
+          consentService: consentService,
+          initializeAdsSdk: () async {
+            initializeCalls++;
+            return null;
+          },
+        );
+
+        final first = await service.refreshRewardedHintAdReadiness();
+        canRequestAds = true;
+        final second = await service.refreshRewardedHintAdReadiness();
+
+        expect(first, isFalse);
+        expect(second, isTrue);
+        expect(initializeCalls, 1);
+      },
+    );
+
+    test(
+      'refreshRewardedHintAdReadiness stays false when consent refresh fails from connectivity',
+      () async {
+        var initializeCalls = 0;
+        var requestCalls = 0;
+        final consentService = AdConsentService(
+          enabled: true,
+          supportsAds: () => true,
+          requestConsentInfoUpdate: (_) async {
+            requestCalls++;
+            if (requestCalls == 1) {
+              return null;
+            }
+            return FormError(errorCode: 7, message: 'network unavailable');
+          },
+          loadAndShowConsentFormIfRequired: () async => null,
+          getConsentStatus: () async => ConsentStatus.obtained,
+          canRequestAds: () async => true,
+          isConsentFormAvailable: () async => false,
+          getPrivacyOptionsRequirementStatus: () async =>
+              PrivacyOptionsRequirementStatus.notRequired,
+          showPrivacyOptionsForm: () async => null,
+        );
+        final service = AdsService(
+          enabled: true,
+          rewardedHintsEnabled: true,
+          androidRewardedInterstitialUnitId: _fakeTestRewardedHintUnitId,
+          iosRewardedInterstitialUnitId: '',
+          debugRewardedInterstitialTestUnitIds: const {
+            _fakeTestRewardedHintUnitId,
+          },
+          looksLikeAdMobUnitId: _looksLikeAdMobUnitId,
+          supportsAds: () => true,
+          consentService: consentService,
+          initializeAdsSdk: () async {
+            initializeCalls++;
+            return null;
+          },
+        );
+
+        final first = await service.refreshRewardedHintAdReadiness();
+        final second = await service.refreshRewardedHintAdReadiness();
+
+        expect(first, isTrue);
+        expect(second, isFalse);
+        expect(initializeCalls, 1);
+      },
+    );
+
+    test(
       'fullscreen ad hang blocks rewarded and interstitials for the session but keeps banners',
       () {
         final service = AdsService(

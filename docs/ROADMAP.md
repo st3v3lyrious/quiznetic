@@ -96,6 +96,7 @@ Use this as a short, editable delivery plan.
     - [x] Default consumable hint SKU: `quiznetic.hint_single` (`IAP_HINT_CONSUMABLE_PRODUCT_ID`).
     - [x] Feature flags (default OFF): `ENABLE_REWARDED_HINTS`, `ENABLE_PAID_HINTS`.
     - [ ] Store setup/QA pending: rewarded ad units + consumable product approval + sandbox validation.
+    - [ ] MVP+1 hardening: preload rewarded interstitial hint ads and drive hint-CTA availability from real ad load readiness, not only consent/session state, so offline/network-loss sessions do not re-enable hint ads prematurely.
   - Activation runbook: `docs/MONETIZATION_SETUP.md`.
 - [ ] M16: Improve UI/UX polish (animations, progress indicators, feedback styling). <!--gh:issue=50-->
 - [ ] M17: Launch MVP (release checklist, store metadata, and production rollout). <!--gh:issue=51-->
