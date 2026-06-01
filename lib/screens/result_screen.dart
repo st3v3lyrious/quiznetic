@@ -5,26 +5,19 @@
 */
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:quiznetic_flutter/screens/upgrade_account_screen.dart';
-import 'package:quiznetic_flutter/services/ad_overlay_recovery_service.dart';
-import 'package:quiznetic_flutter/services/ads_service.dart';
 import 'package:quiznetic_flutter/services/analytics_service.dart';
 import 'package:quiznetic_flutter/services/auth_service.dart';
-import 'package:quiznetic_flutter/services/entitlement_service.dart';
 import 'package:quiznetic_flutter/services/leaderboard_band_service.dart';
 import 'package:quiznetic_flutter/services/score_repository.dart';
-import 'package:quiznetic_flutter/widgets/monetized_banner_ad.dart';
+import 'package:quiznetic_flutter/utils/app_logger.dart';
 import 'quiz_screen.dart';
 import 'difficulty_screen.dart';
 import 'home_screen.dart';
 import 'leaderboard_screen.dart';
 import 'user_profile_screen.dart';
-
-typedef ResultInterstitialPresenter = Future<bool> Function(String adUnitId);
 
 class ResultScreenArgs {
   final String categoryKey;
@@ -54,9 +47,6 @@ class ResultScreen extends StatefulWidget {
   final ScoreRepository? scoreRepository;
   final AuthService? authService;
   final LeaderboardBandService? leaderboardBandService;
-  final AdsService? adsService;
-  final EntitlementService? entitlementService;
-  final ResultInterstitialPresenter? presentResultInterstitialAd;
 
   const ResultScreen({
     super.key,
@@ -65,9 +55,6 @@ class ResultScreen extends StatefulWidget {
     this.scoreRepository,
     this.authService,
     this.leaderboardBandService,
-    this.adsService,
-    this.entitlementService,
-    this.presentResultInterstitialAd,
   });
 
   /// Creates state for the quiz results screen.
@@ -82,22 +69,10 @@ class _ResultScreenState extends State<ResultScreen> {
   bool _didInit = false;
   bool _dismissGuestCta = false;
   bool _hasLoggedQuizCompleted = false;
-  bool _shouldShowResultBanner = true;
-  bool _didResolveResultAdFlow = false;
-
-  late final AdsService _adsService;
-  late final EntitlementService _entitlementService;
-  late final ResultInterstitialPresenter _presentResultInterstitialAd;
 
   @override
   void initState() {
     super.initState();
-    _adsService = widget.adsService ?? AdsService.instance;
-    _entitlementService =
-        widget.entitlementService ?? EntitlementService.instance;
-    _presentResultInterstitialAd =
-        widget.presentResultInterstitialAd ??
-        _presentResultInterstitialAdDefault;
   }
 
   /// Loads args once, saves score, and resolves the displayed high score.
@@ -113,7 +88,6 @@ class _ResultScreenState extends State<ResultScreen> {
       }
 
       final args = route.settings.arguments as ResultScreenArgs;
-      _configureResultAdFlow();
       if (!_hasLoggedQuizCompleted) {
         _hasLoggedQuizCompleted = true;
         final accuracyPercent = args.total > 0
@@ -149,7 +123,7 @@ class _ResultScreenState extends State<ResultScreen> {
               totalQuestions: totalQuestions,
             );
             if (result.queuedForSync) {
-              debugPrint(
+              AppLogger.d(
                 'ResultScreen score sync queued for '
                 '$categoryKey/$difficulty: ${result.syncError}',
               );
@@ -200,7 +174,7 @@ class _ResultScreenState extends State<ResultScreen> {
       );
       return _ResultData(highScore: highScore, guestBand: band);
     } catch (e) {
-      debugPrint('SaveScore error: $e');
+      AppLogger.d('SaveScore error: $e');
       unawaited(
         _safeLogAnalyticsEvent(
           'score_save_failed',
@@ -233,7 +207,7 @@ class _ResultScreenState extends State<ResultScreen> {
         candidateDisplayName: user.displayName,
       );
     } catch (e) {
-      debugPrint('Leaderboard band lookup failed: $e');
+      AppLogger.d('Leaderboard band lookup failed: $e');
       unawaited(
         _safeLogAnalyticsEvent(
           'leaderboard_band_lookup_failed',
@@ -277,212 +251,6 @@ class _ResultScreenState extends State<ResultScreen> {
     }
   }
 
-  void _configureResultAdFlow() {
-    if (_didResolveResultAdFlow) return;
-    _didResolveResultAdFlow = true;
-
-    final adUnitId = _adsService.resultInterstitialAdUnitId;
-    final shouldAttemptInterstitial =
-        _adsService.isResultInterstitialEnabled &&
-        !_entitlementService.hasRemoveAds &&
-        adUnitId != null &&
-        adUnitId.isNotEmpty;
-
-    if (!shouldAttemptInterstitial) {
-      _shouldShowResultBanner = true;
-      return;
-    }
-
-    // Hybrid strategy: interstitial-first, banner fallback only on failure.
-    _shouldShowResultBanner = false;
-    unawaited(_attemptResultInterstitial(adUnitId));
-  }
-
-  Future<void> _attemptResultInterstitial(String adUnitId) async {
-    await _safeLogEvent('result_interstitial_requested');
-    final ready = await _adsService.ensureInitializedForAdRequests();
-    if (!mounted) return;
-    if (!ready) {
-      await _safeLogEvent('result_interstitial_fallback_banner');
-      setState(() {
-        _shouldShowResultBanner = true;
-      });
-      return;
-    }
-
-    final shown = await _presentResultInterstitialAd(adUnitId);
-    if (!mounted) return;
-
-    if (shown) {
-      await _safeLogEvent('result_interstitial_shown');
-      return;
-    }
-
-    await _safeLogEvent('result_interstitial_fallback_banner');
-    setState(() {
-      _shouldShowResultBanner = true;
-    });
-  }
-
-  Future<bool> _presentResultInterstitialAdDefault(String adUnitId) async {
-    final completer = Completer<bool>();
-    InterstitialAd? loadedAd;
-    Timer? loadWatchdog;
-    Timer? showWatchdog;
-    const loadTimeout = Duration(seconds: 20);
-    final fullscreenTimeout = kDebugMode
-        ? const Duration(seconds: 30)
-        : const Duration(seconds: 45);
-
-    void cancelWatchdogs() {
-      loadWatchdog?.cancel();
-      showWatchdog?.cancel();
-    }
-
-    Future<void> recoverOverlay(String reason) async {
-      await AdOverlayRecoveryService.finishStuckAdActivity(reason: reason);
-    }
-
-    var showed = false;
-    var hadImpression = false;
-    var dismissed = false;
-    var finalized = false;
-
-    InterstitialAd.load(
-      adUnitId: adUnitId,
-      request: const AdRequest(),
-      adLoadCallback: InterstitialAdLoadCallback(
-        onAdLoaded: (ad) {
-          loadWatchdog?.cancel();
-          if (completer.isCompleted) {
-            ad.dispose();
-            return;
-          }
-          loadedAd = ad;
-          void disposeLoadedAd(InterstitialAd ad, {required String reason}) {
-            if (!identical(loadedAd, ad)) return;
-            loadedAd = null;
-            ad.dispose();
-          }
-
-          void finalize(bool shown) {
-            if (finalized) return;
-            finalized = true;
-            cancelWatchdogs();
-            if (!completer.isCompleted) {
-              completer.complete(shown);
-            }
-          }
-
-          ad.fullScreenContentCallback = FullScreenContentCallback(
-            onAdShowedFullScreenContent: (ad) {
-              showed = true;
-              showWatchdog = Timer(fullscreenTimeout, () {
-                if (dismissed) return;
-                _adsService.reportFullscreenAdHang(
-                  format: 'interstitial',
-                  reason: 'watchdog_timeout',
-                );
-                unawaited(
-                  _safeLogAnalyticsEvent(
-                    'ad_result_interstitial_watchdog_timeout',
-                  ),
-                );
-                disposeLoadedAd(ad, reason: 'watchdog_timeout');
-                unawaited(
-                  recoverOverlay('result_interstitial_watchdog_timeout'),
-                );
-                finalize(false);
-              });
-            },
-            onAdImpression: (ad) {
-              hadImpression = true;
-            },
-            onAdDismissedFullScreenContent: (ad) {
-              dismissed = true;
-              disposeLoadedAd(ad, reason: 'dismissed');
-              final actuallyShown = showed && hadImpression;
-              if (!actuallyShown) {
-                unawaited(
-                  _safeLogAnalyticsEvent(
-                    'ad_result_interstitial_no_impression',
-                  ),
-                );
-              }
-              finalize(actuallyShown);
-            },
-            onAdFailedToShowFullScreenContent: (ad, error) {
-              dismissed = true;
-              disposeLoadedAd(ad, reason: 'show_failed');
-              debugPrint(
-                AdsService.summarizeAdError(
-                  format: 'interstitial',
-                  placement: AdsService.placementResult,
-                  adUnitId: adUnitId,
-                  error: error,
-                ),
-              );
-              unawaited(
-                _safeLogAnalyticsEvent(
-                  'ad_result_interstitial_show_failed',
-                  parameters: AdsService.adErrorAnalyticsParameters(
-                    placement: AdsService.placementResult,
-                    format: 'interstitial',
-                    adUnitId: adUnitId,
-                    error: error,
-                  ),
-                ),
-              );
-              finalize(false);
-            },
-          );
-          ad.show();
-        },
-        onAdFailedToLoad: (error) {
-          cancelWatchdogs();
-          debugPrint(
-            AdsService.summarizeLoadAdError(
-              format: 'interstitial',
-              placement: AdsService.placementResult,
-              adUnitId: adUnitId,
-              error: error,
-            ),
-          );
-          unawaited(
-            _safeLogAnalyticsEvent(
-              'ad_result_interstitial_load_failed',
-              parameters: AdsService.loadAdErrorAnalyticsParameters(
-                placement: AdsService.placementResult,
-                format: 'interstitial',
-                adUnitId: adUnitId,
-                error: error,
-              ),
-            ),
-          );
-          if (!completer.isCompleted) {
-            completer.complete(false);
-          }
-        },
-      ),
-    );
-
-    loadWatchdog = Timer(loadTimeout, () {
-      if (loadedAd != null || completer.isCompleted) return;
-      unawaited(_safeLogAnalyticsEvent('ad_result_interstitial_timeout'));
-      if (!completer.isCompleted) {
-        completer.complete(false);
-      }
-    });
-
-    final shown = await completer.future;
-    cancelWatchdogs();
-    if (!shown) {
-      loadedAd?.dispose();
-      loadedAd = null;
-    }
-    return shown;
-  }
-
   static Future<void> _safeLogAnalyticsEvent(
     String name, {
     Map<String, Object?>? parameters,
@@ -490,17 +258,8 @@ class _ResultScreenState extends State<ResultScreen> {
     try {
       await AnalyticsService.instance.logEvent(name, parameters: parameters);
     } catch (e, stackTrace) {
-      debugPrint('ResultScreen analytics event failed for "$name": $e');
-      debugPrintStack(stackTrace: stackTrace);
-    }
-  }
-
-  Future<void> _safeLogEvent(String name) async {
-    try {
-      await AnalyticsService.instance.logEvent(name);
-    } catch (e, stackTrace) {
-      debugPrint('ResultScreen logEvent failed for "$name": $e');
-      debugPrintStack(stackTrace: stackTrace);
+      AppLogger.d('ResultScreen analytics event failed for "$name": $e');
+      AppLogger.stack(stackTrace);
     }
   }
 
@@ -727,12 +486,6 @@ class _ResultScreenState extends State<ResultScreen> {
                                 },
                                 child: const Text('Change Quiz Type'),
                               ),
-                              if (_shouldShowResultBanner) ...[
-                                const SizedBox(height: 16),
-                                const Center(
-                                  child: MonetizedBannerAd(placement: 'result'),
-                                ),
-                              ],
                             ],
                           ),
                         ],

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:quiznetic_flutter/screens/difficulty_screen.dart';
 import 'package:quiznetic_flutter/screens/home_screen.dart';
 import 'package:quiznetic_flutter/screens/leaderboard_screen.dart';
@@ -8,32 +7,9 @@ import 'package:quiznetic_flutter/screens/quiz_screen.dart';
 import 'package:quiznetic_flutter/screens/result_screen.dart';
 import 'package:quiznetic_flutter/screens/upgrade_account_screen.dart';
 import 'package:quiznetic_flutter/screens/user_profile_screen.dart';
-import 'package:quiznetic_flutter/services/ad_consent_service.dart';
-import 'package:quiznetic_flutter/services/ads_service.dart';
 import 'package:quiznetic_flutter/services/auth_service.dart';
-import 'package:quiznetic_flutter/services/entitlement_service.dart';
 import 'package:quiznetic_flutter/services/leaderboard_band_service.dart';
-import 'package:quiznetic_flutter/widgets/monetized_banner_ad.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
-const _fakeResultInterstitialUnitId = 'admob-test-interstitial';
-
-bool _looksLikeAdMobUnitId(String adUnitId) => adUnitId.startsWith('admob-');
-
-AdConsentService _allowingConsentService() {
-  return AdConsentService(
-    enabled: true,
-    supportsAds: () => true,
-    requestConsentInfoUpdate: (_) async => null,
-    loadAndShowConsentFormIfRequired: () async => null,
-    getConsentStatus: () async => ConsentStatus.obtained,
-    canRequestAds: () async => true,
-    isConsentFormAvailable: () async => false,
-    getPrivacyOptionsRequirementStatus: () async =>
-        PrivacyOptionsRequirementStatus.notRequired,
-    showPrivacyOptionsForm: () async => null,
-  );
-}
 
 void main() {
   Future<void> pumpResult(
@@ -51,9 +27,6 @@ void main() {
     AuthService? authService,
     LeaderboardBandService? leaderboardBandService,
     WidgetBuilder? upgradeRouteBuilder,
-    AdsService? adsService,
-    EntitlementService? entitlementService,
-    ResultInterstitialPresenter? presentResultInterstitialAd,
   }) async {
     await tester.pumpWidget(
       MaterialApp(
@@ -68,9 +41,6 @@ void main() {
               getHighScore: getHighScore,
               authService: authService,
               leaderboardBandService: leaderboardBandService,
-              adsService: adsService,
-              entitlementService: entitlementService,
-              presentResultInterstitialAd: presentResultInterstitialAd,
             ),
           ),
         ],
@@ -449,137 +419,6 @@ void main() {
 
     expect(find.byKey(const Key('guest-conversion-cta')), findsNothing);
   });
-
-  testWidgets(
-    'keeps result banner hidden when result interstitial shows successfully',
-    (tester) async {
-      await pumpResult(
-        tester,
-        args: ResultScreenArgs(
-          categoryKey: 'flag',
-          score: 6,
-          total: 10,
-          difficulty: 'easy',
-        ),
-        saveScore:
-            ({
-              required categoryKey,
-              required difficulty,
-              required score,
-              required totalQuestions,
-            }) async => score,
-        getHighScore: (categoryKey, difficulty) async => 9,
-        adsService: AdsService(
-          enabled: true,
-          resultInterstitialEnabled: true,
-          androidBannerUnitId: '',
-          iosBannerUnitId: '',
-          androidHomeBannerUnitId: '',
-          iosHomeBannerUnitId: '',
-          androidResultBannerUnitId: 'android-result-banner',
-          iosResultBannerUnitId: '',
-          androidResultInterstitialUnitId: _fakeResultInterstitialUnitId,
-          iosResultInterstitialUnitId: '',
-          debugInterstitialTestUnitIds: const {_fakeResultInterstitialUnitId},
-          looksLikeAdMobUnitId: _looksLikeAdMobUnitId,
-          supportsAds: () => true,
-          initializeAdsSdk: () async => null,
-          consentService: _allowingConsentService(),
-        ),
-        entitlementService: EntitlementService(initialRemoveAds: false),
-        presentResultInterstitialAd: (_) async => true,
-      );
-
-      expect(find.byType(MonetizedBannerAd), findsNothing);
-    },
-  );
-
-  testWidgets('falls back to result banner when result interstitial fails', (
-    tester,
-  ) async {
-    await pumpResult(
-      tester,
-      args: ResultScreenArgs(
-        categoryKey: 'flag',
-        score: 6,
-        total: 10,
-        difficulty: 'easy',
-      ),
-      saveScore:
-          ({
-            required categoryKey,
-            required difficulty,
-            required score,
-            required totalQuestions,
-          }) async => score,
-      getHighScore: (categoryKey, difficulty) async => 9,
-      adsService: AdsService(
-        enabled: true,
-        resultInterstitialEnabled: true,
-        androidBannerUnitId: '',
-        iosBannerUnitId: '',
-        androidHomeBannerUnitId: '',
-        iosHomeBannerUnitId: '',
-        androidResultBannerUnitId: 'android-result-banner',
-        iosResultBannerUnitId: '',
-        androidResultInterstitialUnitId: _fakeResultInterstitialUnitId,
-        iosResultInterstitialUnitId: '',
-        debugInterstitialTestUnitIds: const {_fakeResultInterstitialUnitId},
-        looksLikeAdMobUnitId: _looksLikeAdMobUnitId,
-        supportsAds: () => true,
-        initializeAdsSdk: () async => null,
-        consentService: _allowingConsentService(),
-      ),
-      entitlementService: EntitlementService(initialRemoveAds: false),
-      presentResultInterstitialAd: (_) async => false,
-    );
-
-    expect(find.byType(MonetizedBannerAd), findsOneWidget);
-  });
-
-  testWidgets(
-    'falls back to result banner when ads SDK initialization is not ready',
-    (tester) async {
-      await pumpResult(
-        tester,
-        args: ResultScreenArgs(
-          categoryKey: 'flag',
-          score: 6,
-          total: 10,
-          difficulty: 'easy',
-        ),
-        saveScore:
-            ({
-              required categoryKey,
-              required difficulty,
-              required score,
-              required totalQuestions,
-            }) async => score,
-        getHighScore: (categoryKey, difficulty) async => 9,
-        adsService: AdsService(
-          enabled: true,
-          resultInterstitialEnabled: true,
-          androidBannerUnitId: '',
-          iosBannerUnitId: '',
-          androidHomeBannerUnitId: '',
-          iosHomeBannerUnitId: '',
-          androidResultBannerUnitId: 'android-result-banner',
-          iosResultBannerUnitId: '',
-          androidResultInterstitialUnitId: _fakeResultInterstitialUnitId,
-          iosResultInterstitialUnitId: '',
-          debugInterstitialTestUnitIds: const {_fakeResultInterstitialUnitId},
-          looksLikeAdMobUnitId: _looksLikeAdMobUnitId,
-          supportsAds: () => true,
-          initializeAdsSdk: () async => throw Exception('ads init failed'),
-          consentService: _allowingConsentService(),
-        ),
-        entitlementService: EntitlementService(initialRemoveAds: false),
-        presentResultInterstitialAd: (_) async => true,
-      );
-
-      expect(find.byType(MonetizedBannerAd), findsOneWidget);
-    },
-  );
 }
 
 class _QuizArgsProbe extends StatelessWidget {

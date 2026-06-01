@@ -10,6 +10,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/widgets.dart';
 import 'package:quiznetic_flutter/config/app_config.dart';
+import 'package:quiznetic_flutter/utils/app_logger.dart';
 
 typedef AnalyticsSetCollectionEnabled = Future<void> Function(bool enabled);
 typedef AnalyticsLogEvent =
@@ -88,8 +89,8 @@ class AnalyticsService {
     try {
       await _setCollectionEnabled(_enabled);
     } catch (e, stackTrace) {
-      debugPrint('Analytics initialize failed: $e');
-      debugPrintStack(stackTrace: stackTrace);
+      AppLogger.d('Analytics initialize failed: $e');
+      AppLogger.stack(stackTrace);
     }
   }
 
@@ -117,8 +118,8 @@ class AnalyticsService {
         _logCrashBreadcrumb('analytics:$normalizedName');
       }
     } catch (e, stackTrace) {
-      debugPrint('Analytics logEvent failed for "$normalizedName": $e');
-      debugPrintStack(stackTrace: stackTrace);
+      AppLogger.d('Analytics logEvent failed for "$normalizedName": $e');
+      AppLogger.stack(stackTrace);
     }
   }
 
@@ -147,10 +148,10 @@ class AnalyticsService {
       );
       _logCrashBreadcrumb('screen_view:$normalizedScreenName');
     } catch (e, stackTrace) {
-      debugPrint(
+      AppLogger.d(
         'Analytics logScreenView failed for "$normalizedScreenName": $e',
       );
-      debugPrintStack(stackTrace: stackTrace);
+      AppLogger.stack(stackTrace);
     }
   }
 

@@ -101,7 +101,7 @@ This document defines the repository quality gates and the intended merge flow.
 - Command:
   - `cd firestore_tests && npm run test:emulator`
 - Deploy command:
-  - `firebase deploy --only firestore:rules,firestore:indexes --project quiznetic-30734`
+  - `firebase deploy --only firestore:rules,firestore:indexes --project <your-firebase-project-id>`
 
 ## Branch Protection (Reference Setup)
 

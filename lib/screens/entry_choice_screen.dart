@@ -11,6 +11,7 @@ import 'package:quiznetic_flutter/screens/home_screen.dart';
 import 'package:quiznetic_flutter/screens/login_screen.dart';
 import 'package:quiznetic_flutter/services/analytics_service.dart';
 import 'package:quiznetic_flutter/services/auth_service.dart';
+import 'package:quiznetic_flutter/utils/app_logger.dart';
 import 'package:quiznetic_flutter/widgets/legal_consent_notice.dart';
 
 typedef ContinueAsGuestAction = Future<void> Function(BuildContext context);
@@ -94,10 +95,10 @@ class EntryChoiceScreen extends StatelessWidget {
                               ),
                             );
                           } catch (e, stackTrace) {
-                            debugPrint(
+                            AppLogger.d(
                               'EntryChoiceScreen guest continuation failed: $e',
                             );
-                            debugPrintStack(stackTrace: stackTrace);
+                            AppLogger.stack(stackTrace);
                             unawaited(
                               AnalyticsService.instance.logEvent(
                                 'auth_guest_continue_failed',

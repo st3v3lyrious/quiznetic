@@ -6,6 +6,7 @@
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:quiznetic_flutter/config/app_config.dart';
+import 'package:quiznetic_flutter/utils/app_logger.dart';
 
 typedef CrashSetCollectionEnabled = Future<void> Function(bool enabled);
 typedef CrashRecordError =
@@ -57,7 +58,7 @@ class CrashReportingService {
     bool fatal = true,
   }) async {
     if (!_enabled) {
-      debugPrint('Unhandled error captured while crash reporting is disabled');
+      AppLogger.d('Unhandled error captured while crash reporting is disabled');
       return;
     }
     await _recordError(error, stackTrace, fatal: fatal);

@@ -3,35 +3,22 @@
  Title: Settings Screen
  Purpose: Provides account/session controls, legal links, and app preferences.
 */
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:quiznetic_flutter/config/brand_config.dart';
 import 'package:quiznetic_flutter/screens/about_screen.dart';
 import 'package:quiznetic_flutter/screens/entry_choice_screen.dart';
 import 'package:quiznetic_flutter/screens/legal_document_screen.dart';
 import 'package:quiznetic_flutter/screens/leaderboard_screen.dart';
 import 'package:quiznetic_flutter/services/accessibility_preferences.dart';
-import 'package:quiznetic_flutter/services/ads_service.dart';
 import 'package:quiznetic_flutter/services/auth_service.dart';
-import 'package:quiznetic_flutter/services/entitlement_service.dart';
-import 'package:quiznetic_flutter/services/iap_service.dart';
+import 'package:quiznetic_flutter/utils/app_logger.dart';
 
 class SettingsScreen extends StatefulWidget {
   static const routeName = '/settings';
 
   final AuthService? authService;
-  final IapService? iapService;
-  final EntitlementService? entitlementService;
-  final AdsService? adsService;
 
-  const SettingsScreen({
-    super.key,
-    this.authService,
-    this.iapService,
-    this.entitlementService,
-    this.adsService,
-  });
+  const SettingsScreen({super.key, this.authService});
 
   /// Creates state for settings controls and sign-out flow.
   @override
@@ -43,33 +30,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _hapticsEnabled = true;
   bool _showFlagDescriptions = false;
   bool _isSigningOut = false;
-  bool _isLoadingRemoveAdsOffer = false;
-  bool _isPurchasingRemoveAds = false;
-  bool _isRestoringPurchases = false;
-  bool _isCollectingAdDiagnostics = false;
-  bool _isOpeningAdInspector = false;
-  bool _isLoadingAdPrivacyState = false;
-  bool _isOpeningAdPrivacyOptions = false;
-  RemoveAdsOffer? _removeAdsOffer;
-  String? _monetizationStatusMessage;
-  PrivacyOptionsRequirementStatus _privacyOptionsRequirementStatus =
-      PrivacyOptionsRequirementStatus.unknown;
-
-  late final IapService _iapService;
-  late final EntitlementService _entitlementService;
-  late final AdsService _adsService;
 
   /// Loads persisted accessibility preferences.
   @override
   void initState() {
     super.initState();
-    _iapService = widget.iapService ?? IapService.instance;
-    _entitlementService =
-        widget.entitlementService ?? EntitlementService.instance;
-    _adsService = widget.adsService ?? AdsService.instance;
     _loadAccessibilityPreferences();
-    _loadMonetizationState();
-    _loadAdPrivacyState();
   }
 
   Future<void> _loadAccessibilityPreferences() async {
@@ -81,8 +47,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _showFlagDescriptions = enabled;
       });
     } catch (e, stackTrace) {
-      debugPrint('Settings accessibility preference load failed: $e');
-      debugPrintStack(stackTrace: stackTrace);
+      AppLogger.d('Settings accessibility preference load failed: $e');
+      AppLogger.stack(stackTrace);
     }
   }
 
@@ -93,8 +59,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     try {
       await AccessibilityPreferences.setShowFlagDescriptionsEnabled(enabled);
     } catch (e, stackTrace) {
-      debugPrint('Settings accessibility preference save failed: $e');
-      debugPrintStack(stackTrace: stackTrace);
+      AppLogger.d('Settings accessibility preference save failed: $e');
+      AppLogger.stack(stackTrace);
       if (!mounted) return;
       setState(() {
         _showFlagDescriptions = !enabled;
@@ -105,203 +71,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
       );
     }
-  }
-
-  Future<void> _loadMonetizationState() async {
-    if (!_iapService.isEnabled) return;
-
-    setState(() {
-      _isLoadingRemoveAdsOffer = true;
-    });
-
-    try {
-      await _iapService.initialize();
-      final offer = await _iapService.loadRemoveAdsOffer();
-      if (!mounted) return;
-      setState(() {
-        _removeAdsOffer = offer;
-        _monetizationStatusMessage = null;
-      });
-    } catch (e, stackTrace) {
-      debugPrint('Settings monetization load failed: $e');
-      debugPrintStack(stackTrace: stackTrace);
-      if (!mounted) return;
-      setState(() {
-        _monetizationStatusMessage =
-            'Monetization options are currently unavailable.';
-      });
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoadingRemoveAdsOffer = false;
-        });
-      }
-    }
-  }
-
-  Future<void> _loadAdPrivacyState() async {
-    if (!_adsService.supportsConsentManagement) return;
-
-    setState(() {
-      _isLoadingAdPrivacyState = true;
-    });
-
-    try {
-      final snapshot = await _adsService.getConsentSnapshot();
-      if (!mounted) return;
-      setState(() {
-        _privacyOptionsRequirementStatus =
-            snapshot.privacyOptionsRequirementStatus;
-      });
-    } catch (e, stackTrace) {
-      debugPrint('Settings ad privacy state load failed: $e');
-      debugPrintStack(stackTrace: stackTrace);
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoadingAdPrivacyState = false;
-        });
-      }
-    }
-  }
-
-  Future<void> _buyRemoveAds() async {
-    if (_isPurchasingRemoveAds) return;
-
-    setState(() {
-      _isPurchasingRemoveAds = true;
-    });
-
-    final result = await _iapService.buyRemoveAds();
-    if (!mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(result.message)));
-
-    setState(() {
-      _isPurchasingRemoveAds = false;
-    });
-  }
-
-  Future<void> _restorePurchases() async {
-    if (_isRestoringPurchases) return;
-
-    setState(() {
-      _isRestoringPurchases = true;
-    });
-
-    final result = await _iapService.restorePurchases();
-    if (!mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(result.message)));
-
-    setState(() {
-      _isRestoringPurchases = false;
-    });
-  }
-
-  Widget _buildMonetizationSection(TextTheme textTheme) {
-    if (!_iapService.isEnabled) {
-      return const SizedBox.shrink();
-    }
-
-    return ValueListenableBuilder<bool>(
-      valueListenable: _entitlementService.hasRemoveAdsListenable,
-      builder: (context, hasRemoveAds, _) {
-        final offer = _removeAdsOffer;
-        final offerSubtitle = offer != null && offer.canPurchase
-            ? '${offer.title ?? 'Remove Ads'} - ${offer.price ?? ''}'
-            : 'Purchase currently unavailable';
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 20),
-            Text(
-              'Support ${BrandConfig.appName}',
-              style: textTheme.titleMedium,
-            ),
-            const SizedBox(height: 8),
-            Card(
-              child: Column(
-                children: [
-                  ListTile(
-                    key: const Key('settings-remove-ads-status'),
-                    leading: Icon(
-                      hasRemoveAds
-                          ? Icons.verified_outlined
-                          : Icons.workspace_premium_outlined,
-                    ),
-                    title: const Text('Remove Ads (Lifetime)'),
-                    subtitle: Text(
-                      hasRemoveAds
-                          ? 'Active on this device/account.'
-                          : offerSubtitle,
-                    ),
-                  ),
-                  if (_isLoadingRemoveAdsOffer)
-                    const Padding(
-                      padding: EdgeInsets.only(bottom: 12),
-                      child: SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                    ),
-                  if (!hasRemoveAds && !_isLoadingRemoveAdsOffer)
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                      child: SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          key: const Key('settings-buy-remove-ads-button'),
-                          onPressed:
-                              (_isPurchasingRemoveAds ||
-                                  offer == null ||
-                                  !offer.canPurchase)
-                              ? null
-                              : _buyRemoveAds,
-                          child: Text(
-                            _isPurchasingRemoveAds
-                                ? 'Starting purchase...'
-                                : 'Buy Remove Ads',
-                          ),
-                        ),
-                      ),
-                    ),
-                  const Divider(height: 1),
-                  ListTile(
-                    key: const Key('settings-restore-purchases-button'),
-                    enabled: !_isRestoringPurchases,
-                    leading: _isRestoringPurchases
-                        ? const SizedBox(
-                            height: 24,
-                            width: 24,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.restore),
-                    title: const Text('Restore Purchases'),
-                    subtitle: const Text('Recover previous purchases'),
-                    onTap: _restorePurchases,
-                  ),
-                  if (_monetizationStatusMessage != null) ...[
-                    const Divider(height: 1),
-                    Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Text(
-                        _monetizationStatusMessage!,
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   /// Returns account status text from the current auth session.
@@ -332,8 +101,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         context,
       ).pushNamedAndRemoveUntil(EntryChoiceScreen.routeName, (_) => false);
     } catch (e, stackTrace) {
-      debugPrint('Settings sign-out failed: $e');
-      debugPrintStack(stackTrace: stackTrace);
+      AppLogger.d('Settings sign-out failed: $e');
+      AppLogger.stack(stackTrace);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Sign out failed. Please try again.')),
@@ -360,173 +129,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     Navigator.of(context).pushNamed(
       LegalDocumentScreen.routeName,
       arguments: LegalDocumentScreen.privacyArgs,
-    );
-  }
-
-  Future<void> _showAdDiagnostics() async {
-    if (_isCollectingAdDiagnostics) return;
-
-    setState(() {
-      _isCollectingAdDiagnostics = true;
-    });
-
-    try {
-      final report = await _adsService.buildDiagnosticsReport();
-      if (!mounted) return;
-      await showDialog<void>(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: const Text('Ad Diagnostics'),
-            content: SizedBox(
-              width: double.maxFinite,
-              child: SingleChildScrollView(
-                child: SelectableText(
-                  report,
-                  key: const Key('settings-ad-diagnostics-report'),
-                ),
-              ),
-            ),
-            actions: [
-              TextButton(
-                key: const Key('settings-ad-diagnostics-close'),
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Close'),
-              ),
-            ],
-          );
-        },
-      );
-    } catch (e, stackTrace) {
-      debugPrint('Settings ad diagnostics failed: $e');
-      debugPrintStack(stackTrace: stackTrace);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Unable to collect ad diagnostics.')),
-      );
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isCollectingAdDiagnostics = false;
-        });
-      }
-    }
-  }
-
-  Future<void> _openAdInspector() async {
-    if (_isOpeningAdInspector) return;
-
-    setState(() {
-      _isOpeningAdInspector = true;
-    });
-
-    try {
-      final error = await _adsService.openInspector();
-      if (!mounted || error == null) return;
-      debugPrint('Settings Ad Inspector unavailable: $error');
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(
-        const SnackBar(
-          content: Text('Unable to open Ad Inspector right now.'),
-        ),
-      );
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isOpeningAdInspector = false;
-        });
-      }
-    }
-  }
-
-  Future<void> _openAdPrivacyOptions() async {
-    if (_isOpeningAdPrivacyOptions) return;
-
-    setState(() {
-      _isOpeningAdPrivacyOptions = true;
-    });
-
-    try {
-      final error = await _adsService.openPrivacyOptionsForm();
-      if (!mounted) return;
-      if (error != null) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(error)));
-      }
-      await _loadAdPrivacyState();
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isOpeningAdPrivacyOptions = false;
-        });
-      }
-    }
-  }
-
-  String _adPrivacySubtitle() {
-    if (_isLoadingAdPrivacyState) {
-      return 'Checking whether ad privacy choices are required';
-    }
-
-    return switch (_privacyOptionsRequirementStatus) {
-      PrivacyOptionsRequirementStatus.required =>
-        'Manage your advertising consent choices',
-      PrivacyOptionsRequirementStatus.notRequired =>
-        'Privacy options are not required right now',
-      PrivacyOptionsRequirementStatus.unknown =>
-        'Refresh or review advertising consent options',
-    };
-  }
-
-  Widget _buildDebugAdTools(TextTheme textTheme) {
-    if (kReleaseMode || !_adsService.canOpenAdInspector) {
-      return const SizedBox.shrink();
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 20),
-        Text('Diagnostics', style: textTheme.titleMedium),
-        const SizedBox(height: 8),
-        Card(
-          child: Column(
-            children: [
-              ListTile(
-                key: const Key('settings-ad-diagnostics-button'),
-                leading: _isCollectingAdDiagnostics
-                    ? const SizedBox(
-                        height: 24,
-                        width: 24,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.bug_report_outlined),
-                title: const Text('View Ad Diagnostics'),
-                subtitle: const Text(
-                  'Show masked SDK status, init adapters, and resolved units',
-                ),
-                onTap: _isCollectingAdDiagnostics ? null : _showAdDiagnostics,
-              ),
-              const Divider(height: 1),
-              ListTile(
-                key: const Key('settings-ad-inspector-button'),
-                leading: _isOpeningAdInspector
-                    ? const SizedBox(
-                        height: 24,
-                        width: 24,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.preview_outlined),
-                title: const Text('Open Ad Inspector'),
-                subtitle: const Text('Launch Google Mobile Ads inspector UI'),
-                onTap: _isOpeningAdInspector ? null : _openAdInspector,
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 
@@ -629,8 +231,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onChanged: _setShowFlagDescriptions,
               ),
             ),
-            _buildMonetizationSection(textTheme),
-            _buildDebugAdTools(textTheme),
             const SizedBox(height: 20),
             Text('Legal', style: textTheme.titleMedium),
             const SizedBox(height: 8),
@@ -650,24 +250,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     title: const Text('Privacy Policy'),
                     onTap: _openPrivacy,
                   ),
-                  if (_adsService.supportsConsentManagement) ...[
-                    const Divider(height: 1),
-                    ListTile(
-                      key: const Key('settings-ad-privacy-options-button'),
-                      leading: _isOpeningAdPrivacyOptions
-                          ? const SizedBox(
-                              height: 24,
-                              width: 24,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.privacy_tip_outlined),
-                      title: const Text('Ad Privacy Choices'),
-                      subtitle: Text(_adPrivacySubtitle()),
-                      onTap: _isOpeningAdPrivacyOptions
-                          ? null
-                          : _openAdPrivacyOptions,
-                    ),
-                  ],
                 ],
               ),
             ),
@@ -690,7 +272,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ListTile(
                     leading: const Icon(Icons.new_releases_outlined),
                     title: const Text('App Version'),
-                    subtitle: const Text(BrandConfig.appVersionLabel),
+                    subtitle: Text(BrandConfig.appVersionLabel),
                   ),
                 ],
               ),

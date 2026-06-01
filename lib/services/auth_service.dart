@@ -4,8 +4,8 @@
  Purpose: Wraps authentication operations and auth-state helpers.
 */
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
 import 'package:quiznetic_flutter/services/score_repository.dart';
+import 'package:quiznetic_flutter/utils/app_logger.dart';
 import 'user_checker.dart';
 
 typedef CurrentUserProvider = User? Function();
@@ -91,7 +91,7 @@ class AuthService {
         try {
           await _syncPendingScoresProvider();
         } catch (e) {
-          debugPrint(
+          AppLogger.d(
             '⚠️ Deferred score sync after anonymous sign-in failed: $e',
           );
         }
@@ -99,7 +99,7 @@ class AuthService {
 
       return credential;
     } catch (e) {
-      debugPrint('❌ Anonymous sign-in failed: $e');
+      AppLogger.d('❌ Anonymous sign-in failed: $e');
       rethrow;
     }
   }
@@ -110,7 +110,7 @@ class AuthService {
     try {
       await _signOutProvider();
     } catch (e) {
-      debugPrint('❌ Sign-out failed: $e');
+      AppLogger.d('❌ Sign-out failed: $e');
       rethrow;
     }
   }
@@ -130,11 +130,11 @@ class AuthService {
       try {
         await _syncPendingScoresProvider();
       } catch (e) {
-        debugPrint('⚠️ Deferred score sync after account linking failed: $e');
+        AppLogger.d('⚠️ Deferred score sync after account linking failed: $e');
       }
       return linked;
     } catch (e) {
-      debugPrint('❌ Account linking failed: $e');
+      AppLogger.d('❌ Account linking failed: $e');
       rethrow;
     }
   }

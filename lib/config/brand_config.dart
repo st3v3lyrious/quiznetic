@@ -4,6 +4,7 @@
  Purpose: Centralizes editable app branding tokens for colors and display naming.
 */
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class EirenyaPalette {
   EirenyaPalette._();
@@ -22,9 +23,20 @@ class BrandConfig {
   static const appName = 'Quiznetic';
   static const tagline = 'Train your world trivia reflexes.';
   static const supportEmail = 'quizneticapp@gmail.com';
-  static const appVersionLabel = '1.0.0+1';
   static const logoSemanticLabel = 'Quiznetic logo';
   static const quizQuestionImageSemanticLabel = 'Quiz question image';
+
+  static String _appVersionLabel = '—';
+  static String get appVersionLabel => _appVersionLabel;
+
+  static Future<void> initVersion() async {
+    try {
+      final info = await PackageInfo.fromPlatform();
+      _appVersionLabel = '${info.version}+${info.buildNumber}';
+    } catch (_) {
+      // keep fallback value
+    }
+  }
 
   // Active theme tokens for the current EIRENYA rollout.
   static const seedColor = EirenyaPalette.blueSerenity;

@@ -12,9 +12,11 @@ import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:firebase_ui_oauth_apple/firebase_ui_oauth_apple.dart';
 import 'package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart';
 import 'package:quiznetic_flutter/config/app_config.dart';
+import 'package:quiznetic_flutter/screens/login_screen.dart';
 import 'package:quiznetic_flutter/services/analytics_service.dart';
 import 'package:quiznetic_flutter/services/score_repository.dart';
 import 'package:quiznetic_flutter/services/user_checker.dart';
+import 'package:quiznetic_flutter/utils/app_logger.dart';
 import 'package:quiznetic_flutter/utils/auth_ui_helper.dart';
 import 'package:quiznetic_flutter/widgets/legal_consent_notice.dart';
 
@@ -106,6 +108,8 @@ class UpgradeAccountScreen extends StatefulWidget {
 class _UpgradeAccountScreenState extends State<UpgradeAccountScreen> {
   String? _initialAnonymousUid;
   bool _isProcessingUpgrade = false;
+  bool _allowExistingAccountUidChange = false;
+  bool _isResolvingExistingAccountCollision = false;
 
   /// Captures initial anonymous uid for continuity checks.
   @override
@@ -126,7 +130,10 @@ class _UpgradeAccountScreenState extends State<UpgradeAccountScreen> {
   }
 
   /// Handles successful credential-link events and closes upgrade flow.
-  Future<void> _finalizeUpgrade(fba.User? user) async {
+  Future<void> _finalizeUpgrade(
+    fba.User? user, {
+    bool allowUidChange = false,
+  }) async {
     if (_isProcessingUpgrade || user == null) return;
     unawaited(
       AnalyticsService.instance.logEvent(
@@ -140,10 +147,11 @@ class _UpgradeAccountScreenState extends State<UpgradeAccountScreen> {
     });
 
     try {
-      if (!UpgradeAccountScreen.preservesGuestIdentity(
-        initialAnonymousUid: _initialAnonymousUid,
-        user: user,
-      )) {
+      if (!allowUidChange &&
+          !UpgradeAccountScreen.preservesGuestIdentity(
+            initialAnonymousUid: _initialAnonymousUid,
+            user: user,
+          )) {
         unawaited(
           AnalyticsService.instance.logEvent(
             'auth_upgrade_failed',
@@ -185,7 +193,7 @@ class _UpgradeAccountScreenState extends State<UpgradeAccountScreen> {
       try {
         await LocalFirstScoreRepository().syncPendingScores(forceRetry: true);
       } catch (e) {
-        debugPrint('⚠️ Deferred score sync after account upgrade failed: $e');
+        AppLogger.d('⚠️ Deferred score sync after account upgrade failed: $e');
         unawaited(
           AnalyticsService.instance.logEvent(
             'auth_upgrade_sync_failed',
@@ -207,8 +215,8 @@ class _UpgradeAccountScreenState extends State<UpgradeAccountScreen> {
         Navigator.of(context).pop();
       }
     } catch (e, stackTrace) {
-      debugPrint('UpgradeAccountScreen finalize failed: $e');
-      debugPrintStack(stackTrace: stackTrace);
+      AppLogger.d('UpgradeAccountScreen finalize failed: $e');
+      AppLogger.stack(stackTrace);
       unawaited(
         AnalyticsService.instance.logEvent(
           'auth_upgrade_failed',
@@ -223,9 +231,128 @@ class _UpgradeAccountScreenState extends State<UpgradeAccountScreen> {
       if (mounted) {
         setState(() {
           _isProcessingUpgrade = false;
+          _allowExistingAccountUidChange = false;
         });
       }
     }
+  }
+
+  Future<void> _resolveExistingAccountCollision(
+    fba.FirebaseAuthException exception,
+  ) async {
+    if (_isResolvingExistingAccountCollision) return;
+    if (!mounted) return;
+
+    setState(() {
+      _isResolvingExistingAccountCollision = true;
+    });
+
+    try {
+      if (exception.code == 'credential-already-in-use' &&
+          exception.credential != null) {
+        try {
+          if (mounted) {
+            setState(() {
+              _allowExistingAccountUidChange = true;
+            });
+          }
+          final credential = await fba.FirebaseAuth.instance
+              .signInWithCredential(exception.credential!);
+          await _finalizeUpgrade(credential.user, allowUidChange: true);
+          return;
+        } catch (e, stackTrace) {
+          AppLogger.d(
+            'UpgradeAccountScreen existing-account auto sign-in failed: $e',
+          );
+          AppLogger.stack(stackTrace);
+          if (mounted) {
+            setState(() {
+              _allowExistingAccountUidChange = false;
+            });
+          }
+        }
+      }
+
+      final email = exception.email?.trim();
+      if (!mounted) return;
+
+      // Note: FirebaseAuth.fetchSignInMethodsForEmail was removed in
+      // firebase_auth 5+ due to email-enumeration security concerns.
+      // existingAccountRecoveryMessage falls back to a generic "different
+      // sign-in method" message when signInMethods is empty, which is correct.
+      final message = AuthUiHelper.existingAccountRecoveryMessage(email: email);
+
+      final shouldOpenLogin =
+          await showDialog<bool>(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                title: const Text('Use Existing Account'),
+                content: Text(message),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(false),
+                    child: const Text('Maybe Later'),
+                  ),
+                  FilledButton(
+                    onPressed: () => Navigator.of(context).pop(true),
+                    child: const Text('Go to Sign In'),
+                  ),
+                ],
+              );
+            },
+          ) ??
+          false;
+      if (!shouldOpenLogin || !mounted) return;
+
+      try {
+        final currentUser = fba.FirebaseAuth.instance.currentUser;
+        if (currentUser != null && currentUser.isAnonymous) {
+          await fba.FirebaseAuth.instance.signOut();
+        }
+      } catch (e, stackTrace) {
+        AppLogger.d('UpgradeAccountScreen anonymous sign-out failed: $e');
+        AppLogger.stack(stackTrace);
+      }
+
+      if (!mounted) return;
+      Navigator.of(context).pushReplacementNamed(LoginScreen.routeName);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isResolvingExistingAccountCollision = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _handleAuthFailure(Exception exception) async {
+    final errorCode = exception is fba.FirebaseAuthException
+        ? exception.code
+        : exception.runtimeType.toString();
+    unawaited(
+      AnalyticsService.instance.logEvent(
+        'auth_upgrade_failed',
+        parameters: {
+          'flow': 'upgrade',
+          'error_code': errorCode,
+          'failure_reason': UpgradeAccountScreen.authFailureReason(exception),
+        },
+      ),
+    );
+
+    if (AuthUiHelper.isExistingAccountCollision(exception) &&
+        exception is fba.FirebaseAuthException) {
+      await _resolveExistingAccountCollision(exception);
+      return;
+    }
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(UpgradeAccountScreen.authFailureMessage(exception)),
+      ),
+    );
   }
 
   /// Builds the sign-in UI used to upgrade an anonymous account.
@@ -276,36 +403,20 @@ class _UpgradeAccountScreenState extends State<UpgradeAccountScreen> {
         },
         actions: [
           AuthStateChangeAction<CredentialLinked>((context, state) {
-            _finalizeUpgrade(state.user);
+            _finalizeUpgrade(
+              state.user,
+              allowUidChange: _allowExistingAccountUidChange,
+            );
           }),
           AuthStateChangeAction<SignedIn>((context, state) {
             // Fallback for providers that emit SignedIn after successful link.
-            _finalizeUpgrade(state.user);
+            _finalizeUpgrade(
+              state.user,
+              allowUidChange: _allowExistingAccountUidChange,
+            );
           }),
-          AuthStateChangeAction<AuthFailed>((context, state) {
-            final exception = state.exception;
-            final errorCode = exception is fba.FirebaseAuthException
-                ? exception.code
-                : exception.runtimeType.toString();
-            unawaited(
-              AnalyticsService.instance.logEvent(
-                'auth_upgrade_failed',
-                parameters: {
-                  'flow': 'upgrade',
-                  'error_code': errorCode,
-                  'failure_reason': UpgradeAccountScreen.authFailureReason(
-                    exception,
-                  ),
-                },
-              ),
-            );
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  UpgradeAccountScreen.authFailureMessage(exception),
-                ),
-              ),
-            );
+          AuthStateChangeAction<AuthFailed>((context, state) async {
+            await _handleAuthFailure(state.exception);
           }),
         ],
         footerBuilder: (context, _) => Column(

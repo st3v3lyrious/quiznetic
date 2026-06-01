@@ -7,11 +7,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:quiznetic_flutter/config/brand_config.dart';
-import 'package:quiznetic_flutter/services/ads_service.dart';
 import 'package:quiznetic_flutter/services/analytics_service.dart';
 import 'package:quiznetic_flutter/services/crash_reporting_service.dart';
-import 'package:quiznetic_flutter/services/entitlement_service.dart';
-import 'package:quiznetic_flutter/services/iap_service.dart';
 import 'package:quiznetic_flutter/screens/difficulty_screen.dart';
 import 'package:quiznetic_flutter/screens/entry_choice_screen.dart';
 import 'package:quiznetic_flutter/screens/home_screen.dart';
@@ -50,16 +47,11 @@ void main() {
       await _ensureFirebaseInitialized();
 
       final analyticsService = AnalyticsService.instance;
-      final entitlementService = EntitlementService.instance;
-      final iapService = IapService.instance;
-      final adsService = AdsService.instance;
 
       await crashReportingService.initialize();
       await analyticsService.initialize();
-      await entitlementService.initialize();
-      await iapService.initialize();
+      await BrandConfig.initVersion();
       runApp(const QuizNetic());
-      unawaited(adsService.initialize());
     },
     (error, stackTrace) {
       unawaited(
@@ -117,7 +109,7 @@ class QuizNetic extends StatelessWidget {
           LeaderboardScreen.routeName: (_) =>
               const AuthGuard(child: LeaderboardScreen()),
           UpgradeAccountScreen.routeName: (_) =>
-              const AuthGuard(allowAnonymous: false, child: HomeScreen()),
+              const AuthGuard(child: UpgradeAccountScreen()),
           EntryChoiceScreen.routeName: (_) => const EntryChoiceScreen(),
           LoginScreen.routeName: (_) => const LoginScreen(),
           LegalDocumentScreen.routeName: (_) => const LegalDocumentScreen(),

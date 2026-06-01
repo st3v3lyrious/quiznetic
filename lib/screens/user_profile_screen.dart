@@ -13,6 +13,7 @@ import 'package:quiznetic_flutter/screens/upgrade_account_screen.dart';
 import 'package:quiznetic_flutter/services/auth_service.dart';
 import 'package:quiznetic_flutter/services/leaderboard_band_service.dart';
 import 'package:quiznetic_flutter/services/score_repository.dart';
+import 'package:quiznetic_flutter/utils/app_logger.dart';
 import '../services/score_service.dart';
 
 class UserProfileScreen extends StatefulWidget {
@@ -122,7 +123,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         candidateDisplayName: user.displayName,
       );
     } catch (e) {
-      debugPrint(
+      AppLogger.d(
         'Leaderboard band lookup failed for ${score.categoryKey}/${score.difficulty}: $e',
       );
       return null;

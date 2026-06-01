@@ -109,7 +109,7 @@ python3 -m pip install -r requirements.txt
 
 # Option A: env token
 export GITHUB_TOKEN=ghp_xxx
-export GITHUB_REPOSITORY=st3v3lyrious/quiznetic
+export GITHUB_REPOSITORY=<your-github-username>/<your-repo-name>
 
 # Option B: GitHub CLI auth
 gh auth login -h github.com

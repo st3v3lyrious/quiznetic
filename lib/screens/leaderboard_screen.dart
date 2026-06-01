@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:quiznetic_flutter/services/leaderboard_service.dart';
 import 'package:quiznetic_flutter/services/score_repository.dart';
 import 'package:quiznetic_flutter/services/score_submission_validator.dart';
+import 'package:quiznetic_flutter/utils/app_logger.dart';
 
 class LeaderboardScreenArgs {
   final String categoryKey;
@@ -68,7 +69,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     try {
       return _hasFirebaseAppChecker();
     } catch (e) {
-      debugPrint('Leaderboard Firebase availability check failed: $e');
+      AppLogger.d('Leaderboard Firebase availability check failed: $e');
       return false;
     }
   }
@@ -106,7 +107,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       try {
         await _scoreRepository.syncPendingScores(forceRetry: true);
       } catch (e) {
-        debugPrint('Leaderboard pre-load score sync failed: $e');
+        AppLogger.d('Leaderboard pre-load score sync failed: $e');
       }
     }
     var snapshot = await _leaderboardService.load(
@@ -158,12 +159,12 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     );
 
     if (result.queuedForSync) {
-      debugPrint(
+      AppLogger.d(
         'Leaderboard repair queued for $scopeKey; '
         'syncError=${result.syncError}',
       );
     } else {
-      debugPrint('Leaderboard repair synced for $scopeKey.');
+      AppLogger.d('Leaderboard repair synced for $scopeKey.');
     }
     return result.synced || !result.queuedForSync;
   }

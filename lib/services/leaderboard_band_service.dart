@@ -5,6 +5,7 @@
 */
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
+import 'package:quiznetic_flutter/utils/app_logger.dart';
 
 enum LeaderboardBand { top10, top20, top100, outsideTop100 }
 
@@ -197,7 +198,7 @@ class LeaderboardBandService {
             .toList();
       } on FirebaseException catch (e) {
         // Fallback path if composite index is not created yet.
-        debugPrint(
+        AppLogger.d(
           'Leaderboard query fallback for $categoryKey/$difficulty: ${e.code}',
         );
         final snap = await entriesRef

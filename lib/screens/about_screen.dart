@@ -73,7 +73,7 @@ class AboutScreen extends StatelessWidget {
             const SizedBox(height: 20),
             Card(
               child: Column(
-                children: const [
+                children: [
                   ListTile(
                     leading: Icon(Icons.new_releases_outlined),
                     title: Text('Version'),

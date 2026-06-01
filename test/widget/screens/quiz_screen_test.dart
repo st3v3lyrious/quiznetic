@@ -1,5 +1,3 @@
-import 'dart:collection';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quiznetic_flutter/config/brand_config.dart';
@@ -8,7 +6,6 @@ import 'package:quiznetic_flutter/screens/leaderboard_screen.dart';
 import 'package:quiznetic_flutter/screens/quiz_screen.dart';
 import 'package:quiznetic_flutter/screens/result_screen.dart';
 import 'package:quiznetic_flutter/services/accessibility_preferences.dart';
-import 'package:quiznetic_flutter/services/hint_monetization_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -33,7 +30,6 @@ void main() {
     List<FlagQuestion>? injectedQuestions,
     int? flagsPerSession,
     bool showFlagDescriptions = false,
-    HintMonetizationGateway? hintMonetizationService,
     Size physicalSize = const Size(1200, 2200),
   }) async {
     final questions = injectedQuestions ?? [injectedQuestion ?? question];
@@ -63,7 +59,6 @@ void main() {
             builder: (_) => QuizScreen(
               flagsLoader: () async => List<FlagQuestion>.from(questions),
               quizPreparer: (subset) => subset,
-              hintMonetizationService: hintMonetizationService,
             ),
           ),
         ],
@@ -145,7 +140,10 @@ void main() {
     final nextTopLeft = tester.getTopLeft(nextFinder);
     final nextBottomRight = tester.getBottomRight(nextFinder);
     expect(nextTopLeft.dy, lessThan(tester.view.physicalSize.height));
-    expect(nextBottomRight.dy, lessThanOrEqualTo(tester.view.physicalSize.height));
+    expect(
+      nextBottomRight.dy,
+      lessThanOrEqualTo(tester.view.physicalSize.height),
+    );
 
     await tester.tap(nextFinder);
     await tester.pumpAndSettle();
@@ -159,7 +157,8 @@ void main() {
     expect(
       scrollableState.position.pixels,
       0,
-      reason: 'Advancing to the next question should reset the scroll position.',
+      reason:
+          'Advancing to the next question should reset the scroll position.',
     );
   });
 
@@ -281,53 +280,6 @@ void main() {
 
     expect(find.text('leaderboard:capital:easy'), findsOneWidget);
   });
-
-  testWidgets('hint action removes two wrong options when granted', (
-    tester,
-  ) async {
-    final hintService = _FakeHintMonetizationService(
-      rewardedHintsRemainingValue: 1,
-      canOfferPaidHintValue: false,
-      queuedResults: Queue<HintRequestResult>.from([
-        const HintRequestResult(
-          status: HintRequestStatus.granted,
-          source: HintGrantSource.rewardedAd,
-          message: 'granted',
-          rewardedHintsRemaining: 0,
-        ),
-      ]),
-    );
-
-    await pumpQuiz(tester, hintMonetizationService: hintService);
-
-    expect(find.byKey(QuizScreen.hintActionButtonKey), findsOneWidget);
-    expect(find.text('Watch Ad for Hint'), findsOneWidget);
-
-    await tester.tap(find.byKey(QuizScreen.hintActionButtonKey));
-    await tester.pumpAndSettle();
-
-    expect(find.text('France'), findsOneWidget);
-    expect(find.text('Germany'), findsOneWidget);
-    expect(find.text('Italy'), findsNothing);
-    expect(find.text('Spain'), findsNothing);
-  });
-
-  testWidgets(
-    'hint action label switches to paid price when free quota is exhausted',
-    (tester) async {
-      final hintService = _FakeHintMonetizationService(
-        rewardedHintsRemainingValue: 0,
-        canOfferPaidHintValue: true,
-        paidHintPriceUsdCentsValue: 50,
-        queuedResults: Queue<HintRequestResult>(),
-      );
-
-      await pumpQuiz(tester, hintMonetizationService: hintService);
-
-      expect(find.byKey(QuizScreen.hintActionButtonKey), findsOneWidget);
-      expect(find.text('Buy Hint (\$0.50)'), findsOneWidget);
-    },
-  );
 }
 
 class _ResultArgsProbe extends StatelessWidget {
@@ -356,51 +308,5 @@ class _LeaderboardArgsProbe extends StatelessWidget {
       );
     }
     return const Scaffold(body: Text('leaderboard:default'));
-  }
-}
-
-class _FakeHintMonetizationService implements HintMonetizationGateway {
-  _FakeHintMonetizationService({
-    required this.rewardedHintsRemainingValue,
-    required this.canOfferPaidHintValue,
-    required this.queuedResults,
-    this.paidHintPriceUsdCentsValue = 50,
-  });
-
-  int rewardedHintsRemainingValue;
-  final bool canOfferPaidHintValue;
-  final int paidHintPriceUsdCentsValue;
-  final Queue<HintRequestResult> queuedResults;
-  int resetSessionCalls = 0;
-
-  @override
-  bool get isEnabled => true;
-
-  @override
-  bool get hasRewardedHintsRemaining => rewardedHintsRemainingValue > 0;
-
-  @override
-  bool get canOfferPaidHint => canOfferPaidHintValue;
-
-  @override
-  int get rewardedHintsRemaining => rewardedHintsRemainingValue;
-
-  @override
-  int get paidHintPriceUsdCents => paidHintPriceUsdCentsValue;
-
-  @override
-  void resetSession() {
-    resetSessionCalls++;
-  }
-
-  @override
-  Future<HintRequestResult> requestHint() async {
-    if (queuedResults.isNotEmpty) {
-      return queuedResults.removeFirst();
-    }
-    return const HintRequestResult(
-      status: HintRequestStatus.failed,
-      message: 'No queued hint result',
-    );
   }
 }

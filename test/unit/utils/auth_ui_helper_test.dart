@@ -86,5 +86,81 @@ void main() {
       expect(AuthUiHelper.authFailureReason(exception), equals(code));
       expect(AuthUiHelper.authFailureMessage(exception), contains('Network'));
     });
+
+    test('detects existing-account collision auth failures', () {
+      expect(
+        AuthUiHelper.isExistingAccountCollision(
+          fba.FirebaseAuthException(
+            code: 'account-exists-with-different-credential',
+          ),
+        ),
+        isTrue,
+      );
+      expect(
+        AuthUiHelper.isExistingAccountCollision(
+          fba.FirebaseAuthException(code: 'credential-already-in-use'),
+        ),
+        isTrue,
+      );
+      expect(
+        AuthUiHelper.isExistingAccountCollision(
+          fba.FirebaseAuthException(code: 'network-request-failed'),
+        ),
+        isFalse,
+      );
+    });
+
+    test('recommends the strongest existing-account sign-in method label', () {
+      expect(
+        AuthUiHelper.recommendedExistingAccountMethodLabel(
+          const ['password', 'google.com'],
+        ),
+        equals('email and password'),
+      );
+      expect(
+        AuthUiHelper.recommendedExistingAccountMethodLabel(
+          const ['google.com'],
+        ),
+        equals('Google'),
+      );
+      expect(
+        AuthUiHelper.recommendedExistingAccountMethodLabel(
+          const ['apple.com'],
+        ),
+        equals('Apple'),
+      );
+      expect(
+        AuthUiHelper.recommendedExistingAccountMethodLabel(const ['phone']),
+        equals('phone'),
+      );
+      expect(
+        AuthUiHelper.recommendedExistingAccountMethodLabel(const ['github.com']),
+        isNull,
+      );
+    });
+
+    test('builds targeted existing-account recovery copy', () {
+      expect(
+        AuthUiHelper.existingAccountRecoveryMessage(
+          email: 'player@example.com',
+          signInMethods: const ['password'],
+        ),
+        contains('email and password'),
+      );
+      expect(
+        AuthUiHelper.existingAccountRecoveryMessage(
+          email: 'player@example.com',
+          signInMethods: const ['google.com'],
+        ),
+        contains('Google'),
+      );
+      expect(
+        AuthUiHelper.existingAccountRecoveryMessage(
+          email: 'player@example.com',
+          signInMethods: const ['github.com'],
+        ),
+        contains('different sign-in method'),
+      );
+    });
   });
 }
