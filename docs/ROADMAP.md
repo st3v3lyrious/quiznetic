@@ -59,7 +59,7 @@ Use this as a short, editable delivery plan.
   - [x] Analytics event breadcrumbs shipped for crash triage (screen views + critical flow actions).
   - [x] Product analytics baseline shipped for auth, quiz, and score-submission funnels.
   - [x] Analytics kill switch added: `ENABLE_ANALYTICS` (default `true`).
-- [ ] M15: Integrate monetization stack (ads + in-app purchases). <!--gh:issue=49-->
+- [ ] M15: Integrate monetization stack (ads + in-app purchases). (**POST-MVP DEFERRED** — removed from MVP scope; see M30 and `docs/MONETIZATION_SETUP.md` for re-activation plan.) <!--gh:issue=49-->
   - Revenue priority: complete ads + IAP launch gate in `docs/MVP_LAUNCH_TEST_CHECKLIST.md` before public rollout.
   - Current status: blocked pending AdMob live-serving validation in release mode or a provider/mediation decision if the no-fill issue persists.
   - [x] App baseline shipped: remove-ads entitlement persistence, IAP purchase/restore plumbing, and banner placements (home/result) behind feature flags with Android+iOS placement-specific ad-unit support.
@@ -142,3 +142,27 @@ Use this as a short, editable delivery plan.
   - Canonical config file: `config/categories.json` (category keys, labels, enabled state, and difficulty/question-count constraints).
   - Generate/sync category allowlists for app validator, Cloud Functions `submitScore`, and Firestore rules from the canonical config.
   - Add CI drift guard so builds fail when generated artifacts are out of sync with `config/categories.json`.
+- [ ] M30: Pre-MVP Architecture Fixes & Cleanup (MVP-blocking dependency removal + query performance + routing fixes).
+  - [x] **IN PROGRESS**: Remove ads monetization from MVP scope (branch: `mvp_readiness_step_one`).
+    - [x] Delete ads service files (`AdsService`, `AdConsentService`, `AdOverlayRecoveryService`, `HintMonetizationService`).
+    - [x] Delete ads UI widgets (`MonetizedBannerAd`).
+    - [x] Remove ads feature flags from `AppConfig` and native platform metadata.
+    - [x] Clean up screens: remove ad placements from `HomeScreen`, `QuizScreen`, `ResultScreen`.
+    - [x] Remove unused dependencies: `google_mobile_ads`, `in_app_purchase` from `pubspec.yaml`.
+    - [x] Remove orphaned `ConsentService` (only used for ads UMP flow, no longer needed).
+    - [x] Skip IAP service initialization when `ENABLE_IAP=false` to avoid wasted resources.
+  - [x] Fix `UpgradeAccountScreen` route misconfiguration: should navigate to `UpgradeAccountScreen()` not `HomeScreen()` (line `lib/main.dart:117`).
+  - [x] Validate and fix quiz screen route arguments: safe `is!` type-check in `didChangeDependencies`; recoverable error screen shown instead of crash when args are missing.
+  - [x] Add Firestore query timeouts (10s) to prevent indefinite UI hangs:
+    - [x] Leaderboard queries in `leaderboard_service.dart` (primary + fallback).
+    - [x] Score queries in `score_service.dart` (`getHighScore`, `getAllHighScores`, `runTransaction`).
+  - [x] Centralize app version management: `BrandConfig.initVersion()` reads from `package_info_plus` at startup; `pubspec.yaml` is now the single source of truth.
+  - [x] Audit and document 88 `debugPrint` statements: replaced all call sites with `AppLogger` (`lib/utils/app_logger.dart`) guarded by `kDebugMode` — zero log output in release builds.
+  - [ ] Add error handling enhancements:
+    - [ ] Generic error messages → specific types (network, auth, notfound) with user-safe retry CTAs.
+    - [ ] Leaderboard error state: add retry mechanism and offline cache display.
+    - [ ] Quiz screen accessibility preferences: distinguish network vs. storage errors with fallback.
+  - Test coverage additions (integration tests):
+    - [ ] Firestore connection loss scenario (app resilience when DB unavailable).
+    - [ ] Network timeout handling with actual timeout triggers.
+    - [ ] IAP service disable path validation when `ENABLE_IAP=false`.

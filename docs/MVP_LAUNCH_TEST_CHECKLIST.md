@@ -12,9 +12,7 @@ Use this checklist on the release-candidate commit you plan to ship.
   - [ ] `ENABLE_APPLE_SIGN_IN=false` (until provider setup is complete)
   - [ ] `ENABLE_CRASH_REPORTING=true`
   - [ ] `ENABLE_ANALYTICS=true`
-  - [ ] `ENABLE_ADS=false` and `ENABLE_IAP=false` unless section 3 is fully green
-  - [ ] `ENABLE_RESULT_INTERSTITIAL_ADS=false` unless hybrid result-ad QA is complete
-  - [ ] `ENABLE_REWARDED_HINTS=false` and `ENABLE_PAID_HINTS=false` unless hint flow QA is complete
+  - [ ] **MVP SCOPE**: Ads and IAP removed; no monetization flags in this build
 
 ## 2) Manual Core Flow Smoke (Must Pass)
 
@@ -32,7 +30,13 @@ Use this checklist on the release-candidate commit you plan to ship.
 
 ## 3) Monetization Priority Gate (Ads + IAP)
 
-If revenue is required for launch, treat this entire section as `NO-GO` blocking.
+⚠️ **REMOVED FROM MVP SCOPE**: Ads and in-app purchases have been removed from the MVP launch to focus on core gameplay stability. This entire section is `SKIPPED` for this release.
+
+**Post-MVP**: When monetization is re-enabled in future releases, restore this checklist section and follow `docs/MONETIZATION_SETUP.md` for safe activation.
+
+---
+
+### (Archived for reference: Monetization QA will be restored in post-MVP releases)
 
 ### Monetization QA Execution Matrix (Run in Order)
 

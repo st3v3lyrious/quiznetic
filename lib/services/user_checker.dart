@@ -6,6 +6,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'package:quiznetic_flutter/utils/app_logger.dart';
 
 class UserChecker {
   /// Checks if the current Firebase user exists in the Firestore 'users' collection.
@@ -43,7 +44,7 @@ class UserChecker {
 
       return true;
     } catch (e) {
-      debugPrint('Error creating anonymous user: $e');
+      AppLogger.d('Error creating anonymous user: $e');
       return false;
     }
   }
@@ -64,7 +65,7 @@ class UserChecker {
       await ref.set(data, SetOptions(merge: true));
       return true;
     } catch (e) {
-      debugPrint('Error ensuring user document: $e');
+      AppLogger.d('Error ensuring user document: $e');
       return false;
     }
   }

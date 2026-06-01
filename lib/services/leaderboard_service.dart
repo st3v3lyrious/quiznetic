@@ -3,10 +3,12 @@
  Title: Leaderboard Service
  Purpose: Loads ranked leaderboard rows for category+difficulty scopes.
 */
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
 import 'package:quiznetic_flutter/services/leaderboard_band_service.dart';
+import 'package:quiznetic_flutter/utils/app_logger.dart';
 
 typedef CurrentUserLoader = User? Function();
 
@@ -111,7 +113,8 @@ class LeaderboardService {
             .orderBy('score', descending: true)
             .orderBy('updatedAt')
             .limit(limit)
-            .get();
+            .get()
+            .timeout(const Duration(seconds: 10));
         return snap.docs
             .map(
               (doc) =>
@@ -120,13 +123,14 @@ class LeaderboardService {
             .toList();
       } on FirebaseException catch (e) {
         // Fallback if composite index isn't available yet.
-        debugPrint(
+        AppLogger.d(
           'LeaderboardService query fallback for $categoryKey/$difficulty: ${e.code}',
         );
         final snap = await entriesRef
             .orderBy('score', descending: true)
             .limit(limit)
-            .get();
+            .get()
+            .timeout(const Duration(seconds: 10));
         final entries =
             snap.docs
                 .map(

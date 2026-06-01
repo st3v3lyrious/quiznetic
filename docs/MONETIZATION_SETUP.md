@@ -1,6 +1,12 @@
 # MONETIZATION SETUP (ADS + IAP)
 
-This runbook documents how to activate monetization safely for MVP.
+⚠️ **MVP SCOPE UPDATE**: Ads and IAP have been **removed from MVP** scope. This document is kept for **post-MVP monetization planning only**.
+
+See `docs/ROADMAP.md` → **M30: Pre-MVP Architecture Fixes** for the ads removal status and related clean-up tasks.
+
+---
+
+This runbook documents how to activate monetization safely for post-MVP releases (not for current MVP launch).
 
 ## Current Baseline (Shipped)
 
@@ -143,7 +149,9 @@ EEA/UK monetization may remain blocked or no-fill.
 
 ## Feature Flags
 
-Defined in `lib/config/app_config.dart`:
+> **Note:** These flags were removed from `lib/config/app_config.dart` as part of the MVP ads removal (M30). They will be re-added when monetization is re-enabled post-MVP. The values below reflect their intended defaults for the post-MVP activation.
+
+Will be re-added to `lib/config/app_config.dart` when monetization is re-enabled:
 
 - `ENABLE_ADS` (default: `false`)
 - `ENABLE_RESULT_INTERSTITIAL_ADS` (default: `false`)

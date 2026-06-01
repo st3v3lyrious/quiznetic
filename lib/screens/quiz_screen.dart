@@ -9,7 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:quiznetic_flutter/config/brand_config.dart';
 import 'package:quiznetic_flutter/services/accessibility_preferences.dart';
 import 'package:quiznetic_flutter/services/analytics_service.dart';
-import 'package:quiznetic_flutter/services/hint_monetization_service.dart';
+import 'package:quiznetic_flutter/utils/app_logger.dart';
 import '../data/capital_loader.dart';
 import '../data/flag_loader.dart';
 import '../models/flag_question.dart';
@@ -34,26 +34,18 @@ class QuizScreen extends StatefulWidget {
   static const flagDescriptionUnavailableKey = Key(
     'quiz-flag-description-unavailable',
   );
-  static const hintActionButtonKey = Key('quiz-hint-action-button');
-  static const hintSummaryKey = Key('quiz-hint-summary');
   static const nextActionButtonKey = Key('quiz-next-action-button');
   final Future<List<FlagQuestion>> Function()? flagsLoader;
   final List<FlagQuestion> Function(List<FlagQuestion>)? quizPreparer;
-  final HintMonetizationGateway? hintMonetizationService;
 
-  const QuizScreen({
-    super.key,
-    this.flagsLoader,
-    this.quizPreparer,
-    this.hintMonetizationService,
-  });
+  const QuizScreen({super.key, this.flagsLoader, this.quizPreparer});
 
   /// Creates state for the quiz session screen.
   @override
   State<QuizScreen> createState() => _QuizScreenState();
 }
 
-class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
+class _QuizScreenState extends State<QuizScreen> {
   static const double _contentHorizontalPadding = 16;
   static const double _contentTopPadding = 24;
   static const double _contentBottomPadding = 24;
@@ -65,17 +57,13 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
   int _score = 0;
   bool _showFlagDescriptionsEnabled = false;
   bool _showCurrentFlagDescription = false;
-  bool _isUnlockingHint = false;
   final Set<String> _eliminatedOptions = <String>{};
   final ScrollController _scrollController = ScrollController();
   final GlobalKey _nextActionKey = GlobalKey();
   late final QuizScreenArgs args;
-  late final HintMonetizationGateway _hintMonetizationService;
   bool _argsLoaded = false;
+  bool _argsInvalid = false;
   bool _hasLoggedQuizStarted = false;
-  bool _rewardedHintReady = false;
-  bool _refreshingRewardedHintAvailability = false;
-  int _hintRequestEpoch = 0;
 
   static const quizProgressSemanticsKey = Key('quiz-progress-semantics');
   static const answerFeedbackCardKey = Key('quiz-answer-feedback-card');
@@ -84,22 +72,11 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
-    _hintMonetizationService =
-        widget.hintMonetizationService ?? HintMonetizationService.instance;
     _loadAccessibilityPreferences();
   }
 
   @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      unawaited(_refreshRewardedHintAvailability(forceRefresh: true));
-    }
-  }
-
-  @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
     _scrollController.dispose();
     super.dispose();
   }
@@ -113,42 +90,8 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
         _showFlagDescriptionsEnabled = enabled;
       });
     } catch (e, stackTrace) {
-      debugPrint('QuizScreen accessibility preference load failed: $e');
-      debugPrintStack(stackTrace: stackTrace);
-    }
-  }
-
-  Future<void> _refreshRewardedHintAvailability({
-    required bool forceRefresh,
-  }) async {
-    if (!_hintMonetizationService.isEnabled ||
-        !_hintMonetizationService.hasRewardedHintsRemaining) {
-      if (!mounted || !_rewardedHintReady) return;
-      setState(() {
-        _rewardedHintReady = false;
-      });
-      return;
-    }
-    if (_refreshingRewardedHintAvailability) return;
-
-    _refreshingRewardedHintAvailability = true;
-    try {
-      final ready = forceRefresh
-          ? await _hintMonetizationService.refreshRewardedHintReady()
-          : await _hintMonetizationService.isRewardedHintReady();
-      if (!mounted || _rewardedHintReady == ready) return;
-      setState(() {
-        _rewardedHintReady = ready;
-      });
-    } catch (e, stackTrace) {
-      debugPrint('QuizScreen hint availability refresh failed: $e');
-      debugPrintStack(stackTrace: stackTrace);
-      if (!mounted || !_rewardedHintReady) return;
-      setState(() {
-        _rewardedHintReady = false;
-      });
-    } finally {
-      _refreshingRewardedHintAvailability = false;
+      AppLogger.d('QuizScreen accessibility preference load failed: $e');
+      AppLogger.stack(stackTrace);
     }
   }
 
@@ -213,10 +156,13 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (!_argsLoaded) {
-      args = ModalRoute.of(context)!.settings.arguments as QuizScreenArgs;
       _argsLoaded = true;
-      _hintMonetizationService.resetSession();
-      unawaited(_refreshRewardedHintAvailability(forceRefresh: true));
+      final routeArgs = ModalRoute.of(context)?.settings.arguments;
+      if (routeArgs is! QuizScreenArgs) {
+        _argsInvalid = true;
+        return;
+      }
+      args = routeArgs;
       final loadQuestions =
           widget.flagsLoader ?? _defaultLoaderForCategory(args.categoryKey);
       final prepare =
@@ -280,22 +226,16 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
   void _nextQuestion() {
     if (_currentIndex < _questions.length - 1) {
       setState(() {
-        _hintRequestEpoch++;
         _currentIndex++;
         _answered = false;
         _selectedOption = null;
-        _isUnlockingHint = false;
         _eliminatedOptions.clear();
       });
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted || !_scrollController.hasClients) return;
         _scrollController.jumpTo(0);
       });
-      unawaited(_refreshRewardedHintAvailability(forceRefresh: true));
     } else {
-      _hintRequestEpoch++;
-      // Instead of pushing ResultScreen(score: _score, total: _questions.length),
-      // do:
       Navigator.pushNamed(
         context,
         ResultScreen.routeName,
@@ -306,97 +246,6 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
           total: _questions.length,
         ),
       );
-    }
-  }
-
-  bool _canApplyHint(FlagQuestion question) {
-    if (_answered) return false;
-    final remainingWrongOptions = question.options
-        .where(
-          (option) =>
-              option != question.correctAnswer &&
-              !_eliminatedOptions.contains(option),
-        )
-        .length;
-    return remainingWrongOptions >= 2;
-  }
-
-  String _paidHintLabel() {
-    final dollars = (_hintMonetizationService.paidHintPriceUsdCents / 100)
-        .toStringAsFixed(2);
-    return 'Buy Hint (\$$dollars)';
-  }
-
-  Future<void> _requestHint(FlagQuestion question) async {
-    if (_isUnlockingHint || !_canApplyHint(question)) return;
-    final requestEpoch = _hintRequestEpoch;
-    final requestedQuestionIndex = _currentIndex;
-
-    setState(() {
-      _isUnlockingHint = true;
-    });
-
-    final result = await _hintMonetizationService.requestHint();
-    if (!mounted) return;
-    final isStale =
-        requestEpoch != _hintRequestEpoch ||
-        requestedQuestionIndex != _currentIndex;
-
-    if (isStale) {
-      return;
-    }
-
-    if (result.status == HintRequestStatus.granted) {
-      final optionsToEliminate = question.options
-          .where(
-            (option) =>
-                option != question.correctAnswer &&
-                !_eliminatedOptions.contains(option),
-          )
-          .take(2)
-          .toList(growable: false);
-
-      setState(() {
-        _eliminatedOptions.addAll(optionsToEliminate);
-      });
-
-      final sourceName = switch (result.source) {
-        HintGrantSource.rewardedAd => 'rewarded_ad',
-        HintGrantSource.paidHint => 'paid_hint',
-        null => 'unknown',
-      };
-      unawaited(
-        AnalyticsService.instance.logEvent(
-          'quiz_hint_applied',
-          parameters: {
-            'category': args.categoryKey,
-            'difficulty': args.difficulty,
-            'question_index': _currentIndex + 1,
-            'source': sourceName,
-            'remaining_rewarded_hints':
-                result.rewardedHintsRemaining ??
-                _hintMonetizationService.rewardedHintsRemaining,
-          },
-        ),
-      );
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Hint applied. Two wrong answers removed.'),
-        ),
-      );
-    } else {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(result.message)));
-    }
-
-    if (mounted) {
-      setState(() {
-        _isUnlockingHint = false;
-        if (!_hintMonetizationService.hasRewardedHintsRemaining) {
-          _rewardedHintReady = false;
-        }
-      });
     }
   }
 
@@ -429,9 +278,17 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
     return description;
   }
 
-  /// Builds loading, empty, and active-quiz UI states.
   @override
   Widget build(BuildContext context) {
+    if (_argsInvalid) {
+      return Scaffold(
+        appBar: AppBar(),
+        body: const Center(
+          child: Text('Unable to load quiz. Please go back and try again.'),
+        ),
+      );
+    }
+
     // 1) Show a loader while flags load
     if (_isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -469,27 +326,6 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
     final nextActionLabel = _currentIndex < _questions.length - 1
         ? 'Next'
         : 'See Results';
-    final rewardedHintActionAvailable =
-        _hintMonetizationService.hasRewardedHintsRemaining &&
-        _rewardedHintReady;
-    final hintActionLabel = _isUnlockingHint
-        ? 'Processing hint...'
-        : _hintMonetizationService.hasRewardedHintsRemaining
-        ? rewardedHintActionAvailable
-              ? 'Watch Ad for Hint'
-              : 'Hint Ads Unavailable'
-        : _hintMonetizationService.canOfferPaidHint
-        ? _paidHintLabel()
-        : 'Hints Unavailable';
-    final hintSummaryText =
-        _hintMonetizationService.hasRewardedHintsRemaining &&
-            !rewardedHintActionAvailable
-        ? 'Free hints left: ${_hintMonetizationService.rewardedHintsRemaining}. Ad hints are temporarily unavailable.'
-        : _hintMonetizationService.hasRewardedHintsRemaining
-        ? 'Free hints left: ${_hintMonetizationService.rewardedHintsRemaining}'
-        : _hintMonetizationService.canOfferPaidHint
-        ? 'Free hints used for this session.'
-        : 'No hints left this session.';
 
     return Scaffold(
       appBar: AppBar(
@@ -616,45 +452,6 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
                           ],
                         ],
                         const SizedBox(height: 24),
-                        if (_hintMonetizationService.isEnabled) ...[
-                          Card(
-                            child: Padding(
-                              padding: const EdgeInsets.all(12),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  Text(
-                                    key: QuizScreen.hintSummaryKey,
-                                    hintSummaryText,
-                                  ),
-                                  const SizedBox(height: 8),
-                                  const Text(
-                                    'Hint removes 2 wrong answers for this question.',
-                                  ),
-                                  const SizedBox(height: 8),
-                                  ElevatedButton.icon(
-                                    key: QuizScreen.hintActionButtonKey,
-                                    onPressed:
-                                        (_isUnlockingHint || !_canApplyHint(q))
-                                        ? null
-                                        : _hintMonetizationService
-                                              .hasRewardedHintsRemaining
-                                        ? rewardedHintActionAvailable
-                                              ? () => _requestHint(q)
-                                              : null
-                                        : _hintMonetizationService
-                                              .canOfferPaidHint
-                                        ? () => _requestHint(q)
-                                        : null,
-                                    icon: const Icon(Icons.lightbulb_outline),
-                                    label: Text(hintActionLabel),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                        ],
                         ...visibleOptions.map((opt) {
                           final isCorrect = opt == q.correctAnswer;
                           final isSelected = opt == _selectedOption;

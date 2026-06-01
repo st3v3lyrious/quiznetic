@@ -8,6 +8,7 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:quiznetic_flutter/services/score_repository.dart';
+import 'package:quiznetic_flutter/utils/app_logger.dart';
 
 class ScoreSyncScope extends StatefulWidget {
   final Widget child;
@@ -89,7 +90,7 @@ class _ScoreSyncScopeState extends State<ScoreSyncScope>
       try {
         await _scoreRepository.syncPendingScores(forceRetry: runForce);
       } catch (e) {
-        debugPrint('Score sync ($reason) failed: $e');
+        AppLogger.d('Score sync ($reason) failed: $e');
       }
     } while (_syncQueued && mounted);
     _syncInProgress = false;

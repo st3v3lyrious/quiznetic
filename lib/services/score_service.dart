@@ -10,6 +10,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'package:quiznetic_flutter/utils/app_logger.dart';
 
 import '../config/app_config.dart';
 import 'analytics_service.dart';
@@ -137,7 +138,7 @@ class ScoreService {
           );
           rethrow;
         }
-        debugPrint(
+        AppLogger.d(
           'submitScore callable unavailable (${e.code}); '
           'falling back to direct client writes.',
         );
@@ -160,7 +161,7 @@ class ScoreService {
         rethrow;
       }
     } else {
-      debugPrint(
+      AppLogger.d(
         'ENABLE_BACKEND_SUBMIT_SCORE is disabled; '
         'using direct Firestore writes for score submission.',
       );
@@ -338,7 +339,7 @@ class ScoreService {
           'updatedAt': now,
         }, SetOptions(merge: true));
       }
-    });
+    }).timeout(const Duration(seconds: 10));
   }
 
   void _logScoreSubmitSuccess({
@@ -447,7 +448,8 @@ class ScoreService {
         .doc(user.uid)
         .collection('scores')
         .doc(docId)
-        .get();
+        .get()
+        .timeout(const Duration(seconds: 10));
 
     final data = snap.data();
     if (data == null) {
@@ -465,7 +467,7 @@ class ScoreService {
 
     final uid = user.uid;
     // Helpful debug info for diagnosing permission issues
-    debugPrint(
+    AppLogger.d(
       'ScoreService.getAllHighScores() for uid=$uid anonymous=${user.isAnonymous}',
     );
 
@@ -474,13 +476,14 @@ class ScoreService {
           .collection('users')
           .doc(uid)
           .collection('scores')
-          .get();
+          .get()
+          .timeout(const Duration(seconds: 10));
 
       return snap.docs
           .map((doc) => parseCategoryScore(docId: doc.id, data: doc.data()))
           .toList();
     } on FirebaseException catch (e) {
-      debugPrint(
+      AppLogger.d(
         'Firestore error reading user scores for $uid: ${e.code} - ${e.message}',
       );
       if (e.code == 'permission-denied') {

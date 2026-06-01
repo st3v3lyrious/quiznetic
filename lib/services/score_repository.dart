@@ -6,7 +6,7 @@
 import 'dart:convert';
 
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
+import 'package:quiznetic_flutter/utils/app_logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'score_service.dart';
@@ -407,7 +407,7 @@ class LocalFirstScoreRepository implements ScoreRepository {
         );
         projections[key] = projection;
       } catch (e) {
-        debugPrint('ScoreRepository.getBestScore remote read failed: $e');
+        AppLogger.d('ScoreRepository.getBestScore remote read failed: $e');
       }
     }
 
@@ -450,7 +450,7 @@ class LocalFirstScoreRepository implements ScoreRepository {
           );
         }
       } catch (e) {
-        debugPrint('ScoreRepository.getAllHighScores remote read failed: $e');
+        AppLogger.d('ScoreRepository.getAllHighScores remote read failed: $e');
       }
     }
 
@@ -514,7 +514,7 @@ class LocalFirstScoreRepository implements ScoreRepository {
         totalQuestions: attempt.totalQuestions,
       );
       if (!validation.isValid) {
-        debugPrint(
+        AppLogger.d(
           'ScoreRepository dropped invalid pending attempt '
           '${attempt.id}: ${validation.rejectionCode}',
         );
@@ -558,7 +558,7 @@ class LocalFirstScoreRepository implements ScoreRepository {
         );
         syncedCount++;
       } catch (e) {
-        debugPrint(
+        AppLogger.d(
           'ScoreRepository sync failed for '
           '${attempt.categoryKey}/${attempt.difficulty} '
           '(attempt ${attempt.id}): $e',

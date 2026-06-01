@@ -16,6 +16,7 @@ import 'package:quiznetic_flutter/screens/login_screen.dart';
 import 'package:quiznetic_flutter/services/analytics_service.dart';
 import 'package:quiznetic_flutter/services/score_repository.dart';
 import 'package:quiznetic_flutter/services/user_checker.dart';
+import 'package:quiznetic_flutter/utils/app_logger.dart';
 import 'package:quiznetic_flutter/utils/auth_ui_helper.dart';
 import 'package:quiznetic_flutter/widgets/legal_consent_notice.dart';
 
@@ -192,7 +193,7 @@ class _UpgradeAccountScreenState extends State<UpgradeAccountScreen> {
       try {
         await LocalFirstScoreRepository().syncPendingScores(forceRetry: true);
       } catch (e) {
-        debugPrint('⚠️ Deferred score sync after account upgrade failed: $e');
+        AppLogger.d('⚠️ Deferred score sync after account upgrade failed: $e');
         unawaited(
           AnalyticsService.instance.logEvent(
             'auth_upgrade_sync_failed',
@@ -214,8 +215,8 @@ class _UpgradeAccountScreenState extends State<UpgradeAccountScreen> {
         Navigator.of(context).pop();
       }
     } catch (e, stackTrace) {
-      debugPrint('UpgradeAccountScreen finalize failed: $e');
-      debugPrintStack(stackTrace: stackTrace);
+      AppLogger.d('UpgradeAccountScreen finalize failed: $e');
+      AppLogger.stack(stackTrace);
       unawaited(
         AnalyticsService.instance.logEvent(
           'auth_upgrade_failed',
@@ -259,10 +260,10 @@ class _UpgradeAccountScreenState extends State<UpgradeAccountScreen> {
           await _finalizeUpgrade(credential.user, allowUidChange: true);
           return;
         } catch (e, stackTrace) {
-          debugPrint(
+          AppLogger.d(
             'UpgradeAccountScreen existing-account auto sign-in failed: $e',
           );
-          debugPrintStack(stackTrace: stackTrace);
+          AppLogger.stack(stackTrace);
           if (mounted) {
             setState(() {
               _allowExistingAccountUidChange = false;
@@ -274,9 +275,11 @@ class _UpgradeAccountScreenState extends State<UpgradeAccountScreen> {
       final email = exception.email?.trim();
       if (!mounted) return;
 
-      final message = AuthUiHelper.existingAccountRecoveryMessage(
-        email: email,
-      );
+      // Note: FirebaseAuth.fetchSignInMethodsForEmail was removed in
+      // firebase_auth 5+ due to email-enumeration security concerns.
+      // existingAccountRecoveryMessage falls back to a generic "different
+      // sign-in method" message when signInMethods is empty, which is correct.
+      final message = AuthUiHelper.existingAccountRecoveryMessage(email: email);
 
       final shouldOpenLogin =
           await showDialog<bool>(
@@ -307,8 +310,8 @@ class _UpgradeAccountScreenState extends State<UpgradeAccountScreen> {
           await fba.FirebaseAuth.instance.signOut();
         }
       } catch (e, stackTrace) {
-        debugPrint('UpgradeAccountScreen anonymous sign-out failed: $e');
-        debugPrintStack(stackTrace: stackTrace);
+        AppLogger.d('UpgradeAccountScreen anonymous sign-out failed: $e');
+        AppLogger.stack(stackTrace);
       }
 
       if (!mounted) return;

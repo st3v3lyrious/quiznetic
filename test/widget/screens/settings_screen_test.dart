@@ -1,15 +1,12 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:quiznetic_flutter/screens/about_screen.dart';
 import 'package:quiznetic_flutter/screens/entry_choice_screen.dart';
 import 'package:quiznetic_flutter/screens/legal_document_screen.dart';
 import 'package:quiznetic_flutter/screens/leaderboard_screen.dart';
 import 'package:quiznetic_flutter/screens/settings_screen.dart';
 import 'package:quiznetic_flutter/services/accessibility_preferences.dart';
-import 'package:quiznetic_flutter/services/ad_consent_service.dart';
-import 'package:quiznetic_flutter/services/ads_service.dart';
 import 'package:quiznetic_flutter/services/auth_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -17,33 +14,6 @@ void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
   });
-
-  AdsService buildAdsService({
-    Future<String?> Function()? openAdInspector,
-    Future<FormError?> Function()? showPrivacyOptionsForm,
-  }) {
-    return AdsService(
-      enabled: true,
-      androidHomeBannerUnitId: 'unit-home-123456',
-      androidResultInterstitialUnitId: 'unit-result-654321',
-      androidRewardedInterstitialUnitId: 'unit-rewarded-interstitial-987654',
-      supportsAds: () => true,
-      consentService: AdConsentService(
-        enabled: true,
-        supportsAds: () => true,
-        loadAndShowConsentFormIfRequired: () async => null,
-        getConsentStatus: () async => ConsentStatus.obtained,
-        canRequestAds: () async => true,
-        isConsentFormAvailable: () async => true,
-        getPrivacyOptionsRequirementStatus: () async =>
-            PrivacyOptionsRequirementStatus.required,
-        showPrivacyOptionsForm: showPrivacyOptionsForm ?? () async => null,
-      ),
-      initializeAdsSdk: () async => null,
-      getSdkVersion: () async => 'sdk-test-version',
-      openAdInspector: openAdInspector,
-    );
-  }
 
   test('exposes the expected route name', () {
     expect(SettingsScreen.routeName, equals('/settings'));
@@ -84,36 +54,6 @@ void main() {
       200,
     );
     expect(find.byKey(const Key('settings-about-link')), findsOneWidget);
-  });
-
-  testWidgets('debug ad diagnostics opens masked report dialog', (
-    tester,
-  ) async {
-    await tester.binding.setSurfaceSize(const Size(800, 1200));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
-
-    await tester.pumpWidget(
-      MaterialApp(home: SettingsScreen(adsService: buildAdsService())),
-    );
-    await tester.pumpAndSettle();
-
-    final diagnosticsFinder = find.byKey(
-      const Key('settings-ad-diagnostics-button'),
-    );
-    await tester.scrollUntilVisible(diagnosticsFinder, 150);
-    await tester.tap(diagnosticsFinder);
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
-
-    expect(
-      find.byKey(const Key('settings-ad-diagnostics-report')),
-      findsOneWidget,
-    );
-    expect(find.textContaining('sdk_version=sdk-test-version'), findsOneWidget);
-    expect(find.textContaining('home_banner_raw=***123456'), findsOneWidget);
-
-    await tester.tap(find.byKey(const Key('settings-ad-diagnostics-close')));
-    await tester.pumpAndSettle();
   });
 
   testWidgets('terms link opens the terms document screen', (tester) async {
@@ -173,43 +113,6 @@ void main() {
     expect(find.text(LegalDocumentScreen.privacyTitle), findsOneWidget);
   });
 
-  testWidgets('ad privacy choices entry point opens when required', (
-    tester,
-  ) async {
-    var privacyOptionsCalls = 0;
-    await tester.binding.setSurfaceSize(const Size(800, 1200));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
-
-    await tester.pumpWidget(
-      MaterialApp(
-        home: SettingsScreen(
-          adsService: buildAdsService(
-            showPrivacyOptionsForm: () async {
-              privacyOptionsCalls++;
-              return null;
-            },
-          ),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    final privacyOptionsFinder = find.byKey(
-      const Key('settings-ad-privacy-options-button'),
-    );
-    await tester.scrollUntilVisible(privacyOptionsFinder, 150);
-    expect(
-      find.text('Manage your advertising consent choices'),
-      findsOneWidget,
-    );
-
-    await tester.ensureVisible(privacyOptionsFinder);
-    await tester.tap(privacyOptionsFinder, warnIfMissed: false);
-    await tester.pumpAndSettle();
-
-    expect(privacyOptionsCalls, 1);
-  });
-
   testWidgets('about link routes to about screen', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
@@ -245,34 +148,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('leaderboard-screen'), findsOneWidget);
-  });
-
-  testWidgets('ad inspector failure shows snackbar', (tester) async {
-    await tester.binding.setSurfaceSize(const Size(800, 1200));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
-
-    await tester.pumpWidget(
-      MaterialApp(
-        home: SettingsScreen(
-          adsService: buildAdsService(
-            openAdInspector: () async =>
-                'code=test_code domain=test_domain message=test_message',
-          ),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    final inspectorFinder = find.byKey(
-      const Key('settings-ad-inspector-button'),
-    );
-    await tester.tap(inspectorFinder);
-    await tester.pumpAndSettle();
-
-    expect(
-      find.text('Unable to open Ad Inspector right now.'),
-      findsOneWidget,
-    );
   });
 
   testWidgets('sign out action signs out and routes to entry choice', (

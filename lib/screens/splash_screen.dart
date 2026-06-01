@@ -9,6 +9,7 @@ import 'package:quiznetic_flutter/config/brand_config.dart';
 import 'package:quiznetic_flutter/screens/entry_choice_screen.dart';
 import 'package:quiznetic_flutter/screens/home_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:quiznetic_flutter/utils/app_logger.dart';
 
 class SplashScreen extends StatefulWidget {
   static const routeName = '/splash';
@@ -37,6 +38,8 @@ class _SplashScreenState extends State<SplashScreen> {
   /// Routes to home for signed-in users, otherwise to entry choice.
   Future<void> _checkUserAndNavigate() async {
     await Future.delayed(widget.startupDelay);
+
+    if (!mounted) return;
     User? currentUser;
     try {
       // Only check Firebase Authentication. Do NOT create or read Firestore
@@ -45,8 +48,8 @@ class _SplashScreenState extends State<SplashScreen> {
           ? widget.currentUserProvider!.call()
           : FirebaseAuth.instance.currentUser;
     } catch (e, stackTrace) {
-      debugPrint('Splash auth lookup failed, defaulting to entry route: $e');
-      debugPrintStack(stackTrace: stackTrace);
+      AppLogger.d('Splash auth lookup failed, defaulting to entry route: $e');
+      AppLogger.stack(stackTrace);
       currentUser = null;
     }
     if (!mounted) return;

@@ -42,7 +42,7 @@ Enable `ENABLE_BACKEND_SUBMIT_SCORE=true` only when all are true:
 1. Deploy backend:
 
 ```bash
-firebase deploy --only functions:submitScore --project quiznetic-30734
+firebase deploy --only functions:submitScore --project <your-firebase-project-id>
 ```
 
 2. Run app with feature flag enabled:
@@ -62,7 +62,7 @@ flutter run \
 4. Verify function logs:
 
 ```bash
-firebase functions:log --only submitScore --project quiznetic-30734
+firebase functions:log --only submitScore --project <your-firebase-project-id>
 ```
 
 ## How To Roll Back Fast

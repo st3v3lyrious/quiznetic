@@ -18,6 +18,7 @@ import 'package:quiznetic_flutter/services/auth_service.dart';
 import 'package:quiznetic_flutter/services/score_repository.dart';
 import 'package:quiznetic_flutter/services/user_checker.dart';
 import 'package:quiznetic_flutter/screens/home_screen.dart';
+import 'package:quiznetic_flutter/utils/app_logger.dart';
 import 'package:quiznetic_flutter/utils/auth_ui_helper.dart';
 import 'package:quiznetic_flutter/widgets/legal_consent_notice.dart';
 
@@ -217,7 +218,7 @@ class LoginScreen extends StatelessWidget {
               final user = state.user;
               if (user == null) return;
 
-              debugPrint('✅ ${user.uid} signed in');
+              AppLogger.d('✅ ${user.uid} signed in');
               unawaited(
                 AnalyticsService.instance.logEvent(
                   'auth_signed_in',
@@ -266,7 +267,7 @@ class LoginScreen extends StatelessWidget {
                   forceRetry: true,
                 );
               } catch (e) {
-                debugPrint(
+                AppLogger.d(
                   '⚠️ Deferred score sync after provider sign-in failed: $e',
                 );
                 unawaited(

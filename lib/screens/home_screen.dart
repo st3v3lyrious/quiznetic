@@ -6,7 +6,6 @@
 import 'package:flutter/material.dart';
 import 'package:quiznetic_flutter/config/brand_config.dart';
 import 'package:quiznetic_flutter/services/auth_service.dart';
-import 'package:quiznetic_flutter/widgets/monetized_banner_ad.dart';
 import 'difficulty_screen.dart';
 import 'leaderboard_screen.dart';
 import 'settings_screen.dart';
@@ -14,28 +13,39 @@ import 'upgrade_account_screen.dart';
 import 'user_profile_screen.dart';
 // Later, you’ll have other screens like 'logo_quiz_screen.dart'
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   static const routeName = '/home';
   final AuthService? authService;
 
   const HomeScreen({super.key, this.authService});
 
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
   // Give each category a unique key, name, and icon.
-  final List<Category> categories = const [
+  static const List<Category> categories = [
     Category(key: 'flag', name: 'Flag Quiz', icon: Icons.flag),
     Category(
       key: 'capital',
       name: 'Capital Quiz',
       icon: Icons.location_city_outlined,
     ),
-    // Example future category:
-    // Category(key: 'logo', name: 'Logo Quiz', icon: Icons.image),
   ];
 
+  late final AuthService _authService;
+
+  @override
+  void initState() {
+    super.initState();
+    _authService = widget.authService ?? AuthService();
+  }
+
   /// Returns whether guest conversion CTA should be shown on home.
-  bool _shouldShowGuestUpgradeCta(AuthService service) {
+  bool get _shouldShowGuestUpgradeCta {
     try {
-      final user = service.currentUser;
+      final user = _authService.currentUser;
       return user != null && user.isAnonymous;
     } catch (_) {
       return false;
@@ -45,8 +55,7 @@ class HomeScreen extends StatelessWidget {
   /// Builds the category selection UI and handles category navigation.
   @override
   Widget build(BuildContext context) {
-    final resolvedAuthService = authService ?? AuthService();
-    final showGuestUpgradeCta = _shouldShowGuestUpgradeCta(resolvedAuthService);
+    final showGuestUpgradeCta = _shouldShowGuestUpgradeCta;
 
     return Scaffold(
       appBar: AppBar(
@@ -184,8 +193,6 @@ class HomeScreen extends StatelessWidget {
                       },
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  const Center(child: MonetizedBannerAd(placement: 'home')),
                 ],
               ),
             ),
