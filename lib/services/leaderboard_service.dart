@@ -29,6 +29,7 @@ class LeaderboardSnapshot {
   final List<LeaderboardRow> rows;
   final String? currentUserUid;
   final LeaderboardRow? currentUserRow;
+  final bool currentUserIsAnonymous;
 
   LeaderboardSnapshot({
     required this.categoryKey,
@@ -37,6 +38,7 @@ class LeaderboardSnapshot {
     required this.rows,
     required this.currentUserUid,
     required this.currentUserRow,
+    required this.currentUserIsAnonymous,
   });
 }
 
@@ -72,7 +74,9 @@ class LeaderboardService {
       sorted.length,
       (index) => LeaderboardRow(rank: index + 1, entry: sorted[index]),
     );
-    final currentUserUid = _currentUserLoader()?.uid;
+    final currentUser = _currentUserLoader();
+    final currentUserUid = currentUser?.uid;
+    final currentUserIsAnonymous = currentUser?.isAnonymous ?? false;
     LeaderboardRow? currentUserRow;
     if (currentUserUid != null) {
       for (final row in rows) {
@@ -90,6 +94,7 @@ class LeaderboardService {
       rows: rows,
       currentUserUid: currentUserUid,
       currentUserRow: currentUserRow,
+      currentUserIsAnonymous: currentUserIsAnonymous,
     );
   }
 

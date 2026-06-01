@@ -334,7 +334,7 @@ class ScoreService {
           ? ((leaderboardSnapshot.data()?['score'] as num?) ?? 0).toInt()
           : null;
 
-      if (shouldUpsertLeaderboard(
+      if (!user.isAnonymous && shouldUpsertLeaderboard(
         bestScore: newBestScore,
         leaderboardScore: existingLeaderboardScore,
       )) {

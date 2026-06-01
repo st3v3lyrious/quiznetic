@@ -5,6 +5,7 @@
 */
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:quiznetic_flutter/screens/upgrade_account_screen.dart';
 import 'package:quiznetic_flutter/services/leaderboard_service.dart';
 import 'package:quiznetic_flutter/services/score_repository.dart';
 import 'package:quiznetic_flutter/services/score_submission_validator.dart';
@@ -51,7 +52,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   ScoreRepository? _defaultScoreRepository;
   late final bool Function() _hasFirebaseAppChecker =
       widget.hasFirebaseApp ?? _defaultHasFirebaseApp;
-  late Future<LeaderboardSnapshot> _leaderboardFuture;
+  late Future<(LeaderboardSnapshot, int)> _leaderboardFuture;
   bool _didInit = false;
   String _selectedCategory = 'flag';
   String _selectedDifficulty = 'easy';
@@ -100,7 +101,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   }
 
   /// Loads one leaderboard snapshot for the selected filters.
-  Future<LeaderboardSnapshot> _loadLeaderboard() async {
+  Future<(LeaderboardSnapshot, int)> _loadLeaderboard() async {
     // Force one retry before reading leaderboard so recent local-first score
     // writes are not left stale behind retry backoff windows.
     if (_hasFirebaseApp()) {
@@ -121,7 +122,20 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         difficulty: _selectedDifficulty,
       );
     }
-    return snapshot;
+
+    var guestLocalBest = 0;
+    if (snapshot.currentUserIsAnonymous && snapshot.currentUserRow == null) {
+      try {
+        guestLocalBest = await _scoreRepository.getBestScore(
+          categoryKey: _selectedCategory,
+          difficulty: _selectedDifficulty,
+        );
+      } catch (e) {
+        AppLogger.d('Leaderboard guest local best fetch failed: $e');
+      }
+    }
+
+    return (snapshot, guestLocalBest);
   }
 
   /// If current user is missing from this scope but local best exists,
@@ -129,6 +143,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   Future<bool> _attemptLeaderboardRepair(LeaderboardSnapshot snapshot) async {
     if (!_hasFirebaseApp()) return false;
     if (snapshot.currentUserRow != null) return false;
+    if (snapshot.currentUserIsAnonymous) return false;
     final currentUserUid = snapshot.currentUserUid;
     if (currentUserUid == null || currentUserUid.isEmpty) return false;
 
@@ -277,6 +292,57 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     );
   }
 
+  /// Builds the guest "not ranked" card with rank-aware messaging.
+  Widget _buildGuestNotRankedCard({
+    required BuildContext context,
+    required int guestLocalBest,
+    required LeaderboardSnapshot snapshot,
+  }) {
+    final IconData icon;
+    final String title;
+    final String subtitle;
+
+    if (guestLocalBest <= 0) {
+      icon = Icons.leaderboard_outlined;
+      title = 'Play a quiz to see where you rank.';
+      subtitle = 'Create an account to appear on the leaderboard.';
+    } else {
+      final rank = _computeHypotheticalRank(snapshot.rows, guestLocalBest);
+      if (rank <= 100) {
+        icon = Icons.emoji_events_outlined;
+        title = 'Your score of $guestLocalBest would put you at #$rank.';
+        subtitle = 'Create an account to claim your spot!';
+      } else {
+        icon = Icons.trending_up;
+        title = 'Your score of $guestLocalBest isn\'t in the top 100 yet.';
+        subtitle =
+            'Create an account and keep playing to climb the ranks!';
+      }
+    }
+
+    return Card(
+      key: const Key('leaderboard-not-ranked-card'),
+      child: ListTile(
+        leading: Icon(icon),
+        title: Text(title),
+        subtitle: Text(subtitle),
+        trailing: TextButton(
+          key: const Key('leaderboard-create-account-button'),
+          onPressed: () =>
+              Navigator.pushNamed(context, UpgradeAccountScreen.routeName),
+          child: const Text('Create Account'),
+        ),
+      ),
+    );
+  }
+
+  /// Returns the rank the guest's score would achieve among the loaded rows.
+  ///
+  /// Counts entries with strictly higher scores; the guest slots in after them.
+  int _computeHypotheticalRank(List<LeaderboardRow> rows, int score) {
+    return rows.where((r) => r.score > score).length + 1;
+  }
+
   /// Builds the global leaderboard view with filter controls.
   @override
   Widget build(BuildContext context) {
@@ -370,7 +436,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                   ),
                   const SizedBox(height: 12),
                   Expanded(
-                    child: FutureBuilder<LeaderboardSnapshot>(
+                    child: FutureBuilder<(LeaderboardSnapshot, int)>(
                       future: _leaderboardFuture,
                       builder: (context, snapshot) {
                         if (snapshot.connectionState ==
@@ -392,7 +458,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                           );
                         }
 
-                        final data = snapshot.data!;
+                        final (data, guestLocalBest) = snapshot.data!;
                         if (data.rows.isEmpty) {
                           return _buildStatusState(
                             icon: Icons.leaderboard_outlined,
@@ -449,6 +515,12 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                                       'Score: ${data.currentUserRow!.score}',
                                     ),
                                   ),
+                                )
+                              else if (data.currentUserIsAnonymous)
+                                _buildGuestNotRankedCard(
+                                  context: context,
+                                  guestLocalBest: guestLocalBest,
+                                  snapshot: data,
                                 )
                               else
                                 const Card(

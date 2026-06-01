@@ -20,7 +20,6 @@ import 'package:quiznetic_flutter/screens/login_screen.dart';
 import 'package:quiznetic_flutter/screens/upgrade_account_screen.dart';
 import 'package:quiznetic_flutter/screens/legal_document_screen.dart';
 import 'package:quiznetic_flutter/screens/settings_screen.dart';
-import 'package:quiznetic_flutter/screens/about_screen.dart';
 import 'package:quiznetic_flutter/widgets/auth_guard.dart';
 import 'package:quiznetic_flutter/widgets/score_sync_scope.dart';
 import 'screens/splash_screen.dart';
@@ -115,7 +114,6 @@ class QuizNetic extends StatelessWidget {
           LegalDocumentScreen.routeName: (_) => const LegalDocumentScreen(),
           SettingsScreen.routeName: (_) =>
               const AuthGuard(child: SettingsScreen()),
-          AboutScreen.routeName: (_) => const AuthGuard(child: AboutScreen()),
         },
         theme: ThemeData(
           // Opt in to Material 3 so background/onBackground are honored:

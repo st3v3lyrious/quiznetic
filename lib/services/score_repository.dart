@@ -497,7 +497,8 @@ class LocalFirstScoreRepository implements ScoreRepository {
     required Map<String, ScoreProjection> projections,
     bool forceRetry = false,
   }) async {
-    if (_currentUserProvider() == null) {
+    final currentUser = _currentUserProvider();
+    if (currentUser == null || currentUser.isAnonymous) {
       return 0;
     }
 
