@@ -1,10 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:quiznetic_flutter/screens/about_screen.dart';
 import 'package:quiznetic_flutter/screens/entry_choice_screen.dart';
 import 'package:quiznetic_flutter/screens/legal_document_screen.dart';
-import 'package:quiznetic_flutter/screens/leaderboard_screen.dart';
 import 'package:quiznetic_flutter/screens/settings_screen.dart';
 import 'package:quiznetic_flutter/services/accessibility_preferences.dart';
 import 'package:quiznetic_flutter/services/auth_service.dart';
@@ -49,11 +47,8 @@ void main() {
     expect(find.text('Legal'), findsOneWidget);
     expect(find.byKey(const Key('settings-terms-link')), findsOneWidget);
     expect(find.byKey(const Key('settings-privacy-link')), findsOneWidget);
-    await tester.scrollUntilVisible(
-      find.byKey(const Key('settings-about-link')),
-      200,
-    );
-    expect(find.byKey(const Key('settings-about-link')), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('Support'), 200);
+    expect(find.text('Support'), findsOneWidget);
   });
 
   testWidgets('terms link opens the terms document screen', (tester) async {
@@ -111,43 +106,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text(LegalDocumentScreen.privacyTitle), findsOneWidget);
-  });
-
-  testWidgets('about link routes to about screen', (tester) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        routes: {
-          '/': (_) => const SettingsScreen(),
-          AboutScreen.routeName: (_) => const _AboutProbe(),
-        },
-      ),
-    );
-
-    final aboutFinder = find.byKey(const Key('settings-about-link'));
-    await tester.scrollUntilVisible(aboutFinder, 200);
-    await tester.tap(aboutFinder);
-    await tester.pumpAndSettle();
-
-    expect(find.text('about-screen'), findsOneWidget);
-  });
-
-  testWidgets('leaderboard action routes to leaderboard screen', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        routes: {
-          '/': (_) => const SettingsScreen(),
-          LeaderboardScreen.routeName: (_) => const _LeaderboardProbe(),
-        },
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.byTooltip('Leaderboard'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('leaderboard-screen'), findsOneWidget);
   });
 
   testWidgets('sign out action signs out and routes to entry choice', (
@@ -216,24 +174,6 @@ class _EntryProbe extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Scaffold(body: Text('entry-choice-screen'));
-  }
-}
-
-class _AboutProbe extends StatelessWidget {
-  const _AboutProbe();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(body: Text('about-screen'));
-  }
-}
-
-class _LeaderboardProbe extends StatelessWidget {
-  const _LeaderboardProbe();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(body: Text('leaderboard-screen'));
   }
 }
 

@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:quiznetic_flutter/config/brand_config.dart';
-import 'package:quiznetic_flutter/screens/about_screen.dart';
 import 'package:quiznetic_flutter/screens/difficulty_screen.dart';
 import 'package:quiznetic_flutter/screens/entry_choice_screen.dart';
 import 'package:quiznetic_flutter/screens/home_screen.dart';
@@ -39,21 +37,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('settings-sign-out-button')), findsOneWidget);
-    await tester.scrollUntilVisible(
-      find.byKey(const Key('settings-about-link')),
-      200,
-    );
-    expect(find.byKey(const Key('settings-about-link')), findsOneWidget);
-  });
-
-  testWidgets('about remains readable with large text scaling', (tester) async {
-    await tester.pumpWidget(
-      _scaledApp(const AboutScreen(), textScaler: largeTextScale),
-    );
-    await tester.pumpAndSettle();
-
-    expect(find.text(BrandConfig.appName), findsOneWidget);
-    expect(find.text(BrandConfig.tagline), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('Support'), 200);
+    expect(find.text('Support'), findsOneWidget);
   });
 
   testWidgets('difficulty actions remain present with large text scaling', (
