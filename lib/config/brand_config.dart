@@ -26,12 +26,16 @@ class BrandConfig {
   static const logoSemanticLabel = 'Quiznetic logo';
   static const quizQuestionImageSemanticLabel = 'Quiz question image';
 
-  static String _appVersionLabel = '';
+  static String _appVersionLabel = '—';
   static String get appVersionLabel => _appVersionLabel;
 
   static Future<void> initVersion() async {
-    final info = await PackageInfo.fromPlatform();
-    _appVersionLabel = '${info.version}+${info.buildNumber}';
+    try {
+      final info = await PackageInfo.fromPlatform();
+      _appVersionLabel = '${info.version}+${info.buildNumber}';
+    } catch (_) {
+      // keep fallback value
+    }
   }
 
   // Active theme tokens for the current EIRENYA rollout.

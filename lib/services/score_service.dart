@@ -184,6 +184,19 @@ class ScoreService {
         score: score,
         totalQuestions: resolvedTotalQuestions,
       );
+    } on TimeoutException {
+      // The transaction may still commit in the background after a timeout.
+      // Log as ambiguous so callers can apply "unknown outcome / retry later"
+      // semantics rather than treating this as a definitive failure.
+      _logScoreSubmitFailed(
+        path: 'direct',
+        categoryKey: categoryKey,
+        difficulty: difficulty,
+        score: score,
+        totalQuestions: resolvedTotalQuestions,
+        rejectionCode: 'timeout_unknown_outcome',
+      );
+      rethrow;
     } on ScoreSubmissionValidationException catch (e) {
       _logScoreSubmitFailed(
         path: 'direct',

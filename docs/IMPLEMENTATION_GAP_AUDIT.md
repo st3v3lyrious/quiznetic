@@ -39,7 +39,7 @@
 |---|---|---|
 | ISS-034 | `lib/screens/quiz_screen.dart` | Question loading uses `.then()` callback. If widget is disposed mid-load, the callback still fires. The current `mounted` check is inside `.then()` but is easy to miss in future changes. Should use async/await for clearer control flow. |
 | ISS-035 | `lib/services/score_repository.dart` | Malformed ISO 8601 timestamp in SharedPreferences causes `DateTime.tryParse()` to return null, which is treated as "retry is due". Could cause aggressive retry storms on corrupted data. |
-| ISS-036 | `lib/screens/upgrade_account_screen.dart` | `_isResolvingExistingAccountCollision` flag is not reset in a `finally` block. If user navigates away during the AlertDialog, the flag stays `true` and blocks future collision recovery. |
+| ISS-036 | `lib/screens/upgrade_account_screen.dart` | ~~Flag not reset in `finally`.~~ **Resolved**: `_isResolvingExistingAccountCollision` is now reset in a `finally` block, and a `mounted` check was added before the initial `setState` to guard against disposal during async auth callbacks. |
 | ISS-037 | `lib/screens/login_screen.dart` | Cleanup during profile bootstrap failure uses `catch (_)` — silently swallows unexpected errors including FirebaseException without logging. Should be `catch (e, stackTrace)` with `AppLogger`. |
 | ISS-038 | `lib/services/score_service.dart` | Firestore `runTransaction().timeout(10s)` is hardcoded. On very slow networks this may abort valid transactions. Should be documented or extracted as a named constant. |
 | ISS-039 | `lib/main.dart` | `runZonedGuarded` sets up error capture before `crashReportingService.initialize()` awaits. An error thrown during Firebase init could be captured before Crashlytics is ready. Low probability but worth documenting. |
@@ -97,7 +97,7 @@ Firestore timeouts  → .timeout(10s) present on all unbounded .get() calls and 
 
 **MVP+1 / Hardening Sprint (post-launch):**
 1. ISS-029, ISS-030, ISS-031, ISS-032, ISS-033 — critical-path test coverage
-2. ISS-035, ISS-036 — correctness hardening (timestamp resilience, state machine reset)
+2. ISS-035, ISS-036 — correctness hardening (timestamp resilience, state machine reset — ISS-036 resolved)
 3. ISS-034, ISS-037, ISS-039 — minor code quality
 4. ISS-040, ISS-041 — additional test coverage
 5. ISS-038 — document/extract timeout constant

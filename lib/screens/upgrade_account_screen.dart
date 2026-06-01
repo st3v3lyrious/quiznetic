@@ -241,6 +241,7 @@ class _UpgradeAccountScreenState extends State<UpgradeAccountScreen> {
     fba.FirebaseAuthException exception,
   ) async {
     if (_isResolvingExistingAccountCollision) return;
+    if (!mounted) return;
 
     setState(() {
       _isResolvingExistingAccountCollision = true;
