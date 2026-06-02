@@ -459,4 +459,7 @@ class _RepairFakeScoreRepository implements ScoreRepository {
 
   @override
   Future<int> syncPendingScores({bool forceRetry = false}) async => 0;
+
+  @override
+  Future<void> clearLocalData() async {}
 }

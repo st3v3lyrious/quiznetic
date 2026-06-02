@@ -22,7 +22,7 @@ import 'package:quiznetic_flutter/utils/app_logger.dart';
 import 'package:quiznetic_flutter/utils/auth_ui_helper.dart';
 import 'package:quiznetic_flutter/widgets/legal_consent_notice.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
   static const routeName = '/login';
   static const logoAssetPath = 'assets/images/logo-no-background.png';
   static const _headerCompactHeightThreshold = 140.0;
@@ -35,6 +35,9 @@ class LoginScreen extends StatelessWidget {
   final String? googleOAuthClientId;
 
   const LoginScreen({super.key, this.googleOAuthClientId});
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
 
   @visibleForTesting
   static bool isGoogleProviderEnabled(String clientId) {
@@ -219,25 +222,46 @@ class LoginScreen extends StatelessWidget {
     );
   }
 
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  bool _completing = false;
+
+  Future<void> _guardedCompleteSignIn(fba.User user) async {
+    if (_completing) return;
+    _completing = true;
+    try {
+      await LoginScreen._completeSignIn(context, user);
+    } finally {
+      // Reset only if still mounted — if navigation succeeded the widget is gone.
+      if (mounted) _completing = false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final resolvedGoogleClientId =
-        googleOAuthClientId ?? AppConfig.googleOAuthClientId;
-    final googleConfigured = isGoogleProviderEnabled(resolvedGoogleClientId);
-    final appleConfigured = isAppleProviderEnabled();
+        widget.googleOAuthClientId ?? AppConfig.googleOAuthClientId;
+    final googleConfigured = LoginScreen.isGoogleProviderEnabled(
+      resolvedGoogleClientId,
+    );
+    final appleConfigured = LoginScreen.isAppleProviderEnabled();
 
     return Scaffold(
       body: SafeArea(
         child: SignInScreen(
           // Providers
-          providers: buildProviders(
+          providers: LoginScreen.buildProviders(
             googleClientId: resolvedGoogleClientId,
             includeAppleProvider: appleConfigured,
           ),
 
           // Header
           headerBuilder: (context, constraints, _) {
-            return buildHeader(context: context, constraints: constraints);
+            return LoginScreen.buildHeader(
+              context: context,
+              constraints: constraints,
+            );
           },
 
           // Subtitle
@@ -259,7 +283,7 @@ class LoginScreen extends StatelessWidget {
                         textAlign: TextAlign.center,
                       ),
                     ),
-                  if (shouldShowAppleUnavailableMessage(
+                  if (LoginScreen.shouldShowAppleUnavailableMessage(
                     appleProviderEnabled: appleConfigured,
                   ))
                     const Padding(
@@ -284,6 +308,8 @@ class LoginScreen extends StatelessWidget {
           // Actions (auth state changes)
           actions: [
             // Fires only on email/password registration (not sign-in, not OAuth).
+            // FirebaseUI also emits SignedIn after UserCreated — the guard in
+            // _guardedCompleteSignIn ensures _completeSignIn runs only once.
             AuthStateChangeAction<UserCreated>((context, state) async {
               final user = state.credential.user;
               if (user == null) return;
@@ -291,10 +317,14 @@ class LoginScreen extends StatelessWidget {
               // Email/password accounts have no displayName from Firebase Auth.
               // Prompt once so the leaderboard shows a real name instead of an email prefix.
               if ((user.displayName?.trim() ?? '').isEmpty && context.mounted) {
-                final name = await _showDisplayNameDialog(context, user.email);
+                final name = await LoginScreen._showDisplayNameDialog(
+                  context,
+                  user.email,
+                );
                 if (name != null && name.isNotEmpty) {
                   try {
                     await user.updateDisplayName(name);
+                    await user.reload();
                   } catch (e) {
                     AppLogger.d('⚠️ Failed to set display name: $e');
                   }
@@ -304,14 +334,14 @@ class LoginScreen extends StatelessWidget {
               // Re-fetch so ensureUserDocument picks up the updated displayName.
               final freshUser = fba.FirebaseAuth.instance.currentUser ?? user;
               if (!context.mounted) return;
-              await _completeSignIn(context, freshUser);
+              await _guardedCompleteSignIn(freshUser);
             }),
             // Fires on email/password sign-in and all OAuth sign-ins/sign-ups.
             // Google and Apple already supply displayName from their provider profile.
             AuthStateChangeAction<SignedIn>((context, state) async {
               final user = state.user;
               if (user == null) return;
-              await _completeSignIn(context, user);
+              await _guardedCompleteSignIn(user);
             }),
             AuthStateChangeAction<AuthFailed>((context, state) {
               final exception = state.exception;
@@ -324,12 +354,14 @@ class LoginScreen extends StatelessWidget {
                   parameters: {
                     'flow': 'login',
                     'error_code': errorCode,
-                    'failure_reason': authFailureReason(exception),
+                    'failure_reason': LoginScreen.authFailureReason(exception),
                   },
                 ),
               );
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(authFailureMessage(exception))),
+                SnackBar(
+                  content: Text(LoginScreen.authFailureMessage(exception)),
+                ),
               );
             }),
           ],
