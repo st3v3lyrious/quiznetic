@@ -572,14 +572,18 @@ class LocalFirstScoreRepository implements ScoreRepository {
         );
         syncedCount++;
       } catch (e) {
-        AppLogger.e(
-          'ScoreRepository sync failed for '
-          '${attempt.categoryKey}/${attempt.difficulty} '
-          '(attempt ${attempt.id}): $e',
-        );
+        final isConnectivity = _looksLikeConnectivityError(e);
+        final msg = 'ScoreRepository sync failed for '
+            '${attempt.categoryKey}/${attempt.difficulty} '
+            '(attempt ${attempt.id}): $e';
+        if (isConnectivity) {
+          AppLogger.d(msg);
+        } else {
+          AppLogger.e(msg);
+        }
         final nextDelay = _retryDelay(
           attemptNumber: attempt.syncAttempts + 1,
-          connectivityError: _looksLikeConnectivityError(e),
+          connectivityError: isConnectivity,
         );
         updated.add(
           attempt.copyWith(

@@ -112,7 +112,7 @@ Use this as a short, editable delivery plan.
   - [x] Phase 1 baseline shipped: validator, idempotent attempt records, stricter Firestore score bounds/scope checks.
   - [ ] Phase 2 pending: backend-authoritative submitScore path + direct projection write lock for clients.
   - Blaze-gated partial implementation shipped: callable `submitScore` + app flag (`ENABLE_BACKEND_SUBMIT_SCORE`) default-off on Spark.
-  - `cleanupOnUserDeleted` Cloud Function written and ready — deletes `users/{uid}` Firestore data when anonymous user is deleted on sign-out.
+  - `cleanupOnUserDeleted` Cloud Function written and ready — recursively deletes `users/{uid}` Firestore data when any Auth account is deleted (covers anonymous sign-out and future account-deletion flows).
   - **TODO before/at launch:** Upgrade project `quiznetic-30734` to Blaze plan, then `cd functions && firebase deploy --only functions` to activate both functions.
   - Activation/rollback conditions: docs/BLAZE_FEATURE_FLAGS.md
 - [x] M21: Enforce CI/CD quality gates (GitHub Actions + branch protection required checks are active on `main`). <!--gh:issue=55-->

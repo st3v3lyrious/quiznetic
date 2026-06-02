@@ -113,14 +113,28 @@ class AuthService {
   // Sign out (works for both anonymous and authenticated users)
   /// Signs out the current user session.
   ///
-  /// Anonymous users are deleted rather than just signed out so their orphaned
-  /// Auth record and Firestore data are cleaned up immediately.
+  /// Anonymous users are deleted rather than just signed out. This removes the
+  /// Auth record immediately and triggers the `cleanupOnUserDeleted` Cloud
+  /// Function, which deletes `users/{uid}` for any deleted account (anonymous
+  /// or otherwise).
   Future<void> signOut() async {
     try {
       await _clearLocalDataProvider();
+    } catch (e) {
+      AppLogger.d('⚠️ clearLocalData failed during sign-out: $e');
+    }
+    try {
       final user = _currentUserProvider();
       if (user != null && user.isAnonymous) {
-        await user.delete();
+        try {
+          await user.delete();
+        } catch (e) {
+          // delete() failed (transient error, etc.) — fall back to sign-out so
+          // the user can always exit the session. The orphaned Auth record will
+          // be cleaned up by cleanupOnUserDeleted once it is deployed.
+          AppLogger.d('⚠️ Anonymous user.delete() failed, falling back to signOut: $e');
+          await _signOutProvider();
+        }
       } else {
         await _signOutProvider();
       }
