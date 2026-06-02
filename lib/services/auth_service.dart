@@ -17,6 +17,7 @@ typedef EnsureUserDocumentProvider =
 typedef LinkWithCredentialProvider =
     Future<UserCredential> Function(User user, AuthCredential credential);
 typedef SyncPendingScoresProvider = Future<int> Function();
+typedef ClearLocalDataProvider = Future<void> Function();
 
 /// Service class that handles all authentication-related operations.
 /// This includes sign in, sign out, and auth state management.
@@ -28,6 +29,7 @@ class AuthService {
   final EnsureUserDocumentProvider _ensureUserDocumentProvider;
   final LinkWithCredentialProvider _linkWithCredentialProvider;
   final SyncPendingScoresProvider _syncPendingScoresProvider;
+  final ClearLocalDataProvider _clearLocalDataProvider;
 
   AuthService({
     CurrentUserProvider? currentUserProvider,
@@ -37,6 +39,7 @@ class AuthService {
     EnsureUserDocumentProvider? ensureUserDocumentProvider,
     LinkWithCredentialProvider? linkWithCredentialProvider,
     SyncPendingScoresProvider? syncPendingScoresProvider,
+    ClearLocalDataProvider? clearLocalDataProvider,
   }) : _currentUserProvider =
            currentUserProvider ?? (() => FirebaseAuth.instance.currentUser),
        _authStateChangesProvider =
@@ -55,7 +58,10 @@ class AuthService {
        _syncPendingScoresProvider =
            syncPendingScoresProvider ??
            (() =>
-               LocalFirstScoreRepository().syncPendingScores(forceRetry: true));
+               LocalFirstScoreRepository().syncPendingScores(forceRetry: true)),
+       _clearLocalDataProvider =
+           clearLocalDataProvider ??
+           (() => LocalFirstScoreRepository().clearLocalData());
 
   // Get the current user (null if not signed in)
   User? get currentUser => _currentUserProvider();
@@ -106,9 +112,18 @@ class AuthService {
 
   // Sign out (works for both anonymous and authenticated users)
   /// Signs out the current user session.
+  ///
+  /// Anonymous users are deleted rather than just signed out so their orphaned
+  /// Auth record and Firestore data are cleaned up immediately.
   Future<void> signOut() async {
     try {
-      await _signOutProvider();
+      await _clearLocalDataProvider();
+      final user = _currentUserProvider();
+      if (user != null && user.isAnonymous) {
+        await user.delete();
+      } else {
+        await _signOutProvider();
+      }
     } catch (e) {
       AppLogger.d('❌ Sign-out failed: $e');
       rethrow;

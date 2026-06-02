@@ -1,4 +1,5 @@
 const {onCall, HttpsError} = require('firebase-functions/v2/https');
+const functions = require('firebase-functions');
 const logger = require('firebase-functions/logger');
 const admin = require('firebase-admin');
 
@@ -342,3 +343,12 @@ exports.submitScore = onCall(
       };
     },
 );
+
+exports.cleanupOnUserDeleted = functions.auth.user().onDelete(async (user) => {
+  try {
+    await db.recursiveDelete(db.collection('users').doc(user.uid));
+    logger.info('cleanupOnUserDeleted: removed user data', {uid: user.uid});
+  } catch (err) {
+    logger.error('cleanupOnUserDeleted: failed to remove user data', {uid: user.uid, err});
+  }
+});

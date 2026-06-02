@@ -391,7 +391,7 @@ void main() {
       );
       expect(best, equals(11));
     });
-    test('syncPendingScores skips all sync when user is anonymous', () async {
+    test('syncPendingScores syncs anonymous user scores to remote', () async {
       SharedPreferences.setMockInitialValues({});
       var remoteSaveCalls = 0;
 
@@ -419,13 +419,13 @@ void main() {
         totalQuestions: 15,
       );
 
-      expect(result.synced, isFalse);
-      expect(result.queuedForSync, isTrue);
-      expect(remoteSaveCalls, equals(0));
+      expect(result.synced, isTrue);
+      expect(result.queuedForSync, isFalse);
+      expect(remoteSaveCalls, equals(1));
 
       final syncedCount = await repo.syncPendingScores(forceRetry: true);
-      expect(syncedCount, equals(0));
-      expect(remoteSaveCalls, equals(0));
+      expect(syncedCount, equals(0)); // nothing left pending after initial save
+      expect(remoteSaveCalls, equals(1));
     });
   });
 }
