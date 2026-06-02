@@ -391,10 +391,57 @@ void main() {
       );
       expect(best, equals(11));
     });
+    test('syncPendingScores syncs anonymous user scores to remote', () async {
+      SharedPreferences.setMockInitialValues({});
+      var remoteSaveCalls = 0;
+
+      final repo = LocalFirstScoreRepository(
+        currentUserProvider: () => _FakeAnonymousUser(),
+        saveRemoteScore:
+            ({
+              required categoryKey,
+              required difficulty,
+              required score,
+              required attemptId,
+              required totalQuestions,
+            }) async {
+              remoteSaveCalls++;
+            },
+        loadRemoteBestScore:
+            ({required categoryKey, required difficulty}) async => 0,
+        loadRemoteScores: () async => [],
+      );
+
+      final result = await repo.saveScore(
+        categoryKey: 'flag',
+        difficulty: 'easy',
+        score: 12,
+        totalQuestions: 15,
+      );
+
+      expect(result.synced, isTrue);
+      expect(result.queuedForSync, isFalse);
+      expect(remoteSaveCalls, equals(1));
+
+      final syncedCount = await repo.syncPendingScores(forceRetry: true);
+      expect(syncedCount, equals(0)); // nothing left pending after initial save
+      expect(remoteSaveCalls, equals(1));
+    });
   });
 }
 
+class _FakeAnonymousUser implements User {
+  @override
+  bool get isAnonymous => true;
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
 class _FakeUser implements User {
+  @override
+  bool get isAnonymous => false;
+
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

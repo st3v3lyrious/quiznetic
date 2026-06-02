@@ -207,6 +207,16 @@ class ScoreService {
         rejectionCode: e.rejectionCode,
       );
       rethrow;
+    } on FirebaseException catch (e) {
+      _logScoreSubmitFailed(
+        path: 'direct',
+        categoryKey: categoryKey,
+        difficulty: difficulty,
+        score: score,
+        totalQuestions: resolvedTotalQuestions,
+        rejectionCode: e.code,
+      );
+      rethrow;
     } catch (e) {
       _logScoreSubmitFailed(
         path: 'direct',
@@ -293,7 +303,11 @@ class ScoreService {
         .doc(uid);
 
     await _db.runTransaction((tx) async {
+      // All reads must precede all writes in a Firestore transaction.
       final attemptSnapshot = await tx.get(attemptDoc);
+      final scoreSnapshot = await tx.get(userDoc);
+      final leaderboardSnapshot = await tx.get(leadDoc);
+
       if (attemptSnapshot.exists) {
         return;
       }
@@ -309,7 +323,6 @@ class ScoreService {
         'createdAt': now,
       });
 
-      final scoreSnapshot = await tx.get(userDoc);
       final prevBest = scoreSnapshot.exists
           ? ((scoreSnapshot.data()?['bestScore'] as num?) ?? 0).toInt()
           : 0;
@@ -329,12 +342,11 @@ class ScoreService {
         }, SetOptions(merge: true));
       }
 
-      final leaderboardSnapshot = await tx.get(leadDoc);
       final existingLeaderboardScore = leaderboardSnapshot.exists
           ? ((leaderboardSnapshot.data()?['score'] as num?) ?? 0).toInt()
           : null;
 
-      if (shouldUpsertLeaderboard(
+      if (!user.isAnonymous && shouldUpsertLeaderboard(
         bestScore: newBestScore,
         leaderboardScore: existingLeaderboardScore,
       )) {

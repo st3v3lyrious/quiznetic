@@ -22,7 +22,7 @@ import 'package:quiznetic_flutter/utils/app_logger.dart';
 import 'package:quiznetic_flutter/utils/auth_ui_helper.dart';
 import 'package:quiznetic_flutter/widgets/legal_consent_notice.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
   static const routeName = '/login';
   static const logoAssetPath = 'assets/images/logo-no-background.png';
   static const _headerCompactHeightThreshold = 140.0;
@@ -36,13 +36,14 @@ class LoginScreen extends StatelessWidget {
 
   const LoginScreen({super.key, this.googleOAuthClientId});
 
-  /// Returns true when Google provider config is available.
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+
   @visibleForTesting
   static bool isGoogleProviderEnabled(String clientId) {
     return AuthUiHelper.isGoogleProviderEnabled(clientId);
   }
 
-  /// Returns true when Apple provider is available in current build/platform.
   @visibleForTesting
   static bool isAppleProviderEnabled({
     bool? appleSignInEnabled,
@@ -56,9 +57,6 @@ class LoginScreen extends StatelessWidget {
     );
   }
 
-  /// Returns true when we should show an "Apple unavailable" notice.
-  ///
-  /// On Android we intentionally hide this notice to avoid irrelevant UX copy.
   @visibleForTesting
   static bool shouldShowAppleUnavailableMessage({
     required bool appleProviderEnabled,
@@ -72,7 +70,6 @@ class LoginScreen extends StatelessWidget {
     );
   }
 
-  /// Builds provider list, conditionally including Google based on config.
   @visibleForTesting
   static List<AuthProvider> buildProviders({
     required String googleClientId,
@@ -87,13 +84,11 @@ class LoginScreen extends StatelessWidget {
     ];
   }
 
-  /// Maps Firebase Auth failures to user-safe sign-in messages.
   @visibleForTesting
   static String authFailureMessage(Exception exception) {
     return AuthUiHelper.authFailureMessage(exception);
   }
 
-  /// Normalized reason used for analytics segmentation.
   @visibleForTesting
   static String authFailureReason(Exception exception) {
     return AuthUiHelper.authFailureReason(exception);
@@ -107,12 +102,13 @@ class LoginScreen extends StatelessWidget {
     final theme = Theme.of(context);
     final verticalPadding =
         constraints.maxHeight < _headerCompactHeightThreshold
-            ? _headerCompactVerticalPadding
-            : _headerDefaultVerticalPadding;
+        ? _headerCompactVerticalPadding
+        : _headerDefaultVerticalPadding;
     final rawLogoHeight =
         constraints.maxHeight - (verticalPadding * 2) - _headerTextReservation;
-    final logoHeight =
-        rawLogoHeight.clamp(0.0, _headerLogoMaxHeight).toDouble();
+    final logoHeight = rawLogoHeight
+        .clamp(0.0, _headerLogoMaxHeight)
+        .toDouble();
     final showLogo = logoHeight >= _headerLogoMinVisibleHeight;
 
     return Padding(
@@ -149,26 +145,123 @@ class LoginScreen extends StatelessWidget {
     );
   }
 
-  /// Builds provider sign-in and account-creation actions.
+  /// Shared post-authentication flow: saves user profile, syncs scores, navigates home.
+  static Future<void> _completeSignIn(
+    BuildContext context,
+    fba.User user,
+  ) async {
+    AppLogger.d('✅ ${user.uid} signed in');
+    unawaited(
+      AnalyticsService.instance.logEvent(
+        'auth_signed_in',
+        parameters: {
+          'flow': 'login',
+          'provider_count': user.providerData.length,
+          'is_anonymous': user.isAnonymous,
+        },
+      ),
+    );
+
+    final created = await UserChecker.ensureUserDocument(user: user);
+    if (!created) {
+      unawaited(
+        AnalyticsService.instance.logEvent(
+          'auth_profile_bootstrap_failed',
+          parameters: {'flow': 'login'},
+        ),
+      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Could not create your user profile. Please try again.',
+            ),
+          ),
+        );
+      }
+      try {
+        await AuthService().signOut();
+      } catch (_) {
+        // Keep user on login screen even if sign-out cleanup fails.
+        unawaited(
+          AnalyticsService.instance.logEvent(
+            'auth_cleanup_failed',
+            parameters: {'flow': 'login'},
+          ),
+        );
+      }
+      return;
+    }
+
+    try {
+      await LocalFirstScoreRepository().syncPendingScores(forceRetry: true);
+    } catch (e) {
+      AppLogger.d('⚠️ Deferred score sync after sign-in failed: $e');
+      unawaited(
+        AnalyticsService.instance.logEvent(
+          'auth_post_signin_sync_failed',
+          parameters: {'flow': 'login', 'error_type': e.runtimeType.toString()},
+        ),
+      );
+    }
+
+    if (context.mounted) {
+      Navigator.of(context).pushReplacementNamed(HomeScreen.routeName);
+    }
+  }
+
+  static Future<String?> _showDisplayNameDialog(
+    BuildContext context,
+    String? email,
+  ) {
+    final emailPrefix = email?.split('@').first ?? '';
+    return showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => _DisplayNameDialog(initialValue: emailPrefix),
+    );
+  }
+
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  bool _completing = false;
+
+  Future<void> _guardedCompleteSignIn(fba.User user) async {
+    if (_completing) return;
+    _completing = true;
+    try {
+      await LoginScreen._completeSignIn(context, user);
+    } finally {
+      // Reset only if still mounted — if navigation succeeded the widget is gone.
+      if (mounted) _completing = false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final resolvedGoogleClientId =
-        googleOAuthClientId ?? AppConfig.googleOAuthClientId;
-    final googleConfigured = isGoogleProviderEnabled(resolvedGoogleClientId);
-    final appleConfigured = isAppleProviderEnabled();
+        widget.googleOAuthClientId ?? AppConfig.googleOAuthClientId;
+    final googleConfigured = LoginScreen.isGoogleProviderEnabled(
+      resolvedGoogleClientId,
+    );
+    final appleConfigured = LoginScreen.isAppleProviderEnabled();
 
     return Scaffold(
       body: SafeArea(
         child: SignInScreen(
           // Providers
-          providers: buildProviders(
+          providers: LoginScreen.buildProviders(
             googleClientId: resolvedGoogleClientId,
             includeAppleProvider: appleConfigured,
           ),
 
           // Header
           headerBuilder: (context, constraints, _) {
-            return buildHeader(context: context, constraints: constraints);
+            return LoginScreen.buildHeader(
+              context: context,
+              constraints: constraints,
+            );
           },
 
           // Subtitle
@@ -190,7 +283,7 @@ class LoginScreen extends StatelessWidget {
                         textAlign: TextAlign.center,
                       ),
                     ),
-                  if (shouldShowAppleUnavailableMessage(
+                  if (LoginScreen.shouldShowAppleUnavailableMessage(
                     appleProviderEnabled: appleConfigured,
                   ))
                     const Padding(
@@ -214,78 +307,41 @@ class LoginScreen extends StatelessWidget {
 
           // Actions (auth state changes)
           actions: [
+            // Fires only on email/password registration (not sign-in, not OAuth).
+            // FirebaseUI also emits SignedIn after UserCreated — the guard in
+            // _guardedCompleteSignIn ensures _completeSignIn runs only once.
+            AuthStateChangeAction<UserCreated>((context, state) async {
+              final user = state.credential.user;
+              if (user == null) return;
+
+              // Email/password accounts have no displayName from Firebase Auth.
+              // Prompt once so the leaderboard shows a real name instead of an email prefix.
+              if ((user.displayName?.trim() ?? '').isEmpty && context.mounted) {
+                final name = await LoginScreen._showDisplayNameDialog(
+                  context,
+                  user.email,
+                );
+                if (name != null && name.isNotEmpty) {
+                  try {
+                    await user.updateDisplayName(name);
+                    await user.reload();
+                  } catch (e) {
+                    AppLogger.d('⚠️ Failed to set display name: $e');
+                  }
+                }
+              }
+
+              // Re-fetch so ensureUserDocument picks up the updated displayName.
+              final freshUser = fba.FirebaseAuth.instance.currentUser ?? user;
+              if (!context.mounted) return;
+              await _guardedCompleteSignIn(freshUser);
+            }),
+            // Fires on email/password sign-in and all OAuth sign-ins/sign-ups.
+            // Google and Apple already supply displayName from their provider profile.
             AuthStateChangeAction<SignedIn>((context, state) async {
               final user = state.user;
               if (user == null) return;
-
-              AppLogger.d('✅ ${user.uid} signed in');
-              unawaited(
-                AnalyticsService.instance.logEvent(
-                  'auth_signed_in',
-                  parameters: {
-                    'flow': 'login',
-                    'provider_count': user.providerData.length,
-                    'is_anonymous': user.isAnonymous,
-                  },
-                ),
-              );
-
-              final created = await UserChecker.ensureUserDocument(user: user);
-              if (!created) {
-                unawaited(
-                  AnalyticsService.instance.logEvent(
-                    'auth_profile_bootstrap_failed',
-                    parameters: {'flow': 'login'},
-                  ),
-                );
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'Could not create your user profile. Please try again.',
-                      ),
-                    ),
-                  );
-                }
-                try {
-                  await AuthService().signOut();
-                } catch (_) {
-                  // Keep user on login screen even if sign-out cleanup fails.
-                  unawaited(
-                    AnalyticsService.instance.logEvent(
-                      'auth_cleanup_failed',
-                      parameters: {'flow': 'login'},
-                    ),
-                  );
-                }
-                return;
-              }
-
-              // If scores were queued while offline, attempt a best-effort sync.
-              try {
-                await LocalFirstScoreRepository().syncPendingScores(
-                  forceRetry: true,
-                );
-              } catch (e) {
-                AppLogger.d(
-                  '⚠️ Deferred score sync after provider sign-in failed: $e',
-                );
-                unawaited(
-                  AnalyticsService.instance.logEvent(
-                    'auth_post_signin_sync_failed',
-                    parameters: {
-                      'flow': 'login',
-                      'error_type': e.runtimeType.toString(),
-                    },
-                  ),
-                );
-              }
-
-              if (context.mounted) {
-                Navigator.of(
-                  context,
-                ).pushReplacementNamed(HomeScreen.routeName);
-              }
+              await _guardedCompleteSignIn(user);
             }),
             AuthStateChangeAction<AuthFailed>((context, state) {
               final exception = state.exception;
@@ -298,15 +354,16 @@ class LoginScreen extends StatelessWidget {
                   parameters: {
                     'flow': 'login',
                     'error_code': errorCode,
-                    'failure_reason': authFailureReason(exception),
+                    'failure_reason': LoginScreen.authFailureReason(exception),
                   },
                 ),
               );
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(authFailureMessage(exception))),
+                SnackBar(
+                  content: Text(LoginScreen.authFailureMessage(exception)),
+                ),
               );
             }),
-            // Additional auth state actions can be added as needed
           ],
 
           // Styles
@@ -317,4 +374,63 @@ class LoginScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+class _DisplayNameDialog extends StatefulWidget {
+  final String initialValue;
+
+  const _DisplayNameDialog({required this.initialValue});
+
+  @override
+  State<_DisplayNameDialog> createState() => _DisplayNameDialogState();
+}
+
+class _DisplayNameDialogState extends State<_DisplayNameDialog> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialValue);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return AlertDialog(
+      title: const Text('What should we call you?'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Your name appears on the leaderboard.',
+            style: theme.textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _controller,
+            autofocus: true,
+            textCapitalization: TextCapitalization.words,
+            decoration: const InputDecoration(
+              hintText: 'Display name',
+              border: OutlineInputBorder(),
+            ),
+            onSubmitted: (_) => _submit(),
+          ),
+        ],
+      ),
+      actions: [
+        FilledButton(onPressed: _submit, child: const Text('Continue')),
+      ],
+    );
+  }
+
+  void _submit() => Navigator.of(context).pop(_controller.text.trim());
 }

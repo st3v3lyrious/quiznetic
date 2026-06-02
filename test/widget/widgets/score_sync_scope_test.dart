@@ -130,6 +130,9 @@ class _FakeScoreRepository implements ScoreRepository {
     forceRetryCalls.add(forceRetry);
     return 0;
   }
+
+  @override
+  Future<void> clearLocalData() async {}
 }
 
 class _FakeUser implements User {

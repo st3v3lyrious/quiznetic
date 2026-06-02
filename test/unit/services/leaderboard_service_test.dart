@@ -55,6 +55,7 @@ void main() {
         expect(snapshot.currentUserUid, 'u2');
         expect(snapshot.currentUserRow?.rank, 2);
         expect(snapshot.currentUserRow?.score, 95);
+        expect(snapshot.currentUserIsAnonymous, isFalse);
       },
     );
 
@@ -87,6 +88,37 @@ void main() {
         expect(snapshot.currentUserUid, 'outside');
         expect(snapshot.currentUserRow, isNull);
         expect(snapshot.rows.single.rank, 1);
+        expect(snapshot.currentUserIsAnonymous, isFalse);
+      },
+    );
+    test(
+      'sets currentUserIsAnonymous when current user is anonymous',
+      () async {
+        final service = LeaderboardService(
+          currentUserLoader: () => _FakeUser(uid: 'guest-1', isAnonymous: true),
+          entriesLoader:
+              ({
+                required categoryKey,
+                required difficulty,
+                required limit,
+              }) async => [
+                LeaderboardEntry(
+                  uid: 'u1',
+                  score: 70,
+                  updatedAt: DateTime.utc(2025, 1, 1),
+                  isAnonymous: false,
+                  displayName: 'Player1',
+                ),
+              ],
+        );
+
+        final snapshot = await service.load(
+          categoryKey: 'flag',
+          difficulty: 'easy',
+        );
+
+        expect(snapshot.currentUserIsAnonymous, isTrue);
+        expect(snapshot.currentUserRow, isNull);
       },
     );
   });
@@ -96,7 +128,10 @@ class _FakeUser implements User {
   @override
   final String uid;
 
-  _FakeUser({required this.uid});
+  @override
+  final bool isAnonymous;
+
+  _FakeUser({required this.uid, this.isAnonymous = false});
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);

@@ -6,7 +6,6 @@
 // lib/screens/user_profile_screen.dart
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:quiznetic_flutter/screens/about_screen.dart';
 import 'package:quiznetic_flutter/screens/leaderboard_screen.dart';
 import 'package:quiznetic_flutter/screens/settings_screen.dart';
 import 'package:quiznetic_flutter/screens/upgrade_account_screen.dart';
@@ -73,7 +72,17 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       authService: authService,
       leaderboardBandService: leaderboardBandService,
     );
-    return _ProfileData(scores: scores, guestBand: guestBand);
+    final displayName = _resolveDisplayName(_safeCurrentUser(authService));
+    return _ProfileData(scores: scores, guestBand: guestBand, displayName: displayName);
+  }
+
+  String _resolveDisplayName(User? user) {
+    if (user == null || user.isAnonymous) return 'Guest';
+    final name = user.displayName?.trim();
+    if (name != null && name.isNotEmpty) return name;
+    final email = user.email?.trim();
+    if (email != null && email.isNotEmpty) return email.split('@').first;
+    return 'Player';
   }
 
   /// Resolves the strongest anonymous leaderboard rank from the user's scores.
@@ -261,13 +270,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
               Navigator.pushNamed(context, SettingsScreen.routeName);
             },
           ),
-          IconButton(
-            icon: const Icon(Icons.info_outline),
-            tooltip: 'About',
-            onPressed: () {
-              Navigator.pushNamed(context, AboutScreen.routeName);
-            },
-          ),
         ],
       ),
       body: FutureBuilder<_ProfileData>(
@@ -308,6 +310,12 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
               const CircleAvatar(
                 radius: 40,
                 child: Icon(Icons.person, size: 40),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                profileData.displayName,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 16),
               const Text(
@@ -379,6 +387,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
 class _ProfileData {
   final List<CategoryScore> scores;
   final LeaderboardBandResult? guestBand;
+  final String displayName;
 
-  _ProfileData({required this.scores, required this.guestBand});
+  _ProfileData({required this.scores, required this.guestBand, required this.displayName});
 }

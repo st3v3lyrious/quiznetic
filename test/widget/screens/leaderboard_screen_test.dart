@@ -250,13 +250,177 @@ void main() {
       expect(scoreRepository.saveScoreCalls, 1);
     },
   );
+  testWidgets('guest with no local score sees play-to-compete message', (
+    tester,
+  ) async {
+    final scoreRepo = _RepairFakeScoreRepository(initialBest: 0);
+    final service = LeaderboardService(
+      currentUserLoader: () => _FakeUser(uid: 'guest-1', isAnonymous: true),
+      entriesLoader:
+          ({required categoryKey, required difficulty, required limit}) async =>
+              [
+                LeaderboardEntry(
+                  uid: 'u1',
+                  score: 80,
+                  updatedAt: DateTime.utc(2025, 1, 1),
+                  isAnonymous: false,
+                  displayName: 'Player1',
+                ),
+              ],
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: LeaderboardScreen(
+          leaderboardService: service,
+          scoreRepository: scoreRepo,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('leaderboard-not-ranked-card')), findsOneWidget);
+    expect(find.text('Play a quiz to see where you rank.'), findsOneWidget);
+    expect(
+      find.byKey(const Key('leaderboard-create-account-button')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('guest with ranking score sees hypothetical rank message', (
+    tester,
+  ) async {
+    final scoreRepo = _RepairFakeScoreRepository(initialBest: 85);
+    final service = LeaderboardService(
+      currentUserLoader: () => _FakeUser(uid: 'guest-1', isAnonymous: true),
+      entriesLoader:
+          ({required categoryKey, required difficulty, required limit}) async =>
+              [
+                LeaderboardEntry(
+                  uid: 'u1',
+                  score: 80,
+                  updatedAt: DateTime.utc(2025, 1, 1),
+                  isAnonymous: false,
+                  displayName: 'Player1',
+                ),
+              ],
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: LeaderboardScreen(
+          leaderboardService: service,
+          scoreRepository: scoreRepo,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('leaderboard-not-ranked-card')), findsOneWidget);
+    expect(
+      find.text('Your score of 85 would put you at #1.'),
+      findsOneWidget,
+    );
+    expect(find.text('Create an account to claim your spot!'), findsOneWidget);
+    expect(
+      find.byKey(const Key('leaderboard-create-account-button')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('guest outside top 100 sees motivational create-account message', (
+    tester,
+  ) async {
+    final scoreRepo = _RepairFakeScoreRepository(initialBest: 50);
+    final service = LeaderboardService(
+      currentUserLoader: () => _FakeUser(uid: 'guest-1', isAnonymous: true),
+      entriesLoader:
+          ({required categoryKey, required difficulty, required limit}) async =>
+              _makeEntries(100, 80),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: LeaderboardScreen(
+          leaderboardService: service,
+          scoreRepository: scoreRepo,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('leaderboard-not-ranked-card')), findsOneWidget);
+    expect(
+      find.text("Your score of 50 isn't in the top 100 yet."),
+      findsOneWidget,
+    );
+    expect(
+      find.text('Create an account and keep playing to climb the ranks!'),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const Key('leaderboard-create-account-button')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets(
+    'shows not-ranked message for registered user not yet on leaderboard',
+    (tester) async {
+      final service = LeaderboardService(
+        currentUserLoader: () => _FakeUser(uid: 'u-new'),
+        entriesLoader:
+            ({
+              required categoryKey,
+              required difficulty,
+              required limit,
+            }) async => [
+              LeaderboardEntry(
+                uid: 'u1',
+                score: 80,
+                updatedAt: DateTime.utc(2025, 1, 1),
+                isAnonymous: false,
+                displayName: 'Player1',
+              ),
+            ],
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(home: LeaderboardScreen(leaderboardService: service)),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('You are not ranked in this top list yet.'),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('leaderboard-create-account-button')),
+        findsNothing,
+      );
+    },
+  );
 }
 
+List<LeaderboardEntry> _makeEntries(int count, int score) => List.generate(
+  count,
+  (i) => LeaderboardEntry(
+    uid: 'u$i',
+    score: score,
+    updatedAt: DateTime.utc(2025, 1, 1),
+    isAnonymous: false,
+    displayName: 'Player$i',
+  ),
+);
+
 class _FakeUser implements User {
-  _FakeUser({required this.uid});
+  _FakeUser({required this.uid, this.isAnonymous = false});
 
   @override
   final String uid;
+
+  @override
+  final bool isAnonymous;
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -295,4 +459,7 @@ class _RepairFakeScoreRepository implements ScoreRepository {
 
   @override
   Future<int> syncPendingScores({bool forceRetry = false}) async => 0;
+
+  @override
+  Future<void> clearLocalData() async {}
 }
