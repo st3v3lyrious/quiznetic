@@ -210,6 +210,9 @@ abstract class ScoreRepository {
 
   /// Retries syncing pending local score attempts.
   Future<int> syncPendingScores({bool forceRetry = false});
+
+  /// Clears all locally cached score data. Call on sign-out to prevent data leaking between users.
+  Future<void> clearLocalData();
 }
 
 class LocalFirstScoreRepository implements ScoreRepository {
@@ -275,6 +278,17 @@ class LocalFirstScoreRepository implements ScoreRepository {
       categoryKey: categoryKey,
       difficulty: difficulty,
     );
+  }
+
+  /// Wipes all local score data from SharedPreferences.
+  @override
+  Future<void> clearLocalData() async {
+    final prefs = await _prefsLoader();
+    await prefs.remove(_attemptsKey);
+    await prefs.remove(_projectionKey);
+    for (final key in ScoreSubmissionValidator.allowedCategoryKeys) {
+      await prefs.remove('highscore_$key');
+    }
   }
 
   /// Saves score locally and retries syncing all pending score attempts.
@@ -558,14 +572,18 @@ class LocalFirstScoreRepository implements ScoreRepository {
         );
         syncedCount++;
       } catch (e) {
-        AppLogger.d(
-          'ScoreRepository sync failed for '
-          '${attempt.categoryKey}/${attempt.difficulty} '
-          '(attempt ${attempt.id}): $e',
-        );
+        final isConnectivity = _looksLikeConnectivityError(e);
+        final msg = 'ScoreRepository sync failed for '
+            '${attempt.categoryKey}/${attempt.difficulty} '
+            '(attempt ${attempt.id}): $e';
+        if (isConnectivity) {
+          AppLogger.d(msg);
+        } else {
+          AppLogger.e(msg);
+        }
         final nextDelay = _retryDelay(
           attemptNumber: attempt.syncAttempts + 1,
-          connectivityError: _looksLikeConnectivityError(e),
+          connectivityError: isConnectivity,
         );
         updated.add(
           attempt.copyWith(

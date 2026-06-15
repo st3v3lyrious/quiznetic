@@ -5,10 +5,8 @@
 */
 import 'package:flutter/material.dart';
 import 'package:quiznetic_flutter/config/brand_config.dart';
-import 'package:quiznetic_flutter/screens/about_screen.dart';
 import 'package:quiznetic_flutter/screens/entry_choice_screen.dart';
 import 'package:quiznetic_flutter/screens/legal_document_screen.dart';
-import 'package:quiznetic_flutter/screens/leaderboard_screen.dart';
 import 'package:quiznetic_flutter/services/accessibility_preferences.dart';
 import 'package:quiznetic_flutter/services/auth_service.dart';
 import 'package:quiznetic_flutter/utils/app_logger.dart';
@@ -139,18 +137,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.leaderboard),
-            tooltip: 'Leaderboard',
-            onPressed: () {
-              Navigator.pushNamed(context, LeaderboardScreen.routeName);
-            },
-          ),
-        ],
-      ),
+      appBar: AppBar(title: const Text('Settings')),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
@@ -260,13 +247,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: Column(
                 children: [
                   ListTile(
-                    key: const Key('settings-about-link'),
-                    leading: const Icon(Icons.info_outline),
-                    title: const Text('About'),
-                    subtitle: const Text('Version, support, and app details'),
-                    onTap: () {
-                      Navigator.of(context).pushNamed(AboutScreen.routeName);
-                    },
+                    leading: const Icon(Icons.email_outlined),
+                    title: const Text('Support'),
+                    subtitle: Text(BrandConfig.supportEmail),
                   ),
                   const Divider(height: 1),
                   ListTile(
