@@ -168,3 +168,6 @@ Use this as a short, editable delivery plan.
     - [ ] Firestore connection loss scenario (app resilience when DB unavailable).
     - [ ] Network timeout handling with actual timeout triggers.
     - [ ] IAP service disable path validation when `ENABLE_IAP=false`.
+- [ ] M31: Add notification capabilities (**POST-MVP**).
+  - [ ] Add push notifications.
+  - [ ] Add email notifications for account creation and account confirmation.
