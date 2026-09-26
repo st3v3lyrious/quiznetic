@@ -161,7 +161,7 @@ require production Web verification. Historical target dates are not new commitm
   - [x] App baseline: Flags, Capitals, guest/account flows, scores, leaderboard, profile and settings implemented with automated coverage.
   - [ ] Choose public URL and matching `--base-href`.
   - [ ] Configure production `FIREBASE_WEB_*` and authorize EIRENYA domains in Firebase Auth/Google OAuth.
-  - [ ] Guard unsupported Crashlytics operations on Web, including initialization and error capture.
+  - [x] Guard unsupported Crashlytics operations on Web, including initialization, error capture and Analytics breadcrumbs (M32 compatibility change; deployment still pending).
   - [ ] Validate release build, responsive layouts, browser back/refresh/direct routes and Email/Google sign-in.
   - [ ] Verify deployed Firestore rules and leaderboard exposure (M20).
   - [ ] Verify Web analytics and current privacy/legal copy for the ad-free build.

@@ -4,11 +4,38 @@ import 'package:quiznetic_flutter/services/analytics_service.dart';
 
 void main() {
   group('AnalyticsService', () {
+    for (final isWeb in [true, false]) {
+      test('keeps analytics without unsupported/disabled breadcrumbs '
+          '(isWeb=$isWeb)', () async {
+        var events = 0;
+        var screens = 0;
+        var breadcrumbs = 0;
+        final service = AnalyticsService(
+          enabled: true,
+          isWeb: isWeb,
+          crashReportingEnabled: isWeb,
+          setCollectionEnabled: (_) async {},
+          logEvent: ({required name, parameters}) async => events++,
+          logScreenView: ({screenName, screenClass}) async => screens++,
+          logCrashBreadcrumb: (_) => breadcrumbs++,
+        );
+
+        await service.initialize();
+        await service.logEvent('quiz_started');
+        await service.logScreenView(screenName: '/quiz');
+
+        expect(events, 1);
+        expect(screens, 1);
+        expect(breadcrumbs, 0);
+      });
+    }
+
     test(
       'initialize toggles analytics collection based on feature flag',
       () async {
         bool? enabledValue;
         final service = AnalyticsService(
+          isWeb: false,
           enabled: true,
           setCollectionEnabled: (enabled) async {
             enabledValue = enabled;
@@ -26,6 +53,7 @@ void main() {
 
     test('initialize swallows setup failures', () async {
       final service = AnalyticsService(
+        isWeb: false,
         enabled: true,
         setCollectionEnabled: (_) async => throw StateError('set-failed'),
         logEvent: ({required name, parameters}) async {},
@@ -40,6 +68,7 @@ void main() {
       var didLogEvent = false;
       var didLogBreadcrumb = false;
       final service = AnalyticsService(
+        isWeb: false,
         enabled: false,
         setCollectionEnabled: (_) async {},
         logEvent: ({required name, parameters}) async {
@@ -62,6 +91,7 @@ void main() {
       Map<String, Object>? loggedParams;
       String? breadcrumb;
       final service = AnalyticsService(
+        isWeb: false,
         enabled: true,
         setCollectionEnabled: (_) async {},
         logEvent: ({required name, parameters}) async {
@@ -102,6 +132,7 @@ void main() {
       String? loggedScreenClass;
       String? breadcrumb;
       final service = AnalyticsService(
+        isWeb: false,
         enabled: true,
         setCollectionEnabled: (_) async {},
         logEvent: ({required name, parameters}) async {},
@@ -126,6 +157,7 @@ void main() {
 
     test('log methods swallow downstream failures', () async {
       final service = AnalyticsService(
+        isWeb: false,
         enabled: true,
         setCollectionEnabled: (_) async {},
         logEvent: ({required name, parameters}) async {
@@ -148,6 +180,7 @@ void main() {
       () async {
         final trackedScreens = <String>[];
         final service = AnalyticsService(
+          isWeb: false,
           enabled: true,
           setCollectionEnabled: (_) async {},
           logEvent: ({required name, parameters}) async {},

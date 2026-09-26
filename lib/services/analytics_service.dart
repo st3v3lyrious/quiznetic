@@ -8,6 +8,7 @@ import 'dart:async';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:quiznetic_flutter/config/app_config.dart';
 import 'package:quiznetic_flutter/utils/app_logger.dart';
@@ -25,11 +26,15 @@ typedef CrashBreadcrumbLogger = void Function(String message);
 class AnalyticsService {
   AnalyticsService({
     bool? enabled,
+    bool isWeb = kIsWeb,
+    bool? crashReportingEnabled,
     AnalyticsSetCollectionEnabled? setCollectionEnabled,
     AnalyticsLogEvent? logEvent,
     AnalyticsLogScreenView? logScreenView,
     CrashBreadcrumbLogger? logCrashBreadcrumb,
   }) : _enabled = enabled ?? AppConfig.enableAnalytics,
+       _crashBreadcrumbsEnabled =
+           !isWeb && (crashReportingEnabled ?? AppConfig.enableCrashReporting),
        _setCollectionEnabled =
            setCollectionEnabled ?? _defaultSetCollectionEnabled,
        _logEvent = logEvent ?? _defaultLogEvent,
@@ -39,6 +44,7 @@ class AnalyticsService {
   static final AnalyticsService instance = AnalyticsService();
 
   final bool _enabled;
+  final bool _crashBreadcrumbsEnabled;
   final AnalyticsSetCollectionEnabled _setCollectionEnabled;
   final AnalyticsLogEvent _logEvent;
   final AnalyticsLogScreenView _logScreenView;
@@ -114,7 +120,7 @@ class AnalyticsService {
         name: normalizedName,
         parameters: normalizedParams.isEmpty ? null : normalizedParams,
       );
-      if (includeCrashBreadcrumb) {
+      if (includeCrashBreadcrumb && _crashBreadcrumbsEnabled) {
         _logCrashBreadcrumb('analytics:$normalizedName');
       }
     } catch (e, stackTrace) {
@@ -146,7 +152,9 @@ class AnalyticsService {
         screenName: normalizedScreenName,
         screenClass: normalizedScreenClass,
       );
-      _logCrashBreadcrumb('screen_view:$normalizedScreenName');
+      if (_crashBreadcrumbsEnabled) {
+        _logCrashBreadcrumb('screen_view:$normalizedScreenName');
+      }
     } catch (e, stackTrace) {
       AppLogger.d(
         'Analytics logScreenView failed for "$normalizedScreenName": $e',
