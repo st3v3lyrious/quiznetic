@@ -4,6 +4,37 @@ import 'package:quiznetic_flutter/services/crash_reporting_service.dart';
 
 void main() {
   group('CrashReportingService', () {
+    for (final enabled in [true, false]) {
+      test('Web skips all Crashlytics calls when enabled=$enabled', () async {
+        final originalHandler = FlutterError.onError;
+        var crashlyticsCalls = 0;
+        final service = CrashReportingService(
+          enabled: enabled,
+          isWeb: true,
+          setCollectionEnabled: (_) async => crashlyticsCalls++,
+          recordError: (error, stackTrace, {fatal = false}) async {
+            crashlyticsCalls++;
+          },
+          recordFlutterFatalError: (_) => crashlyticsCalls++,
+        );
+
+        await service.initialize();
+        await service.recordUnhandledError(
+          StateError('Web error'),
+          StackTrace.current,
+        );
+
+        expect(crashlyticsCalls, 0);
+        expect(FlutterError.onError, same(originalHandler));
+      });
+    }
+
+    test('Web default callbacks never access the native plugin', () async {
+      final service = CrashReportingService(enabled: true, isWeb: true);
+      await service.initialize();
+      await service.recordUnhandledError(StateError('Web'), StackTrace.current);
+    });
+
     test(
       'initialize enables collection and forwards Flutter fatal errors',
       () async {
@@ -16,6 +47,7 @@ void main() {
         });
 
         final service = CrashReportingService(
+          isWeb: false,
           enabled: true,
           setCollectionEnabled: (enabled) async {
             collectionEnabled = enabled;
@@ -59,6 +91,7 @@ void main() {
 
         bool? collectionEnabled;
         final service = CrashReportingService(
+          isWeb: false,
           enabled: false,
           setCollectionEnabled: (enabled) async {
             collectionEnabled = enabled;
@@ -79,6 +112,7 @@ void main() {
     test('recordUnhandledError no-ops when disabled', () async {
       var didRecord = false;
       final service = CrashReportingService(
+        isWeb: false,
         enabled: false,
         setCollectionEnabled: (_) async {},
         recordError: (error, stackTrace, {fatal = false}) async {
@@ -101,6 +135,7 @@ void main() {
       StackTrace? recordedStack;
       bool? recordedFatal;
       final service = CrashReportingService(
+        isWeb: false,
         enabled: true,
         setCollectionEnabled: (_) async {},
         recordError: (error, stackTrace, {fatal = false}) async {

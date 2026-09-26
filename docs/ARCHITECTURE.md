@@ -61,8 +61,8 @@ It is intended to be source material for generated docs (including `README.md`).
 ## Runtime Flow (Current)
 
 1. `main()` initializes Firebase.
-2. Crash reporting service configures Crashlytics collection and unhandled-error hooks.
-3. Analytics service configures collection toggle and route observer screen-view logging.
+2. Crash reporting service configures Crashlytics collection and unhandled-error hooks on native platforms; on Web all Crashlytics operations are skipped.
+3. Analytics service configures collection toggle and route observer screen-view logging. Web retains product events and screen views without native Crashlytics breadcrumbs; the crash-reporting kill switch also suppresses these breadcrumbs.
 4. App starts on splash route.
 5. Splash checks auth state after delay and navigates to home (if user exists) or entry choice.
 6. If there is no session, entry-choice screen presents explicit user choice:

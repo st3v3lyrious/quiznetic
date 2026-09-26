@@ -17,10 +17,12 @@ typedef CrashRecordFlutterFatalError =
 class CrashReportingService {
   CrashReportingService({
     bool? enabled,
+    bool isWeb = kIsWeb,
     CrashSetCollectionEnabled? setCollectionEnabled,
     CrashRecordError? recordError,
     CrashRecordFlutterFatalError? recordFlutterFatalError,
   }) : _enabled = enabled ?? AppConfig.enableCrashReporting,
+       _isWeb = isWeb,
        _setCollectionEnabled =
            setCollectionEnabled ??
            ((enabled) => FirebaseCrashlytics.instance
@@ -35,12 +37,15 @@ class CrashReportingService {
                FirebaseCrashlytics.instance.recordFlutterFatalError(details));
 
   final bool _enabled;
+  final bool _isWeb;
   final CrashSetCollectionEnabled _setCollectionEnabled;
   final CrashRecordError _recordError;
   final CrashRecordFlutterFatalError _recordFlutterFatalError;
 
   /// Configures Crashlytics collection and Flutter framework error handling.
   Future<void> initialize() async {
+    // Crashlytics has no Web implementation, including collection toggles.
+    if (_isWeb) return;
     await _setCollectionEnabled(_enabled);
     if (!_enabled) return;
 
@@ -57,6 +62,7 @@ class CrashReportingService {
     StackTrace stackTrace, {
     bool fatal = true,
   }) async {
+    if (_isWeb) return;
     if (!_enabled) {
       AppLogger.d('Unhandled error captured while crash reporting is disabled');
       return;
