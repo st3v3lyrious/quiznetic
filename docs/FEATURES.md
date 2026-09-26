@@ -70,14 +70,14 @@ Use this as an editable feature checklist.
 - [x] Add product analytics instrumentation (baseline auth + quiz + score funnel events) <!--gh:issue=114-->
 - [x] Add analytics event breadcrumbs for crash triage (screen views + critical actions) <!--gh:issue=115-->
 - [x] Add crash reporting (Crashlytics baseline with compile-time kill switch) <!--gh:issue=116-->
-- [x] Integrate monetization baseline via ads <!--gh:issue=117-->
+- [x] Historical ads baseline (removed in M30; reimplementation tracked by M15) <!--gh:issue=117-->
   - [x] Banner ad placements on home and result screens
   - [x] Placement-aware ad-unit mapping (Android+iOS home/result ids, with shared fallback ids)
   - [x] Runtime gating via `ENABLE_ADS` plus entitlement check (`remove_ads`)
   - [x] Non-release compliance guard blocks live `ca-app-pub-*` units unless explicitly allowed (`ALLOW_LIVE_AD_UNITS_IN_DEBUG=true`)
   - [x] Result-screen hybrid ad strategy behind dedicated flag (`ENABLE_RESULT_INTERSTITIAL_ADS`, default `false`): interstitial-first with banner fallback on failure
   - [x] Native AdMob app-id baseline configured (`com.google.android.gms.ads.APPLICATION_ID` / `GADApplicationIdentifier`)
-- [x] Integrate monetization baseline via in-app purchases (IAP) <!--gh:issue=118-->
+- [x] Historical IAP baseline (removed in M30; reimplementation tracked by M15) <!--gh:issue=118-->
   - [x] Runtime gating via `ENABLE_IAP` (default `false`)
   - [x] Lifetime `Remove Ads` catalog + purchase/restore plumbing
   - [x] Persisted entitlement state (`entitlement_remove_ads`) to suppress ads post-purchase
@@ -101,7 +101,7 @@ Use this as an editable feature checklist.
   - [x] Incident postmortem template + cadence documented (`docs/INCIDENT_POSTMORTEM_TEMPLATE.md`)
   - [ ] Dedicated on-call paging + KPI dashboard automation pending
 - [ ] Add user feedback collection loop (in-app feedback form + categorization + roadmap review input) <!--gh:issue=130-->
-- [ ] Launch MVP <!--gh:issue=131-->
+- [ ] Launch mobile MVP after Web validation (M17; Web launch tracked by M32) <!--gh:issue=131-->
 - [ ] Add Logo quiz category (Deferred: blocked by logo asset dataset + answer metadata map) <!--gh:issue=132-->
 
 ## Test Scaffolding
