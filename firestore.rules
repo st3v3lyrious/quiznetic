@@ -9,6 +9,14 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == uid;
     }
 
+    function isAnonymous() {
+      return request.auth.token.firebase.sign_in_provider == 'anonymous';
+    }
+
+    function validSource(source) {
+      return source == (isAnonymous() ? 'guest' : 'account');
+    }
+
     function isAllowedCategory(categoryKey) {
       return categoryKey in ['flag', 'capital'];
     }
@@ -32,7 +40,10 @@ service cloud.firestore {
     }
 
     function validUserScore(scoreId) {
-      return request.resource.data.categoryKey is string
+      return request.resource.data.keys().hasOnly([
+            'categoryKey', 'difficulty', 'bestScore', 'source', 'updatedAt'
+          ])
+          && request.resource.data.categoryKey is string
           && request.resource.data.difficulty is string
           && isAllowedCategory(request.resource.data.categoryKey)
           && isAllowedDifficulty(request.resource.data.difficulty)
@@ -42,21 +53,31 @@ service cloud.firestore {
           && request.resource.data.bestScore <= expectedTotalQuestions(request.resource.data.difficulty)
           && request.resource.data.source is string
           && isAllowedSource(request.resource.data.source)
+          && validSource(request.resource.data.source)
           && request.resource.data.updatedAt is timestamp
           && request.resource.data.updatedAt == request.time
           && (resource == null || request.resource.data.bestScore > resource.data.bestScore);
     }
 
-    function validLeaderboardEntry(scope) {
-      return request.resource.data.categoryKey is string
+    function validLeaderboardEntry(scope, uid) {
+      let savedScore = getAfter(/databases/$(database)/documents/users/$(uid)/scores/$(scope));
+      return request.resource.data.keys().hasOnly([
+            'categoryKey', 'difficulty', 'score', 'isAnonymous', 'displayName', 'updatedAt'
+          ])
+          && !isAnonymous()
+          && request.resource.data.categoryKey is string
           && request.resource.data.difficulty is string
           && isAllowedCategory(request.resource.data.categoryKey)
           && isAllowedDifficulty(request.resource.data.difficulty)
           && scope == (request.resource.data.categoryKey + '_' + request.resource.data.difficulty)
           && request.resource.data.score is int
-          && request.resource.data.score >= 0
+          && request.resource.data.score > 0
           && request.resource.data.score <= expectedTotalQuestions(request.resource.data.difficulty)
           && request.resource.data.isAnonymous is bool
+          && request.resource.data.isAnonymous == false
+          && savedScore.data.categoryKey == request.resource.data.categoryKey
+          && savedScore.data.difficulty == request.resource.data.difficulty
+          && savedScore.data.bestScore == request.resource.data.score
           && request.resource.data.displayName is string
           && request.resource.data.displayName.size() > 0
           && request.resource.data.displayName.size() <= 120
@@ -66,7 +87,13 @@ service cloud.firestore {
     }
 
     function validScoreAttempt(attemptId) {
-      return request.resource.data.attemptId is string
+      return request.resource.data.keys().hasOnly([
+            'attemptId', 'categoryKey', 'difficulty', 'correctCount',
+            'totalQuestions', 'status', 'source', 'createdAt'
+          ])
+          && request.resource.data.attemptId is string
+          && attemptId.size() > 0
+          && attemptId.size() <= 120
           && request.resource.data.attemptId == attemptId
           && request.resource.data.categoryKey is string
           && request.resource.data.difficulty is string
@@ -81,6 +108,7 @@ service cloud.firestore {
           && request.resource.data.status in ['accepted', 'flagged']
           && request.resource.data.source is string
           && isAllowedSource(request.resource.data.source)
+          && validSource(request.resource.data.source)
           && request.resource.data.createdAt is timestamp
           && request.resource.data.createdAt == request.time;
     }
@@ -103,8 +131,11 @@ service cloud.firestore {
     }
 
     match /leaderboard/{scope}/entries/{uid} {
-      allow read: if isSignedIn();
-      allow create, update: if isOwner(uid) && validLeaderboardEntry(scope);
+      allow get: if isSignedIn();
+      allow list: if isSignedIn()
+          && request.query.limit != null
+          && request.query.limit <= 100;
+      allow create, update: if isOwner(uid) && validLeaderboardEntry(scope, uid);
       allow delete: if false;
     }
 

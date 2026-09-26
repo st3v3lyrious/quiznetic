@@ -87,7 +87,7 @@ Use this as an editable feature checklist.
 - [ ] Improve UI/UX polish (animations, progress bar behavior, answer feedback styling) <!--gh:issue=119-->
 - [ ] Add content licensing + attribution pipeline for celebrity/song/anime datasets <!--gh:issue=120-->
 - [x] Harden Firestore security rules with automated rule tests <!--gh:issue=121-->
-- [ ] Add leaderboard integrity protections (anti-cheat heuristics, abuse controls, write throttling) <!--gh:issue=122-->
+- [ ] Add leaderboard integrity protections (anti-cheat heuristics, abuse controls, write throttling) — P2 / Deferred: authoritative scoring requires a separate backend/budget decision; Spark rule hardening is tracked by M20 (#54). <!--gh:issue=122-->
 - [x] Add CI/CD quality gates (analyze, unit/widget/integration/e2e, coverage threshold + branch protection required checks) <!--gh:issue=123-->
 - [x] Add privacy and legal readiness baseline (Privacy Policy, Terms, and consent links in entry/login/upgrade flows) <!--gh:issue=124-->
 - [ ] Add Remote Config feature flags for staged rollout <!--gh:issue=125-->

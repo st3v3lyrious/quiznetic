@@ -3,6 +3,14 @@
 This document tracks features that require Firebase Blaze billing and are
 therefore disabled by default for Spark-budget operation.
 
+## Current budget decision — September 26, 2026
+
+Stay on Spark. Do not enable billing for the Web MVP. The instructions below are
+a deferred migration plan, not required launch work. See
+[SPARK_SECURITY.md](SPARK_SECURITY.md) for rule hardening and remaining risks.
+Fix and test the staged callable's transaction ordering, rate-limit concurrency,
+flagged-score policy and score-validation model before considering activation.
+
 ## Current Blaze-Dependent Flags
 
 ### `ENABLE_BACKEND_SUBMIT_SCORE`
