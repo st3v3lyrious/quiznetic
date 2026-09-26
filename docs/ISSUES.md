@@ -35,53 +35,43 @@ Use this file as the bug/issue tracker, separate from milestone planning in
 | ISS-020 | P2 | MVP | Done | 88 `debugPrint` statements left in production code (reduced to ~50 after ads removal). Added `AppLogger` utility (`lib/utils/app_logger.dart`) guarded by `kDebugMode`; replaced all call sites across 18 files. Release builds produce zero log output. | `You` | `June 7, 2026` |  |
 | ISS-021 | P1 | MVP | Done | Quiz screen route arguments not validated: silent crash if `QuizScreenArgs` not provided. Added `_argsInvalid` flag + safe `is!` type-check in `didChangeDependencies`; `build` shows a recoverable error screen before any `args` access. | `You` | `June 5, 2026` |  |
 | ISS-022 | P2 | MVP | Done | IAP service initializes even when `ENABLE_IAP=false`: wastes resources, potential crash if store config missing. Skip init when disabled. | `You` | `June 1, 2026` |  |
-| ISS-023 | P2 | MVP | Open | Generic error messages across result screen, leaderboard, legal docs: users can't retry or understand failures. Implement specific error types + retry CTAs. | `You` | `June 6, 2026` |  |
-| ISS-024 | P2 | MVP | Open | Leaderboard offline: shows empty state instead of cached data with stale indicator. Implement offline cache + "Data from last sync" banner. | `You` | `June 7, 2026` |  |
-| ISS-025 | P2 | MVP | Open | Leaderboard repair logic has silent failures: if repair fails, only logs via `AppLogger` (no output in release builds). No user feedback. Consider adding repair status badge or warning. | `You` | `June 7, 2026` |  |
-| ISS-026 | P2 | MVP | Open | No network state detection UI: ROADMAP M1 promises "connectivity-aware" but users don't see offline indicator. Would benefit from "Offline Mode" badge in critical screens. | `You` | `June 8, 2026` |  |
-| ISS-027 | P2 | MVP | Open | No sync progress indicator: users don't know when pending scores are syncing. Consider adding small badge in HomeScreen during sync. | `You` | `June 8, 2026` |  |
-| ISS-028 | P2 | MVP | Open | Test coverage gaps: ConsentService, error handling paths, and leaderboard repair logic lack integration test coverage for network failure scenarios. | `You` | `June 7, 2026` |  |
+| ISS-023 | P2 | MVP+1 | Open | Generic error messages across result screen, leaderboard, legal docs: users can't retry or understand failures. Implement specific error types + retry CTAs. | `You` | `June 6, 2026` |  |
+| ISS-024 | P2 | MVP+1 | Open | Leaderboard offline: shows empty state instead of cached data with stale indicator. Implement offline cache + "Data from last sync" banner. | `You` | `June 7, 2026` |  |
+| ISS-025 | P2 | MVP+1 | Open | Leaderboard repair logic has silent failures: if repair fails, only logs via `AppLogger` (no output in release builds). No user feedback. Consider adding repair status badge or warning. | `You` | `June 7, 2026` |  |
+| ISS-026 | P2 | MVP+1 | Open | No network state detection UI: ROADMAP M1 promises "connectivity-aware" but users don't see offline indicator. Would benefit from "Offline Mode" badge in critical screens. | `You` | `June 8, 2026` |  |
+| ISS-027 | P2 | MVP+1 | Open | No sync progress indicator: users don't know when pending scores are syncing. Consider adding small badge in HomeScreen during sync. | `You` | `June 8, 2026` |  |
+| ISS-028 | P2 | MVP+1 | Open | Test coverage gaps: error handling and leaderboard repair need integration coverage for actual network loss/timeouts. ConsentService was removed in M30. | `You` | `June 7, 2026` |  |
 
-### Recommended Execution Order (MVP)
+### Current execution order — September 26, 2026
 
-The dates below keep the original target dates for historical tracking.
+1. M32 Web launch: production Firebase/OAuth, Web-safe crash reporting,
+   release build and browser/device QA.
+2. M20 public leaderboard exposure review, M27 observability/rollback checks
+   and M28 feedback capture.
+3. Deferred P2 resilience/UX work (ISS-023 through ISS-028) and remaining
+   hardening tests; these are MVP+1 follow-ups.
 
-**CRITICAL PATH (Complete by June 5, 2026)**
-1. `ISS-016` (Audit blockers: dependency removal, route fixes, query timeouts) — foundation for clean release build
-   - Subtask: `ISS-017` (Add Firestore query timeouts)
-   - Subtask: `ISS-018` (Fix UpgradeAccountScreen route)
-   - Subtask: `ISS-019` (Centralize app version)
-   - Subtask: `ISS-021` (Quiz route args validation)
-2. `ISS-022` (Skip IAP init when disabled) — prevents wasted init calls
-3. `ISS-020` (Reduce debugPrint noise) — optional but recommended for production build
-
-**DEFERRED - NOT CRITICAL FOR MVP**
-- `ISS-015` **MARKED DONE** (Google sign-in account collision already implemented)
-- `ISS-023` (Specific error messages) — polish for post-MVP if time permits
-- `ISS-024` (Offline leaderboard cache) — UX enhancement for post-MVP
-- `ISS-025` (Leaderboard repair feedback) — minor UX gap
-- `ISS-026` (Network state indicator) — nice-to-have
-- `ISS-027` (Sync progress indicator) — polish for post-MVP
-- `ISS-028` (Test coverage gaps) — can be addressed in post-MVP hardening
+Original target dates are historical, not new commitments.
+See docs/PLANNING_SYNC_2026-09-26.md for closure evidence and limitations.
 
 ## MVP+1 Backlog
 
 | ID | Severity | Scope | Status | Issue | Owner | Target Date | GH |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | ISS-005 | P2 | MVP+1 | Open | Add optional audio description mode for visually impaired users (spoken flag/context cues). | `You` | `March 20, 2026` | #141 |
-| ISS-029 | P1 | MVP+1 | Open | No unit tests for `_retryDelay()` and `_looksLikeConnectivityError()` in `score_repository.dart`: these control exponential backoff — a bug here silently breaks offline recovery. | `You` | `TBD` | |
+| ISS-029 | P1 | MVP+1 | Open | Backoff and forced-retry behavior have passing repository tests. Remaining work: exhaustive retry-delay growth/cap and connectivity-error classification edge cases. | `You` | `TBD` | |
 | ISS-030 | P1 | MVP+1 | Open | No unit tests for leaderboard fallback query client-side sort in `leaderboard_service.dart`: if composite index is missing, results could be mis-ordered and the bug is invisible. | `You` | `TBD` | |
-| ISS-031 | P1 | MVP+1 | Open | No unit tests for flag/capital asset manifest parsing or quiz preparation (`flag_loader.dart`, `capital_loader.dart`): country key normalization and option shuffling are untested. | `You` | `TBD` | |
+| ISS-031 | P1 | MVP+1 | Done | Added passing flag/capital manifest, normalization and quiz preparation tests in test/unit/data/flag_loader_test.dart and capital_loader_test.dart. | `You` | `TBD` | |
 | ISS-032 | P1 | MVP+1 | Open | No integration tests for `UserChecker` Firestore permission-denied or quota-exceeded paths: boolean return value masks error type from callers; retry scenarios untested. | `You` | `TBD` | |
 | ISS-033 | P1 | MVP+1 | Open | No unit tests verifying `LeaderboardScreen` uses injected repository vs. creates default exactly once (`leaderboard_screen.dart` lines 59-81). | `You` | `TBD` | |
 | ISS-034 | P2 | MVP+1 | Open | Quiz screen question loading uses `.then()` callback (`quiz_screen.dart`): mounted check is inside callback and easy to miss in future edits. Refactor to async/await for safer control flow. | `You` | `TBD` | |
 | ISS-035 | P2 | MVP+1 | Open | Malformed ISO 8601 timestamp in SharedPreferences causes `DateTime.tryParse()` to return null in `score_repository.dart`, treated as "retry due" — could trigger aggressive retry loops on corrupted data. | `You` | `TBD` | |
-| ISS-036 | P2 | MVP+1 | Open | `_isResolvingExistingAccountCollision` flag not reset in a `finally` block (`upgrade_account_screen.dart`): if user navigates away during AlertDialog, flag stays `true` and blocks future collision recovery. | `You` | `TBD` | |
+| ISS-036 | P2 | MVP+1 | Done | Collision-recovery flag resets in finally with a mounted guard; verified in upgrade_account_screen.dart and passing upgrade widget tests. | `You` | `TBD` | |
 | ISS-037 | P2 | MVP+1 | Open | Profile bootstrap cleanup in `login_screen.dart` uses `catch (_)` — silently swallows unexpected errors including `FirebaseException` without logging. Should use `catch (e, stackTrace)` + `AppLogger`. | `You` | `TBD` | |
 | ISS-038 | P2 | MVP+1 | Open | Firestore `runTransaction().timeout(10s)` is hardcoded in `score_service.dart`. Should be extracted as a named constant or added to `AppConfig` for visibility. | `You` | `TBD` | |
 | ISS-039 | P2 | MVP+1 | Open | `runZonedGuarded` error capture in `main.dart` activates before `crashReportingService.initialize()` completes: an error during Firebase init could be captured before Crashlytics is ready. | `You` | `TBD` | |
-| ISS-040 | P2 | MVP+1 | Open | No unit tests for `LeaderboardBandService.getBandForScore()`: wrong band assignment silently shows wrong guest conversion prompt. Needs edge case coverage (empty leaderboard, candidate at various ranks). | `You` | `TBD` | |
-| ISS-041 | P2 | MVP+1 | Open | No unit tests for `accessibility_preferences.dart` SharedPreferences round-trip: default value (key not found → false) is untested. | `You` | `TBD` | |
+| ISS-040 | P2 | MVP+1 | Done | Band-service tests cover rank thresholds, empty boards, tie-breakers and candidate replacement; validated September 26, 2026. | `You` | `TBD` | |
+| ISS-041 | P2 | MVP+1 | Done | Passing accessibility preferences tests verify the default false value and persisted toggle round-trip. | `You` | `TBD` | |
 | ISS-042 | P2 | MVP+1 | Open | Dart package name is `quiznetic_flutter` (template name) in `pubspec.yaml`: app display name is correct but all 60+ import paths use the template identifier. Worth renaming before repo grows further. | `You` | `TBD` | |
 | ISS-043 | P2 | MVP+1 | Open | Stale guest rank band on result screen: band CTA ("You're in the top 10!") is computed from Firestore after `saveScore()` returns. If the score hasn't synced yet (slow/offline network), the band is computed without the user's own entry and can be optimistic. Consider computing band from local projected score instead of Firestore. | `You` | `TBD` | |
 | ISS-044 | P2 | MVP+1 | Open | Profile screen score staleness: `UserProfileScreen` loads scores once in `initState` and doesn't auto-refresh. If a user plays offline and navigates to profile, best scores won't reflect the new attempt until manual refresh. Consider subscribing to local score projections or showing a "last updated" timestamp. | `You` | `TBD` | |

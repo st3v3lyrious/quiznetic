@@ -2,6 +2,23 @@
 
 Use this as a short, editable delivery plan.
 
+## Current priorities — September 26, 2026
+
+The September 16 Notion decision makes the EIRENYA Web MVP the first delivery
+channel. Mobile stores follow product validation. Implemented app flows still
+require production Web verification. Historical target dates are not new commitments.
+
+| Priority | Milestones | Next outcome |
+| --- | --- | --- |
+| P0 | M32 | Production Web Firebase/OAuth, Web-safe crash reporting, release/browser QA and EIRENYA Web launch. |
+| P1 | M20 | Review public leaderboard abuse exposure; decide backend billing/deployment and enforce authoritative writes. |
+| P1 | M27, M28 | Web analytics/rollback checks and feedback collection; dashboard/paging automation can follow launch. |
+| P2 | M12, M16, M29, M30 | Final visual QA, targeted UX polish, category configuration and resilience hardening. |
+| P2 | M10, M17 | Mobile signing/store readiness and Apple setup after Web validation. |
+| P2 | M6–M9, M15, M18, M23–M25, M31, M33 | Growth backlog; Web ads only after stable launch and measured traffic. |
+
+## Milestones
+
 - [x] M1: Stabilize entry auth flow (dedicated entry-choice screen, provider login on second step, no startup auto-guest auth). <!--gh:issue=15-->
 - [x] M1: Implement local-first score repository (persist locally first for guest and signed-in users). <!--gh:issue=16-->
 - [x] M1: Add pending score sync queue with retry for Firestore/network failures. <!--gh:issue=17-->
@@ -59,47 +76,14 @@ Use this as a short, editable delivery plan.
   - [x] Analytics event breadcrumbs shipped for crash triage (screen views + critical flow actions).
   - [x] Product analytics baseline shipped for auth, quiz, and score-submission funnels.
   - [x] Analytics kill switch added: `ENABLE_ANALYTICS` (default `true`).
-- [ ] M15: Integrate monetization stack (ads + in-app purchases). (**POST-MVP DEFERRED** — removed from MVP scope; see M30 and `docs/MONETIZATION_SETUP.md` for re-activation plan.) <!--gh:issue=49-->
-  - Revenue priority: complete ads + IAP launch gate in `docs/MVP_LAUNCH_TEST_CHECKLIST.md` before public rollout.
-  - Current status: blocked pending AdMob live-serving validation in release mode or a provider/mediation decision if the no-fill issue persists.
-  - [x] App baseline shipped: remove-ads entitlement persistence, IAP purchase/restore plumbing, and banner placements (home/result) behind feature flags with Android+iOS placement-specific ad-unit support.
-  - [ ] Store-side setup still required (ad network approval, ad unit IDs, store product creation, and sandbox purchase QA).
-  - [ ] Ad launch readiness (remaining implementation + platform setup):
-    - [x] Add non-release ad policy guard: block live AdMob `ca-app-pub-*` units unless `ALLOW_LIVE_AD_UNITS_IN_DEBUG=true` is explicitly set.
-    - [x] Add Android AdMob app id metadata (`com.google.android.gms.ads.APPLICATION_ID`) in `android/app/src/main/AndroidManifest.xml`.
-    - [x] Add iOS AdMob app id (`GADApplicationIdentifier`) in `ios/Runner/Info.plist`.
-    - [x] Implement result-screen interstitial runtime flow (load/show/lifecycle + failure fallback) behind a dedicated feature flag (`ENABLE_RESULT_INTERSTITIAL_ADS`, default `false`).
-    - [x] Decide and document result placement strategy (hybrid: interstitial-first with banner fallback on failure) and ensure unit-id wiring matches chosen format.
-    - [x] Add Google UMP/GDPR consent coverage for EEA/UK traffic.
-      - [x] App-side baseline shipped: launch-time UMP consent flow, ad-request gating on consent readiness, settings privacy-options entry point, and consent diagnostics.
-      - [x] AdMob console baseline shipped: `Privacy & messaging` European regulations message published for the current app and privacy-policy URL supplied.
-    - [ ] Add iOS ATT/consent handling path and validate ad behavior when tracking is denied.
-      - [ ] Owner assigned: `____________`
-      - [ ] Target date: `____________`
-      - ATT runtime implementation rule: implement prompt flow only if we enable IDFA usage, personalized ads, or advanced attribution.
-      - [x] MVP metadata baseline shipped (`NSUserTrackingUsageDescription` + `SKAdNetworkItems` key presence in `ios/Runner/Info.plist`).
-      - [ ] Runtime ATT prompt/consent flow + denied-path QA pending (deferred for MVP default no-forced-prompt build).
-    - [ ] Publish and verify `app-ads.txt` for production domains/store metadata.
-      - [ ] Owner assigned: `____________`
-      - [ ] Target date: `____________`
-      - [x] Template file added: `docs/app-ads.txt.example`.
-      - [ ] Buy/select production domain for hosting `app-ads.txt` (examples: `quiznetic.com`, `quizneticapp.com`).
-      - [ ] Publish `https://<domain>/app-ads.txt` and verify public access.
-      - [ ] Add the exact `app-ads.txt` URL/domain in Google Play Console and App Store Connect metadata.
-    - [x] Validate release define matrix (`ENABLE_ADS`, `ENABLE_RESULT_INTERSTITIAL_ADS`, `ENABLE_REWARDED_HINTS`, `ENABLE_PAID_HINTS`) and keep defaults OFF for safe rollback builds.
-  - [ ] Complete end-to-end monetization QA on physical Android+iOS devices (test ads, rewarded completion path, paid fallback, remove-ads entitlement, restore flow).
-  - [ ] Add hint monetization flow:
-    - [x] App-side baseline shipped: remove-2-wrong-answers hint action in `QuizScreen` with per-session cap and paid fallback flow.
-    - [x] Reward delivery stabilized by migrating the hint ad format from classic rewarded to rewarded interstitial.
-    - [x] Session cap default: `REWARDED_HINTS_PER_SESSION=3`.
-    - [x] Paid fallback default: `$0.50` per hint (`PAID_HINT_PRICE_USD_CENTS=50`).
-    - [x] Default consumable hint SKU: `quiznetic.hint_single` (`IAP_HINT_CONSUMABLE_PRODUCT_ID`).
-    - [x] Feature flags (default OFF): `ENABLE_REWARDED_HINTS`, `ENABLE_PAID_HINTS`.
-    - [ ] Store setup/QA pending: rewarded ad units + consumable product approval + sandbox validation.
-    - [ ] MVP+1 hardening: preload rewarded interstitial hint ads and drive hint-CTA availability from real ad load readiness, not only consent/session state, so offline/network-loss sessions do not re-enable hint ads prematurely.
-  - Activation runbook: `docs/MONETIZATION_SETUP.md`.
+- [ ] M15: Reintroduce mobile monetization stack (ads + in-app purchases) after Web validation. (**POST-MVP DEFERRED** — prior runtime integration was removed in M30.) <!--gh:issue=49-->
+  - Priority: P2. Not a Web MVP launch gate; Web advertising belongs to M33.
+  - [x] Previous implementation and activation guidance documented in docs/MONETIZATION_SETUP.md; this is historical work.
+  - [ ] Reimplement mobile ads/IAP services, SDK dependencies, placements and consent when activated.
+  - [ ] Complete provider/store setup, release ad validation, purchase/restore QA and physical-device checks.
 - [ ] M16: Improve UI/UX polish (animations, progress indicators, feedback styling). <!--gh:issue=50-->
-- [ ] M17: Launch MVP (release checklist, store metadata, and production rollout). <!--gh:issue=51-->
+- [ ] M17: Launch mobile MVP (Play Store first; TestFlight when financially viable). <!--gh:issue=51-->
+  - Priority: P2. Follows M32 Web validation.
   - [x] Launch preflight automation shipped (`tools/release_preflight.sh` + `.github/workflows/release_preflight.yml`).
   - [x] Manual launch test checklist published: `docs/MVP_LAUNCH_TEST_CHECKLIST.md`.
   - [x] Bug tracking split out from roadmap into dedicated issue log: `docs/ISSUES.md`.
@@ -140,19 +124,19 @@ Use this as a short, editable delivery plan.
   - [x] Incident postmortem template + review cadence documented: `docs/INCIDENT_POSTMORTEM_TEMPLATE.md`.
   - [ ] Dedicated pager/on-call automation and KPI dashboard automation still pending.
 - [ ] M28: Build feedback intelligence loop (in-app feedback capture, tagged triage, and recurring roadmap review cadence). <!--gh:issue=62-->
-- [ ] M29: Centralize quiz category definitions under a single source of truth (JSON-first) with generated enforcement artifacts.
+- [ ] M29: Centralize quiz category definitions under a single source of truth (JSON-first) with generated enforcement artifacts. <!--gh:issue=156-->
   - Canonical config file: `config/categories.json` (category keys, labels, enabled state, and difficulty/question-count constraints).
   - Generate/sync category allowlists for app validator, Cloud Functions `submitScore`, and Firestore rules from the canonical config.
   - Add CI drift guard so builds fail when generated artifacts are out of sync with `config/categories.json`.
-- [ ] M30: Pre-MVP Architecture Fixes & Cleanup (MVP-blocking dependency removal + query performance + routing fixes).
-  - [x] **IN PROGRESS**: Remove ads monetization from MVP scope (branch: `mvp_readiness_step_one`).
+- [ ] M30: Pre-MVP Architecture Fixes & Cleanup (MVP-blocking dependency removal + query performance + routing fixes). <!--gh:issue=157-->
+  - [x] Remove ads monetization from MVP scope (merged through PR #153).
     - [x] Delete ads service files (`AdsService`, `AdConsentService`, `AdOverlayRecoveryService`, `HintMonetizationService`).
     - [x] Delete ads UI widgets (`MonetizedBannerAd`).
     - [x] Remove ads feature flags from `AppConfig` and native platform metadata.
     - [x] Clean up screens: remove ad placements from `HomeScreen`, `QuizScreen`, `ResultScreen`.
     - [x] Remove unused dependencies: `google_mobile_ads`, `in_app_purchase` from `pubspec.yaml`.
     - [x] Remove orphaned `ConsentService` (only used for ads UMP flow, no longer needed).
-    - [x] Skip IAP service initialization when `ENABLE_IAP=false` to avoid wasted resources.
+    - [x] Remove IAP/entitlement services and initialization together with SDK dependencies.
   - [x] Fix `UpgradeAccountScreen` route misconfiguration: should navigate to `UpgradeAccountScreen()` not `HomeScreen()` (line `lib/main.dart:117`).
   - [x] Validate and fix quiz screen route arguments: safe `is!` type-check in `didChangeDependencies`; recoverable error screen shown instead of crash when args are missing.
   - [x] Add Firestore query timeouts (10s) to prevent indefinite UI hangs:
@@ -162,12 +146,32 @@ Use this as a short, editable delivery plan.
   - [x] Audit and document 88 `debugPrint` statements: replaced all call sites with `AppLogger` (`lib/utils/app_logger.dart`) guarded by `kDebugMode` — zero log output in release builds.
   - [ ] Add error handling enhancements:
     - [ ] Generic error messages → specific types (network, auth, notfound) with user-safe retry CTAs.
-    - [ ] Leaderboard error state: add retry mechanism and offline cache display.
+    - [x] Leaderboard error state: add retry mechanism (widget-test coverage).
+    - [ ] Leaderboard error state: add offline cache display.
     - [ ] Quiz screen accessibility preferences: distinguish network vs. storage errors with fallback.
   - Test coverage additions (integration tests):
     - [ ] Firestore connection loss scenario (app resilience when DB unavailable).
     - [ ] Network timeout handling with actual timeout triggers.
-    - [ ] IAP service disable path validation when `ENABLE_IAP=false`.
-- [ ] M31: Add notification capabilities (**POST-MVP**).
+    - [x] IAP disable-path validation superseded by full service removal; reactivation QA belongs to M15.
+- [ ] M31: Add notification capabilities (**POST-MVP**). <!--gh:issue=158-->
   - [ ] Add push notifications.
   - [ ] Add email notifications for account creation and account confirmation.
+- [ ] M32: Launch QuizNetic Web MVP on the EIRENYA domain. <!--gh:issue=159-->
+  - Priority: P0. In progress in Notion; production rollout remains unverified.
+  - [x] App baseline: Flags, Capitals, guest/account flows, scores, leaderboard, profile and settings implemented with automated coverage.
+  - [ ] Choose public URL and matching `--base-href`.
+  - [ ] Configure production `FIREBASE_WEB_*` and authorize EIRENYA domains in Firebase Auth/Google OAuth.
+  - [ ] Guard unsupported Crashlytics operations on Web, including initialization and error capture.
+  - [ ] Validate release build, responsive layouts, browser back/refresh/direct routes and Email/Google sign-in.
+  - [ ] Verify deployed Firestore rules and leaderboard exposure (M20).
+  - [ ] Verify Web analytics and current privacy/legal copy for the ad-free build.
+  - [ ] Deploy an unannounced preview and smoke-test both categories, score persistence and leaderboard.
+  - [ ] Publish Web MVP and collect initial feedback.
+  - Notion: https://www.notion.so/3dd722c1b5b281eebc88de3b70635cfa
+- [ ] M33: Validate Web advertising after establishing a real traffic baseline. <!--gh:issue=160-->
+  - Priority: P2. Depends on M32 public/stable and measured traffic/retention.
+  - [ ] Choose Web advertising provider and validate domain eligibility.
+  - [ ] Review Web privacy/consent requirements and automated-traffic protections.
+  - [ ] Test placements, responsive behavior, performance and quiz completion impact.
+  - [ ] Measure revenue and retention before deciding whether to keep ads.
+  - Notion: https://www.notion.so/3dd722c1b5b281fbbdedcd07fb82d126
