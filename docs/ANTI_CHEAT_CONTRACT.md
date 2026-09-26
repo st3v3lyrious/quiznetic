@@ -20,12 +20,21 @@ Only **validated server-accepted attempts** are allowed to affect user best scor
 
 ## Current State (Today)
 
+Budget decision (September 26, 2026): stay on Firebase Spark. The server-accepted
+attempt contract below is a deferred target, not a claim about the live app.
+Spark rule hardening and its remaining limitations are documented in
+[SPARK_SECURITY.md](SPARK_SECURITY.md). No billing upgrade is a Web launch gate.
+
 - Client-side validator enforces category, difficulty, question-count, and score bounds before persistence.
 - Firestore rules enforce auth/ownership, score bounds, scope consistency, and monotonic best-score updates.
 - Leaderboard stores one best row per user per `category+difficulty`.
 - Tie-breakers already defined (`score desc`, `updatedAt asc`, `uid asc`).
 - Backend callable `submitScore` is implemented but gated behind
   `ENABLE_BACKEND_SUBMIT_SCORE` and defaults to off for Spark-plan compatibility.
+
+The staged callable needs fixes before activation: transaction reads currently
+follow writes, concurrent requests can bypass its separate rate check, flagged
+scores still project, and the payload still trusts client-reported correct counts.
 
 This baseline is stronger, but full integrity protection still needs a backend-authoritative submit path and server-side rate limiting.
 

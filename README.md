@@ -97,7 +97,7 @@ Use this as an editable feature checklist.
 - [ ] Improve UI/UX polish (animations, progress bar behavior, answer feedback styling) <!--gh:issue=119-->
 - [ ] Add content licensing + attribution pipeline for celebrity/song/anime datasets <!--gh:issue=120-->
 - [x] Harden Firestore security rules with automated rule tests <!--gh:issue=121-->
-- [ ] Add leaderboard integrity protections (anti-cheat heuristics, abuse controls, write throttling) <!--gh:issue=122-->
+- [ ] Add leaderboard integrity protections (anti-cheat heuristics, abuse controls, write throttling) — P2 / Deferred: authoritative scoring requires a separate backend/budget decision; Spark rule hardening is tracked by M20 (#54). <!--gh:issue=122-->
 - [x] Add CI/CD quality gates (analyze, unit/widget/integration/e2e, coverage threshold + branch protection required checks) <!--gh:issue=123-->
 - [x] Add privacy and legal readiness baseline (Privacy Policy, Terms, and consent links in entry/login/upgrade flows) <!--gh:issue=124-->
 - [ ] Add Remote Config feature flags for staged rollout <!--gh:issue=125-->
@@ -193,7 +193,7 @@ require production Web verification. Historical target dates are not new commitm
 | Priority | Milestones | Next outcome |
 | --- | --- | --- |
 | P0 | M32 | Production Web Firebase/OAuth, Web-safe crash reporting, release/browser QA and EIRENYA Web launch. |
-| P1 | M20 | Review public leaderboard abuse exposure; decide backend billing/deployment and enforce authoritative writes. |
+| P1 | M20 | Harden scoring rules on Spark; authoritative scoring and any billing upgrade are deferred. |
 | P1 | M27, M28 | Web analytics/rollback checks and feedback collection; dashboard/paging automation can follow launch. |
 | P2 | M12, M16, M29, M30 | Final visual QA, targeted UX polish, category configuration and resilience hardening. |
 | P2 | M10, M17 | Mobile signing/store readiness and Apple setup after Web validation. |
@@ -274,13 +274,17 @@ require production Web verification. Historical target dates are not new commitm
 - [ ] M18: Build content licensing + attribution pipeline for celebrity/song/anime datasets. <!--gh:issue=52-->
 - [x] M19: Harden Firestore security rules and add automated Firestore-rules tests in CI. <!--gh:issue=53-->
 - [ ] M20: Add leaderboard integrity protections (anti-cheat scoring checks, abuse controls, rate limits). <!--gh:issue=54-->
-  - Contract reference: docs/ANTI_CHEAT_CONTRACT.md
-  - [x] Phase 1 baseline shipped: validator, idempotent attempt records, stricter Firestore score bounds/scope checks.
-  - [ ] Phase 2 pending: backend-authoritative submitScore path + direct projection write lock for clients.
-  - Blaze-gated partial implementation shipped: callable `submitScore` + app flag (`ENABLE_BACKEND_SUBMIT_SCORE`) default-off on Spark.
-  - `cleanupOnUserDeleted` Cloud Function written and ready — recursively deletes `users/{uid}` Firestore data when any Auth account is deleted (covers anonymous sign-out and future account-deletion flows).
-  - **TODO before/at launch:** Upgrade project `quiznetic-30734` to Blaze plan, then `cd functions && firebase deploy --only functions` to activate both functions.
-  - Activation/rollback conditions: docs/BLAZE_FEATURE_FLAGS.md
+  - Priority: P1 for Spark rule hardening; backend migration deferred pending an explicit budget decision.
+  - Contract references: docs/ANTI_CHEAT_CONTRACT.md and docs/SPARK_SECURITY.md.
+  - [x] Phase 1 baseline shipped: validator, idempotent attempt records, Firestore ownership/bounds/scope checks.
+  - [x] Production audit: deployed rules matched main; billing disabled; App Check unenforced.
+  - [ ] Review, merge and deploy Spark hardening: field allowlists, auth-derived source, account-only leaderboard publication, personal-score consistency and queries capped at 100.
+  - [ ] Verify live guest/account score writes and upgrade after rules deployment.
+  - [ ] Spark follow-up: initialize Web App Check, monitor compatibility, then consider enforcement (not an anti-cheat guarantee).
+  - [ ] Deferred: authoritative backend scoring, enforced rate limits, direct-write lock and automated account-data cleanup (GitHub #122, P2 / Deferred).
+  - Keep ENABLE_BACKEND_SUBMIT_SCORE=false. No Blaze upgrade is required for Web launch.
+  - Staged submitScore is not activation-ready: fix reads after writes, rate-limit concurrency, flagged-score projection and client-trusted correct counts before any migration.
+  - Client-supplied bounded scores remain forgeable on Spark; retain this limitation explicitly.
 - [x] M21: Enforce CI/CD quality gates (GitHub Actions + branch protection required checks are active on `main`). <!--gh:issue=55-->
 - [x] M22: Complete privacy/legal baseline (Privacy Policy, Terms, consent copy, and in-app legal links). <!--gh:issue=56-->
   - Formal legal counsel review and age-rating metadata can be finalized before public store launch.
@@ -339,16 +343,18 @@ require production Web verification. Historical target dates are not new commitm
   - [ ] Add push notifications.
   - [ ] Add email notifications for account creation and account confirmation.
 - [ ] M32: Launch QuizNetic Web MVP on the EIRENYA domain. <!--gh:issue=159-->
-  - Priority: P0. In progress in Notion; production rollout remains unverified.
+  - Priority: P0. Deployed on quiznetic.eirenya.com; security rollout, analytics/legal checks and initial feedback remain.
   - [x] App baseline: Flags, Capitals, guest/account flows, scores, leaderboard, profile and settings implemented with automated coverage.
-  - [ ] Choose public URL and matching `--base-href`.
-  - [ ] Configure production `FIREBASE_WEB_*` and authorize EIRENYA domains in Firebase Auth/Google OAuth.
-  - [x] Guard unsupported Crashlytics operations on Web, including initialization, error capture and Analytics breadcrumbs (M32 compatibility change; deployment still pending).
-  - [ ] Validate release build, responsive layouts, browser back/refresh/direct routes and Email/Google sign-in.
-  - [ ] Verify deployed Firestore rules and leaderboard exposure (M20).
+  - [x] Public URL: quiznetic.eirenya.com with root base href; quiznetic.eirenya.fr redirects with HTTP 308.
+  - [x] Configure production Firebase Web app and authorize quiznetic.eirenya.com; owner validated Email/Google login and password reset.
+  - [x] Guard unsupported Crashlytics operations on Web, including initialization, error capture and Analytics breadcrumbs (PR #162 merged and deployed).
+  - [x] Release build and core browser flows validated; owner tested categories, login, scores, leaderboard and mobile flows. Guest upgrade preserves UID and score after refresh/sign-in.
+  - [x] Audit deployed Firestore rules and leaderboard exposure (M20); record Spark limitations.
+  - [ ] Merge/deploy Spark hardening and recheck live score flows (M20).
   - [ ] Verify Web analytics and current privacy/legal copy for the ad-free build.
-  - [ ] Deploy an unannounced preview and smoke-test both categories, score persistence and leaderboard.
-  - [ ] Publish Web MVP and collect initial feedback.
+  - [x] Deploy production build from merge 81df9ce and smoke-test categories, persistence, leaderboard and guest upgrade.
+  - [x] Publish Web MVP on the EIRENYA domain.
+  - [ ] Collect initial feedback (M28); analytics/legal checks remain open.
   - Notion: https://www.notion.so/3dd722c1b5b281eebc88de3b70635cfa
 - [ ] M33: Validate Web advertising after establishing a real traffic baseline. <!--gh:issue=160-->
   - Priority: P2. Depends on M32 public/stable and measured traffic/retention.

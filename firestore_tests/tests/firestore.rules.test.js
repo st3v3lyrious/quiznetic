@@ -8,7 +8,7 @@ import {
   assertSucceeds,
   initializeTestEnvironment,
 } from '@firebase/rules-unit-testing';
-import { doc, getDoc, serverTimestamp, setDoc, Timestamp } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, limit, query, serverTimestamp, setDoc, Timestamp, writeBatch } from 'firebase/firestore';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -16,6 +16,20 @@ const rulesPath = path.resolve(__dirname, '../../firestore.rules');
 
 const projectId = 'quiznetic-firestore-rules-test';
 let testEnv;
+
+function accountContext(uid) {
+  return testEnv.authenticatedContext(uid, { firebase: { sign_in_provider: 'password' } });
+}
+
+function guestContext(uid) {
+  return testEnv.authenticatedContext(uid, { firebase: { sign_in_provider: 'anonymous' } });
+}
+
+async function seedScore(bestScore = 14) {
+  await testEnv.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(doc(ctx.firestore(), 'users/userA/scores/flag_easy'), scorePayload({ bestScore }));
+  });
+}
 
 function parseEmulatorHost() {
   const value = process.env.FIRESTORE_EMULATOR_HOST;
@@ -38,7 +52,7 @@ function scorePayload({ categoryKey = 'flag', difficulty = 'easy', bestScore = 1
     categoryKey,
     difficulty,
     bestScore,
-    source: 'guest',
+    source: 'account',
     updatedAt: serverTimestamp(),
   };
 }
@@ -48,7 +62,7 @@ function leaderboardPayload({
   categoryKey = 'flag',
   difficulty = 'easy',
   score = 14,
-  isAnonymous = true,
+  isAnonymous = false,
 } = {}) {
   return {
     categoryKey,
@@ -75,7 +89,7 @@ function attemptPayload({
     correctCount,
     totalQuestions,
     status,
-    source: 'guest',
+    source: 'account',
     createdAt: serverTimestamp(),
   };
 }
@@ -102,8 +116,114 @@ after(async () => {
 });
 
 describe('Firestore security rules', () => {
+  test('leaderboard queries require authentication and a maximum limit of 100', async () => {
+    const accountDb = accountContext('userA').firestore();
+    const entries = collection(accountDb, 'leaderboard/flag_easy/entries');
+    await assertFails(getDocs(entries));
+    await assertFails(getDocs(query(entries, limit(101))));
+    await assertSucceeds(getDocs(query(entries, limit(100))));
+    const guestDb = guestContext('userB').firestore();
+    await assertSucceeds(getDocs(query(collection(guestDb, 'leaderboard/flag_easy/entries'), limit(100))));
+    const signedOutDb = testEnv.unauthenticatedContext().firestore();
+    await assertFails(getDocs(query(collection(signedOutDb, 'leaderboard/flag_easy/entries'), limit(100))));
+  });
+
+  test('guest scores and attempts require guest source; accounts cannot spoof it', async () => {
+    const guestDb = guestContext('userA').firestore();
+    await assertFails(setDoc(doc(guestDb, 'users/userA/scores/flag_easy'), scorePayload()));
+    await assertSucceeds(setDoc(doc(guestDb, 'users/userA/scores/flag_easy'), {
+      ...scorePayload(), source: 'guest',
+    }));
+    await assertFails(setDoc(doc(guestDb, 'users/userA/attempts/attempt-1'), attemptPayload()));
+    await assertSucceeds(setDoc(doc(guestDb, 'users/userA/attempts/attempt-1'), {
+      ...attemptPayload(), source: 'guest',
+    }));
+    const accountDb = accountContext('userB').firestore();
+    await assertFails(setDoc(doc(accountDb, 'users/userB/scores/flag_easy'), {
+      ...scorePayload(), source: 'guest',
+    }));
+    await assertFails(setDoc(doc(accountDb, 'users/userB/attempts/attempt-1'), {
+      ...attemptPayload(), source: 'guest',
+    }));
+  });
+
+  test('score, attempt and leaderboard documents reject unexpected fields', async () => {
+    const db = accountContext('userA').firestore();
+    await assertFails(setDoc(doc(db, 'users/userA/scores/flag_easy'), {
+      ...scorePayload(), arbitraryData: 'unexpected',
+    }));
+    await assertFails(setDoc(doc(db, 'users/userA/attempts/attempt-1'), {
+      ...attemptPayload(), arbitraryData: 'unexpected',
+    }));
+    await seedScore();
+    await assertFails(setDoc(doc(db, 'leaderboard/flag_easy/entries/userA'), {
+      ...leaderboardPayload(), arbitraryData: 'unexpected',
+    }));
+  });
+
+  test('leaderboard requires an existing matching personal score', async () => {
+    const db = accountContext('userA').firestore();
+    const entry = doc(db, 'leaderboard/flag_easy/entries/userA');
+    await assertFails(setDoc(entry, leaderboardPayload()));
+    await seedScore(12);
+    await assertFails(setDoc(entry, leaderboardPayload({ score: 14 })));
+    await assertFails(setDoc(entry, leaderboardPayload({ score: 11 })));
+    await assertSucceeds(setDoc(entry, leaderboardPayload({ score: 12 })));
+  });
+
+  test('account can atomically save a score and matching leaderboard entry', async () => {
+    const db = accountContext('userA').firestore();
+    const batch = writeBatch(db);
+    batch.set(doc(db, 'users/userA/scores/flag_easy'), scorePayload());
+    batch.set(doc(db, 'leaderboard/flag_easy/entries/userA'), leaderboardPayload());
+    await assertSucceeds(batch.commit());
+  });
+
+  test('guests cannot publish leaderboard entries or pretend to be accounts', async () => {
+    await seedScore();
+    const db = guestContext('userA').firestore();
+    const entry = doc(db, 'leaderboard/flag_easy/entries/userA');
+    await assertFails(setDoc(entry, leaderboardPayload()));
+    await assertFails(setDoc(entry, leaderboardPayload({ isAnonymous: true })));
+  });
+
+  test('upgraded account can publish its existing guest best score', async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), 'users/userA/scores/flag_easy'), {
+        ...scorePayload(), source: 'guest',
+      });
+    });
+    const db = accountContext('userA').firestore();
+    await assertSucceeds(setDoc(doc(db, 'leaderboard/flag_easy/entries/userA'), leaderboardPayload()));
+    await assertFails(setDoc(doc(db, 'leaderboard/flag_easy/entries/userA'), leaderboardPayload({
+      score: 15,
+    })));
+  });
+
+  test('account leaderboard must be marked non-anonymous and have a positive score', async () => {
+    const db = accountContext('userA').firestore();
+    await seedScore();
+    await assertFails(setDoc(doc(db, 'leaderboard/flag_easy/entries/userA'), leaderboardPayload({ isAnonymous: true })));
+    await seedScore(0);
+    await assertFails(setDoc(doc(db, 'leaderboard/flag_easy/entries/userA'), leaderboardPayload({ score: 0 })));
+  });
+
+  test('oversized attempt identifiers are rejected', async () => {
+    const db = accountContext('userA').firestore();
+    const attemptId = 'a'.repeat(121);
+    await assertFails(setDoc(doc(db, `users/userA/attempts/${attemptId}`), attemptPayload({ attemptId })));
+  });
+
+  test('a bounded fabricated score is still possible without server validation', async () => {
+    const db = accountContext('userA').firestore();
+    const batch = writeBatch(db);
+    batch.set(doc(db, 'users/userA/scores/flag_easy'), scorePayload({ bestScore: 15 }));
+    batch.set(doc(db, 'leaderboard/flag_easy/entries/userA'), leaderboardPayload({ score: 15 }));
+    await assertSucceeds(batch.commit());
+  });
+
   test('owner can create and read their own user document', async () => {
-    const db = testEnv.authenticatedContext('userA').firestore();
+    const db = accountContext('userA').firestore();
     const userDoc = doc(db, 'users/userA');
 
     await assertSucceeds(
@@ -128,12 +248,12 @@ describe('Firestore security rules', () => {
       });
     });
 
-    const db = testEnv.authenticatedContext('userA').firestore();
+    const db = accountContext('userA').firestore();
     await assertFails(getDoc(doc(db, 'users/userB')));
   });
 
   test('owner can write and read own score subdocument', async () => {
-    const db = testEnv.authenticatedContext('userA').firestore();
+    const db = accountContext('userA').firestore();
     const scoreDoc = doc(db, 'users/userA/scores/flag_easy');
 
     await assertSucceeds(setDoc(scoreDoc, scorePayload()));
@@ -146,7 +266,7 @@ describe('Firestore security rules', () => {
       await setDoc(doc(adminDb, 'users/userA/scores/flag_easy'), scorePayload({ bestScore: 12 }));
     });
 
-    const db = testEnv.authenticatedContext('userA').firestore();
+    const db = accountContext('userA').firestore();
     const scoreDoc = doc(db, 'users/userA/scores/flag_easy');
 
     await assertFails(setDoc(scoreDoc, scorePayload({ bestScore: 12 })));
@@ -155,14 +275,14 @@ describe('Firestore security rules', () => {
   });
 
   test('user cannot write score for another uid', async () => {
-    const db = testEnv.authenticatedContext('userA').firestore();
+    const db = accountContext('userA').firestore();
     const scoreDoc = doc(db, 'users/userB/scores/flag_easy');
 
     await assertFails(setDoc(scoreDoc, scorePayload()));
   });
 
   test('invalid score payload is rejected', async () => {
-    const db = testEnv.authenticatedContext('userA').firestore();
+    const db = accountContext('userA').firestore();
     const scoreDoc = doc(db, 'users/userA/scores/flag_easy');
 
     await assertFails(setDoc(scoreDoc, scorePayload({ bestScore: -1 })));
@@ -177,7 +297,7 @@ describe('Firestore security rules', () => {
   });
 
   test('score payload with client-provided updatedAt is rejected', async () => {
-    const db = testEnv.authenticatedContext('userA').firestore();
+    const db = accountContext('userA').firestore();
     const scoreDoc = doc(db, 'users/userA/scores/flag_easy');
 
     await assertFails(
@@ -189,17 +309,19 @@ describe('Firestore security rules', () => {
   });
 
   test('owner can write own leaderboard entry and authenticated users can read', async () => {
-    const ownerDb = testEnv.authenticatedContext('userA').firestore();
+    const ownerDb = accountContext('userA').firestore();
     const entryDoc = doc(ownerDb, 'leaderboard/flag_easy/entries/userA');
+    await seedScore();
     await assertSucceeds(setDoc(entryDoc, leaderboardPayload()));
 
-    const readerDb = testEnv.authenticatedContext('userB').firestore();
+    const readerDb = accountContext('userB').firestore();
     await assertSucceeds(
       getDoc(doc(readerDb, 'leaderboard/flag_easy/entries/userA')),
     );
   });
 
   test('leaderboard updates must strictly improve score', async () => {
+    await seedScore(13);
     await testEnv.withSecurityRulesDisabled(async (ctx) => {
       const adminDb = ctx.firestore();
       await setDoc(
@@ -208,7 +330,7 @@ describe('Firestore security rules', () => {
       );
     });
 
-    const db = testEnv.authenticatedContext('userA').firestore();
+    const db = accountContext('userA').firestore();
     const entryDoc = doc(db, 'leaderboard/flag_easy/entries/userA');
 
     await assertFails(setDoc(entryDoc, leaderboardPayload({ score: 12 })));
@@ -217,14 +339,15 @@ describe('Firestore security rules', () => {
   });
 
   test('user cannot write leaderboard entry for another uid', async () => {
-    const db = testEnv.authenticatedContext('userA').firestore();
+    const db = accountContext('userA').firestore();
     const entryDoc = doc(db, 'leaderboard/flag_easy/entries/userB');
 
     await assertFails(setDoc(entryDoc, leaderboardPayload({ uid: 'userB' })));
   });
 
   test('leaderboard payload with client-provided updatedAt is rejected', async () => {
-    const db = testEnv.authenticatedContext('userA').firestore();
+    await seedScore();
+    const db = accountContext('userA').firestore();
     const entryDoc = doc(db, 'leaderboard/flag_easy/entries/userA');
 
     await assertFails(
@@ -249,7 +372,7 @@ describe('Firestore security rules', () => {
   });
 
   test('owner can create and read attempt records but cannot update', async () => {
-    const db = testEnv.authenticatedContext('userA').firestore();
+    const db = accountContext('userA').firestore();
     const attemptDoc = doc(db, 'users/userA/attempts/attempt-1');
 
     await assertSucceeds(setDoc(attemptDoc, attemptPayload()));
@@ -264,7 +387,7 @@ describe('Firestore security rules', () => {
   });
 
   test('attempt payload must match difficulty bounds and attempt id', async () => {
-    const db = testEnv.authenticatedContext('userA').firestore();
+    const db = accountContext('userA').firestore();
 
     await assertFails(
       setDoc(
@@ -289,7 +412,7 @@ describe('Firestore security rules', () => {
   });
 
   test('attempt payload with client-provided createdAt is rejected', async () => {
-    const db = testEnv.authenticatedContext('userA').firestore();
+    const db = accountContext('userA').firestore();
     await assertFails(
       setDoc(
         doc(db, 'users/userA/attempts/attempt-1'),
@@ -302,7 +425,7 @@ describe('Firestore security rules', () => {
   });
 
   test('user cannot write attempts for another uid', async () => {
-    const db = testEnv.authenticatedContext('userA').firestore();
+    const db = accountContext('userA').firestore();
     await assertFails(
       setDoc(
         doc(db, 'users/userB/attempts/attempt-1'),

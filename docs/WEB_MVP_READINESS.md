@@ -1,5 +1,26 @@
 # Web MVP readiness
 
+## Production status — September 26, 2026
+
+PR #162 is merged. Commit `81df9ce` is deployed at
+https://quiznetic.eirenya.com with root base href. The `.fr` subdomain redirects
+with HTTP 308; HTTPS and both DNS configurations were verified. The owner added
+the production hostname to Firebase Auth and tested Email/Google sign-in,
+password reset, both quiz categories, score persistence, leaderboard and mobile
+flows. Missing reset emails were an Outlook synchronization issue.
+
+An automated live test completed a guest Capital Quiz (4/15), linked a dedicated
+email/password account, verified the UID stayed unchanged, and checked the saved
+score after refresh and a fresh sign-in. The temporary account and its data were
+removed. No JavaScript errors occurred during that flow.
+
+The Firestore audit is complete; Spark rule hardening is prepared for review and
+still needs deployment and a live smoke test. Billing remains disabled. See
+[SPARK_SECURITY.md](SPARK_SECURITY.md) for the budget decision, security limits
+and rollout checklist. Web analytics delivery, current legal copy and initial
+feedback remain open. The sections below preserve the earlier local audit and
+pre-deployment checklist as historical context.
+
 ## Compatibility audit — September 26, 2026
 
 CrashReportingService now skips every Crashlytics operation on Web, including
