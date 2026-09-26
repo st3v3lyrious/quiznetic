@@ -14,11 +14,17 @@ email/password account, verified the UID stayed unchanged, and checked the saved
 score after refresh and a fresh sign-in. The temporary account and its data were
 removed. No JavaScript errors occurred during that flow.
 
-The Firestore audit is complete; Spark rule hardening is prepared for review and
-still needs deployment and a live smoke test. Billing remains disabled. See
+PR #163 is merged and its Firestore rules are deployed with an exact match to
+commit `8a52c77`. Live guest score persistence, account linking with unchanged UID,
+account attempt writes and matching leaderboard publication passed. The temporary
+account and five Firestore documents were removed. Billing remains disabled. See
 [SPARK_SECURITY.md](SPARK_SECURITY.md) for the budget decision, security limits
 and rollout checklist. Web analytics delivery, current legal copy and initial
-feedback remain open. The sections below preserve the earlier local audit and
+feedback remain open. The SDK queue contains quiz_started, quiz_completed and
+score_submit_success and collection requests were observed; dashboard receipt
+has not been verified. Refreshing /#/leaderboard loads Home instead of restoring
+the requested screen. The current privacy copy needs review for Web Analytics
+and Vercel hosting disclosures. App Check remains unenforced. The sections below preserve the earlier local audit and
 pre-deployment checklist as historical context.
 
 ## Compatibility audit — September 26, 2026

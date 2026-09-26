@@ -278,8 +278,8 @@ require production Web verification. Historical target dates are not new commitm
   - Contract references: docs/ANTI_CHEAT_CONTRACT.md and docs/SPARK_SECURITY.md.
   - [x] Phase 1 baseline shipped: validator, idempotent attempt records, Firestore ownership/bounds/scope checks.
   - [x] Production audit: deployed rules matched main; billing disabled; App Check unenforced.
-  - [ ] Review, merge and deploy Spark hardening: field allowlists, auth-derived source, account-only leaderboard publication, personal-score consistency and queries capped at 100.
-  - [ ] Verify live guest/account score writes and upgrade after rules deployment.
+  - [x] PR #163 merged; Spark hardening deployed and exact rules match verified on September 26: field allowlists, auth-derived source, account-only leaderboard publication, personal-score consistency and queries capped at 100.
+  - [x] Live guest/account score writes and upgrade verified after deployment: UID and guest score preserved, account attempt saved and matching leaderboard entry displayed; test account/data removed.
   - [ ] Spark follow-up: initialize Web App Check, monitor compatibility, then consider enforcement (not an anti-cheat guarantee).
   - [ ] Deferred: authoritative backend scoring, enforced rate limits, direct-write lock and automated account-data cleanup (GitHub #122, P2 / Deferred).
   - Keep ENABLE_BACKEND_SUBMIT_SCORE=false. No Blaze upgrade is required for Web launch.
@@ -343,14 +343,16 @@ require production Web verification. Historical target dates are not new commitm
   - [ ] Add push notifications.
   - [ ] Add email notifications for account creation and account confirmation.
 - [ ] M32: Launch QuizNetic Web MVP on the EIRENYA domain. <!--gh:issue=159-->
-  - Priority: P0. Deployed on quiznetic.eirenya.com; security rollout, analytics/legal checks and initial feedback remain.
+  - Priority: P0. Deployed on quiznetic.eirenya.com; analytics/legal checks, browser matrix and initial feedback remain.
   - [x] App baseline: Flags, Capitals, guest/account flows, scores, leaderboard, profile and settings implemented with automated coverage.
   - [x] Public URL: quiznetic.eirenya.com with root base href; quiznetic.eirenya.fr redirects with HTTP 308.
   - [x] Configure production Firebase Web app and authorize quiznetic.eirenya.com; owner validated Email/Google login and password reset.
   - [x] Guard unsupported Crashlytics operations on Web, including initialization, error capture and Analytics breadcrumbs (PR #162 merged and deployed).
   - [x] Release build and core browser flows validated; owner tested categories, login, scores, leaderboard and mobile flows. Guest upgrade preserves UID and score after refresh/sign-in.
   - [x] Audit deployed Firestore rules and leaderboard exposure (M20); record Spark limitations.
-  - [ ] Merge/deploy Spark hardening and recheck live score flows (M20).
+  - [x] Merge/deploy Spark hardening and recheck live score flows (M20, PR #163).
+  - [x] Analytics enabled; live SDK queue contains quiz_started, quiz_completed and score_submit_success with Google Analytics collection requests. Dashboard receipt remains unverified.
+  - [ ] Complete browser/responsive matrix; refreshing /#/leaderboard currently returns Home rather than restoring the route.
   - [ ] Verify Web analytics and current privacy/legal copy for the ad-free build.
   - [x] Deploy production build from merge 81df9ce and smoke-test categories, persistence, leaderboard and guest upgrade.
   - [x] Publish Web MVP on the EIRENYA domain.

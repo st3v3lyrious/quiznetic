@@ -54,12 +54,27 @@ a quiz score was earned.
 
 ## Validation and rollout
 
+Production rollout completed September 26, 2026 after PR #163 merged as
+`8a52c77`. Existing records (11 scores, 31 attempts, 10 leaderboard entries)
+contained no fields outside the new allowlists. Only Firestore rules were deployed.
+The released ruleset `5898afc4-2352-48be-a23a-3523a48ae029` exactly matches the
+merged file (SHA-256
+`0bc3887aa7a1894c5a443865c108a14abe97dc04c58c2f2c68b75302e297f25d`).
+Billing remains disabled; App Check enforcement remains unchanged.
+
+Live verification saved a guest Capital Easy score of 3/15, linked a password
+account without changing its UID or losing the score, then saved an account
+attempt and published/displayed the matching 3-point leaderboard entry. No
+JavaScript errors were reported. The temporary Auth account and all five test
+Firestore documents were deleted. App Check and authoritative scoring remain
+separate follow-ups; this rollout does not make client scores trustworthy.
+
 The Firestore emulator suite covers allowed guest/account writes, denied source
 spoofing and unknown fields, leaderboard consistency, atomic writes, guest upgrade,
 ownership, timestamps, score bounds, attempt immutability and bounded queries.
 It also explicitly demonstrates that a fabricated bounded score remains possible.
 
-After PR merge:
+Rollout procedure for future changes:
 
 1. Inspect existing scoring document field names for compatibility with the
    allowlists; resolve any legacy extra fields before deploying.
