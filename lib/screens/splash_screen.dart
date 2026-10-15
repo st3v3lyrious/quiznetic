@@ -46,7 +46,7 @@ class _SplashScreenState extends State<SplashScreen> {
       // documents here — creation is handled in the login/signup flows.
       currentUser = widget.currentUserProvider != null
           ? widget.currentUserProvider!.call()
-          : FirebaseAuth.instance.currentUser;
+          : await FirebaseAuth.instance.authStateChanges().first;
     } catch (e, stackTrace) {
       AppLogger.d('Splash auth lookup failed, defaulting to entry route: $e');
       AppLogger.stack(stackTrace);

@@ -23,12 +23,14 @@ class LeaderboardScreen extends StatefulWidget {
   final LeaderboardService? leaderboardService;
   final ScoreRepository? scoreRepository;
   final bool Function()? hasFirebaseApp;
+  final void Function(String category, String difficulty)? onScopeChanged;
 
   const LeaderboardScreen({
     super.key,
     this.leaderboardService,
     this.scoreRepository,
     this.hasFirebaseApp,
+    this.onScopeChanged,
   });
 
   /// Creates state that handles filters and data refresh.
@@ -191,6 +193,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       _selectedCategory = value;
       _leaderboardFuture = _loadLeaderboard();
     });
+    widget.onScopeChanged?.call(_selectedCategory, _selectedDifficulty);
   }
 
   /// Updates difficulty filter and reloads the board.
@@ -200,6 +203,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       _selectedDifficulty = value;
       _leaderboardFuture = _loadLeaderboard();
     });
+    widget.onScopeChanged?.call(_selectedCategory, _selectedDifficulty);
   }
 
   /// Retries loading leaderboard data for the current filters.
@@ -315,8 +319,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       } else {
         icon = Icons.trending_up;
         title = 'Your score of $guestLocalBest isn\'t in the top 100 yet.';
-        subtitle =
-            'Create an account and keep playing to climb the ranks!';
+        subtitle = 'Create an account and keep playing to climb the ranks!';
       }
     }
 

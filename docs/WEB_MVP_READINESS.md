@@ -27,6 +27,28 @@ the requested screen. The current privacy copy needs review for Web Analytics
 and Vercel hosting disclosures. App Check remains unenforced. The sections below preserve the earlier local audit and
 pre-deployment checklist as historical context.
 
+## Navigation correction — October 15, 2026 (local verification)
+
+The navigation defect recorded in the production snapshot above is corrected in
+this change, pending review, merge and deployment. Stable hash routes now bypass
+the forced startup redirect, preserve authentication destinations, and support
+browser back/forward. Filters and legal-document selection survive refresh;
+missing quiz/result sessions show a recovery action without submitting scores.
+Authentication subscriptions remain stable during navigation and popup menus do
+not trigger browser-location updates.
+
+Validation: 249 Flutter tests, static analysis, the review check, a 64.07% unit
+coverage gate (minimum 25%), and 17 Chromium scenarios at desktop/mobile/tablet
+sizes pass. A complete quiz followed by refreshing results leaves exactly one
+persisted attempt in local Firestore. Both the normal entrypoint and emulator
+entrypoint compile as release Web builds. The existing SocialIcons font warning
+is still emitted by the build.
+
+[Reproduction steps and actual UI captures](reviews/m32/README.md).
+Screenshots and browser tests use demo Firebase Auth/Firestore emulators. This
+is not new production verification or a Safari/WebKit test. M32 remains open for
+those checks, Analytics dashboard receipt, legal review and initial feedback.
+
 ## Compatibility audit — September 26, 2026
 
 CrashReportingService now skips every Crashlytics operation on Web, including

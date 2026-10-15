@@ -206,7 +206,10 @@ class LoginScreen extends StatefulWidget {
     }
 
     if (context.mounted) {
-      Navigator.of(context).pushReplacementNamed(HomeScreen.routeName);
+      final destination = ModalRoute.of(context)?.settings.arguments;
+      Navigator.of(context).pushReplacementNamed(
+        destination is String ? destination : HomeScreen.routeName,
+      );
     }
   }
 
@@ -221,7 +224,6 @@ class LoginScreen extends StatefulWidget {
       builder: (_) => _DisplayNameDialog(initialValue: emailPrefix),
     );
   }
-
 }
 
 class _LoginScreenState extends State<LoginScreen> {

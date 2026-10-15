@@ -170,7 +170,7 @@ require production Web verification. Historical target dates are not new commitm
   - [x] Audit deployed Firestore rules and leaderboard exposure (M20); record Spark limitations.
   - [x] Merge/deploy Spark hardening and recheck live score flows (M20, PR #163).
   - [x] Analytics enabled; live SDK queue contains quiz_started, quiz_completed and score_submit_success with Google Analytics collection requests. Dashboard receipt remains unverified.
-  - [ ] Complete browser/responsive matrix; refreshing /#/leaderboard currently returns Home rather than restoring the route.
+  - [ ] Complete browser/responsive matrix and production verification. Local Chromium desktop/mobile/tablet navigation checks now pass (deep links, refresh, back/forward, filters and safe session recovery); Safari and deployed-build verification remain. See docs/reviews/m32/README.md.
   - [ ] Verify Web analytics and current privacy/legal copy for the ad-free build.
   - [x] Deploy production build from merge 81df9ce and smoke-test categories, persistence, leaderboard and guest upgrade.
   - [x] Publish Web MVP on the EIRENYA domain.
