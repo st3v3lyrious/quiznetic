@@ -236,7 +236,7 @@ class _QuizScreenState extends State<QuizScreen> {
         _scrollController.jumpTo(0);
       });
     } else {
-      Navigator.pushNamed(
+      Navigator.pushReplacementNamed(
         context,
         ResultScreen.routeName,
         arguments: ResultScreenArgs(

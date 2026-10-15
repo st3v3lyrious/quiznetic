@@ -20,26 +20,35 @@ typedef SignInChoiceAction = void Function(BuildContext context);
 class EntryChoiceScreen extends StatelessWidget {
   static const routeName = '/entry';
 
+  final String? returnTo;
   final ContinueAsGuestAction? continueAsGuest;
   final SignInChoiceAction? onSignInChoice;
 
   const EntryChoiceScreen({
     super.key,
     this.continueAsGuest,
+    this.returnTo,
     this.onSignInChoice,
   });
+
+  String _destination(BuildContext context) {
+    final args = ModalRoute.of(context)?.settings.arguments;
+    return returnTo ?? (args is String ? args : HomeScreen.routeName);
+  }
 
   /// Signs in anonymously and routes to home when successful.
   Future<void> _defaultContinueAsGuest(BuildContext context) async {
     final cred = await AuthService().signInAnonymously();
     if (cred.user != null && context.mounted) {
-      Navigator.of(context).pushReplacementNamed(HomeScreen.routeName);
+      Navigator.of(context).pushReplacementNamed(_destination(context));
     }
   }
 
   /// Routes to provider sign-in choices.
   void _defaultSignInChoice(BuildContext context) {
-    Navigator.of(context).pushNamed(LoginScreen.routeName);
+    Navigator.of(
+      context,
+    ).pushNamed(LoginScreen.routeName, arguments: _destination(context));
   }
 
   /// Builds first-entry actions before provider-specific login.

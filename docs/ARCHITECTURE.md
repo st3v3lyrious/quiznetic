@@ -24,7 +24,8 @@ It is intended to be source material for generated docs (including `README.md`).
 
 ## Codebase Layout
 
-- `lib/main.dart`: app bootstrap, Firebase init, route registration, global theme.
+- `lib/main.dart`: app bootstrap, Firebase init, global theme.
+- `lib/navigation/app_router.dart`: Router protocol, named-route bridge, URL argument validation and safe session recovery.
 - `lib/services/analytics_service.dart`: Firebase Analytics wiring and route-observer screen tracking.
 - `lib/services/crash_reporting_service.dart`: Crashlytics wiring and unhandled-error capture hooks.
 - `lib/config/brand_config.dart`: app branding tokens (app name, core colors, web/splash color values).
@@ -58,13 +59,20 @@ It is intended to be source material for generated docs (including `README.md`).
 - `/about` -> `AboutScreen`
 - `/upgrade` -> guarded route; anonymous users see upgrade screen, authenticated non-anonymous users are redirected to home.
 
+Stable Web pages use hash routes; leaderboard filters, difficulty category and
+legal-document selection use validated query parameters. Browser history is
+reported through Flutter Router while screens retain their named Navigator API.
+Unknown/incomplete URLs and refreshed quiz/results sessions show a recovery page;
+URL parameters never reconstruct a score or completed attempt. A completed quiz
+replaces its route with results. See docs/reviews/m32/README.md for verification.
+
 ## Runtime Flow (Current)
 
 1. `main()` initializes Firebase.
 2. Crash reporting service configures Crashlytics collection and unhandled-error hooks on native platforms; on Web all Crashlytics operations are skipped.
 3. Analytics service configures collection toggle and route observer screen-view logging. Web retains product events and screen views without native Crashlytics breadcrumbs; the crash-reporting kill switch also suppresses these breadcrumbs.
-4. App starts on splash route.
-5. Splash checks auth state after delay and navigates to home (if user exists) or entry choice.
+4. Root entry starts on splash; direct hash links restore their requested route. Auth guards await persisted authentication and retain the requested destination through entry/login.
+5. Splash awaits the first auth-state event after its branding delay and navigates to home (if a user exists) or entry choice.
 6. If there is no session, entry-choice screen presents explicit user choice:
    - Continue as guest
    - Sign in / create account
