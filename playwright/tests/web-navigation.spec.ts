@@ -69,6 +69,19 @@ for (const [device, viewport] of Object.entries({ desktop: { width: 1280, height
       await expect(page.getByRole('button', { name: 'Expert', exact: true })).toBeVisible();
       await capture(page, `${device}-leaderboard-refreshed`);
     });
+    test('root startup and guest entry replace transient history', async ({ page }) => {
+      await open(page, '/');
+      await page.getByRole('button', { name: 'Continue as Guest', exact: true }).waitFor();
+      const before = await page.evaluate(() => history.length);
+      await page.getByRole('button', { name: 'Continue as Guest', exact: true }).click();
+      await expect(page.getByText('Choose Your Quiz', { exact: true })).toBeVisible();
+      await expect(page).toHaveURL(/#\/home$/);
+      expect(await page.evaluate(() => history.length)).toBe(before);
+      await page.getByRole('button', { name: 'Leaderboard', exact: true }).click();
+      await expect(page.getByText('Global Leaderboard', { exact: true })).toBeVisible();
+      await page.goBack();
+      await expect(page.getByText('Choose Your Quiz', { exact: true })).toBeVisible();
+    });
     test('browser back and forward restore screens', async ({ page }) => {
       await guest(page);
       await expect(page.getByText('Choose Your Quiz', { exact: true })).toBeVisible();

@@ -38,7 +38,7 @@ Authentication subscriptions remain stable during navigation and popup menus do
 not trigger browser-location updates.
 
 Validation: 249 Flutter tests, static analysis, the review check, a 64.07% unit
-coverage gate (minimum 25%), and 15 Chromium scenarios at desktop/mobile/tablet
+coverage gate (minimum 25%), and 17 Chromium scenarios at desktop/mobile/tablet
 sizes pass. A complete quiz followed by refreshing results leaves exactly one
 persisted attempt in local Firestore. Both the normal entrypoint and emulator
 entrypoint compile as release Web builds. The existing SocialIcons font warning

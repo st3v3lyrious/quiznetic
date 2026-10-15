@@ -144,6 +144,7 @@ class AppRouter extends RouterDelegate<Uri>
   Uri _initial = Uri(path: '/splash');
   bool _started = false;
   bool _notificationScheduled = false;
+  bool _replacePending = true;
   bool _disposed = false;
 
   @override
@@ -152,7 +153,9 @@ class AppRouter extends RouterDelegate<Uri>
   @override
   Uri get currentConfiguration {
     final named = _history.where((route) => route.settings.name != null);
-    return named.isEmpty ? _initial : _location(named.last);
+    final location = named.isEmpty ? _initial : _location(named.last);
+    // Splash is transient startup UI, not a destination in browser history.
+    return location.path == '/splash' ? Uri(path: '/') : location;
   }
 
   Uri _location(Route<dynamic> route) =>
@@ -186,12 +189,21 @@ class AppRouter extends RouterDelegate<Uri>
     );
   }
 
-  void _changed() {
+  void _changed({bool replace = false}) {
+    _replacePending = _replacePending || replace;
     if (_notificationScheduled || _disposed) return;
     _notificationScheduled = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _notificationScheduled = false;
-      if (!_disposed) notifyListeners();
+      final replace = _replacePending;
+      _replacePending = false;
+      if (_disposed) return;
+      final context = navigatorKey.currentContext;
+      if (replace && context != null) {
+        Router.neglect(context, notifyListeners);
+      } else {
+        notifyListeners();
+      }
     });
     WidgetsBinding.instance.ensureVisualUpdate();
   }
@@ -282,7 +294,7 @@ class _HistoryObserver extends NavigatorObserver {
       }
     }
     if (oldRoute?.settings.name != null || newRoute?.settings.name != null) {
-      router._changed();
+      router._changed(replace: true);
     }
   }
 }

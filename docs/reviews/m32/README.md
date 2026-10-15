@@ -11,6 +11,7 @@ review and initial feedback remain separate checks.
   changing them replaces the current history entry.
 - Difficulty URLs require `?category=flag` or `?category=capital`.
 - Legal documents use `?document=terms` or `?document=privacy`.
+- Transient splash and authentication replacements do not add browser-history entries.
 - Protected deep links retain their destination through guest entry and login,
   including refreshing the login page. Authentication persistence is awaited.
 - Quiz/results are in-memory sessions. Refreshing them displays a recovery
@@ -81,7 +82,7 @@ only the recovery page is new.
 - Normal `lib/main.dart` and emulator release Web builds: passed. The existing
   SocialIcons font warning remains; production Firebase runtime credentials were
   not used for this local compile check.
-- Playwright: 15 Chromium scenarios passed, with no JavaScript page errors.
+- Playwright: 17 Chromium scenarios passed, with no JavaScript page errors.
   Desktop/mobile cover auth destinations, refresh, filters, back/forward, legal
   documents, malformed links and a complete 15-question quiz with exactly one
   persisted attempt after refreshing results. Tablet adds rendering checks.
