@@ -7,22 +7,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:quiznetic_flutter/config/brand_config.dart';
+import 'package:quiznetic_flutter/navigation/app_router.dart';
+import 'package:quiznetic_flutter/widgets/score_sync_scope.dart';
 import 'package:quiznetic_flutter/services/analytics_service.dart';
 import 'package:quiznetic_flutter/services/crash_reporting_service.dart';
-import 'package:quiznetic_flutter/screens/difficulty_screen.dart';
-import 'package:quiznetic_flutter/screens/entry_choice_screen.dart';
-import 'package:quiznetic_flutter/screens/home_screen.dart';
-import 'package:quiznetic_flutter/screens/quiz_screen.dart';
-import 'package:quiznetic_flutter/screens/result_screen.dart';
-import 'package:quiznetic_flutter/screens/user_profile_screen.dart';
-import 'package:quiznetic_flutter/screens/leaderboard_screen.dart';
-import 'package:quiznetic_flutter/screens/login_screen.dart';
-import 'package:quiznetic_flutter/screens/upgrade_account_screen.dart';
-import 'package:quiznetic_flutter/screens/legal_document_screen.dart';
-import 'package:quiznetic_flutter/screens/settings_screen.dart';
-import 'package:quiznetic_flutter/widgets/auth_guard.dart';
-import 'package:quiznetic_flutter/widgets/score_sync_scope.dart';
-import 'screens/splash_screen.dart';
 import 'firebase_env_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 
@@ -92,29 +80,7 @@ class QuizNetic extends StatelessWidget {
     );
 
     return ScoreSyncScope(
-      child: MaterialApp(
-        title: BrandConfig.appName,
-        initialRoute: SplashScreen.routeName,
-        navigatorObservers: [AnalyticsNavigationObserver()],
-        routes: {
-          SplashScreen.routeName: (_) => const SplashScreen(),
-          HomeScreen.routeName: (_) => const AuthGuard(child: HomeScreen()),
-          QuizScreen.routeName: (_) => const AuthGuard(child: QuizScreen()),
-          ResultScreen.routeName: (_) => const AuthGuard(child: ResultScreen()),
-          DifficultyScreen.routeName: (_) =>
-              const AuthGuard(child: DifficultyScreen()),
-          UserProfileScreen.routeName: (_) =>
-              const AuthGuard(child: UserProfileScreen()),
-          LeaderboardScreen.routeName: (_) =>
-              const AuthGuard(child: LeaderboardScreen()),
-          UpgradeAccountScreen.routeName: (_) =>
-              const AuthGuard(child: UpgradeAccountScreen()),
-          EntryChoiceScreen.routeName: (_) => const EntryChoiceScreen(),
-          LoginScreen.routeName: (_) => const LoginScreen(),
-          LegalDocumentScreen.routeName: (_) => const LegalDocumentScreen(),
-          SettingsScreen.routeName: (_) =>
-              const AuthGuard(child: SettingsScreen()),
-        },
+      child: AppNavigation(
         theme: ThemeData(
           // Opt in to Material 3 so background/onBackground are honored:
           useMaterial3: true,
@@ -141,7 +107,6 @@ class QuizNetic extends StatelessWidget {
             elevation: 0,
           ),
         ),
-        home: const SplashScreen(),
       ),
     );
   }
