@@ -28,6 +28,7 @@ doc/api/
 *.js.deps
 *.js.map
 !firestore_tests/tests/*.js
+!web/analytics_consent.js
 
 .flutter-plugins
 .flutter-plugins-dependencies

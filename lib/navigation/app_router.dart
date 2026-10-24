@@ -15,6 +15,7 @@ import '../screens/splash_screen.dart';
 import '../screens/upgrade_account_screen.dart';
 import '../screens/user_profile_screen.dart';
 import '../services/analytics_service.dart';
+import '../widgets/analytics_consent_panel.dart';
 import '../widgets/auth_guard.dart';
 
 /// Browser locations contain navigation context, never scores or quiz answers.
@@ -394,6 +395,15 @@ class _AppNavigationState extends State<AppNavigation> {
   Widget build(BuildContext context) => MaterialApp.router(
     title: BrandConfig.appName,
     theme: widget.theme,
+    builder: (context, child) => kIsWeb
+        ? AnalyticsConsentPanel(
+            onPrivacy: () => _router.navigatorKey.currentState!.pushNamed(
+              LegalDocumentScreen.routeName,
+              arguments: LegalDocumentScreen.privacyArgs,
+            ),
+            child: child ?? const SizedBox.shrink(),
+          )
+        : child ?? const SizedBox.shrink(),
     routerDelegate: _router,
     routeInformationParser: const AppRouteParser(),
   );

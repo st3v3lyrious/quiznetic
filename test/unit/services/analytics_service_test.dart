@@ -14,6 +14,8 @@ void main() {
           enabled: true,
           isWeb: isWeb,
           crashReportingEnabled: isWeb,
+          loadWebAnalytics: () async {},
+          disableWebAnalytics: () {},
           setCollectionEnabled: (_) async {},
           logEvent: ({required name, parameters}) async => events++,
           logScreenView: ({screenName, screenClass}) async => screens++,
@@ -21,6 +23,7 @@ void main() {
         );
 
         await service.initialize();
+        if (isWeb) await service.setWebConsent(true);
         await service.logEvent('quiz_started');
         await service.logScreenView(screenName: '/quiz');
 

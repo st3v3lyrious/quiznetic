@@ -71,3 +71,17 @@ This Privacy Policy explains how Quiznetic collects, uses, and stores informatio
 ## 11. Contact
 
 - Privacy questions: `quizneticapp@gmail.com`
+
+## 12. Web Audience Measurement Preferences
+- On the Web, optional audience measurement uses Google Analytics for Firebase.
+- Analytics is off until you choose Accept analytics. Refusing does not affect
+  accounts, gameplay or scores. Advertising signals and personalization stay off.
+- After acceptance, Analytics may store first-party cookies and measure visits,
+  screen views, quiz category/difficulty, completion and score-submission events.
+- Your choice is stored in this browser for up to 180 days. It is separate from
+  account sign-in and from acceptance of the Terms of Service.
+- Use Analytics preferences on any screen to change your choice. Refusing after
+  acceptance stops future collection, removes accessible first-party GA cookies
+  and reloads the page. Changing preferences during a quiz can end that session.
+- Withdrawal does not automatically erase previously collected data. Contact
+  quizneticapp@gmail.com for questions or requests about your data.
