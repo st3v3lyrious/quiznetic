@@ -4,6 +4,8 @@
  Purpose: Initializes Firebase and boots the app with routes and theme.
 */
 import 'dart:async';
+import 'package:flutter/foundation.dart';
+import 'services/analytics_consent.dart';
 
 import 'package:flutter/material.dart';
 import 'package:quiznetic_flutter/config/brand_config.dart';
@@ -37,6 +39,7 @@ void main() {
 
       await crashReportingService.initialize();
       await analyticsService.initialize();
+      if (kIsWeb) await AnalyticsConsent.instance.initialize();
       await BrandConfig.initVersion();
       runApp(const QuizNetic());
     },

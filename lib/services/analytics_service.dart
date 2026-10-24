@@ -5,6 +5,10 @@
 */
 import 'dart:async';
 
+import 'analytics_web/bridge.dart'
+    if (dart.library.js_interop) 'analytics_web/bridge_web.dart'
+    as web;
+
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
@@ -28,11 +32,16 @@ class AnalyticsService {
     bool? enabled,
     bool isWeb = kIsWeb,
     bool? crashReportingEnabled,
+    Future<void> Function()? loadWebAnalytics,
+    VoidCallback? disableWebAnalytics,
     AnalyticsSetCollectionEnabled? setCollectionEnabled,
     AnalyticsLogEvent? logEvent,
     AnalyticsLogScreenView? logScreenView,
     CrashBreadcrumbLogger? logCrashBreadcrumb,
   }) : _enabled = enabled ?? AppConfig.enableAnalytics,
+       _isWeb = isWeb,
+       _loadWebAnalytics = loadWebAnalytics ?? web.loadAnalytics,
+       _disableWebAnalytics = disableWebAnalytics ?? web.disableAnalytics,
        _crashBreadcrumbsEnabled =
            !isWeb && (crashReportingEnabled ?? AppConfig.enableCrashReporting),
        _setCollectionEnabled =
@@ -44,6 +53,34 @@ class AnalyticsService {
   static final AnalyticsService instance = AnalyticsService();
 
   final bool _enabled;
+  final bool _isWeb;
+  final Future<void> Function() _loadWebAnalytics;
+  final VoidCallback _disableWebAnalytics;
+  bool _webAllowed = false;
+  bool _webLoaded = false;
+
+  bool get canCollect => _enabled && (!_isWeb || _webAllowed);
+
+  /// No Web SDK calls are made until the browser owner explicitly opts in.
+  Future<void> setWebConsent(bool accepted) async {
+    if (!_isWeb) return;
+    _webAllowed = false;
+    if (!accepted || !_enabled) {
+      _disableWebAnalytics();
+      if (_webLoaded) await _setCollectionEnabled(false);
+      return;
+    }
+    try {
+      await _loadWebAnalytics().timeout(const Duration(seconds: 15));
+      _webLoaded = true;
+      await _setCollectionEnabled(true);
+      _webAllowed = true;
+    } catch (_) {
+      _disableWebAnalytics();
+      rethrow;
+    }
+  }
+
   final bool _crashBreadcrumbsEnabled;
   final AnalyticsSetCollectionEnabled _setCollectionEnabled;
   final AnalyticsLogEvent _logEvent;
@@ -92,6 +129,7 @@ class AnalyticsService {
 
   /// Configures collection toggle for Analytics.
   Future<void> initialize() async {
+    if (_isWeb) return;
     try {
       await _setCollectionEnabled(_enabled);
     } catch (e, stackTrace) {
@@ -106,7 +144,7 @@ class AnalyticsService {
     Map<String, Object?>? parameters,
     bool includeCrashBreadcrumb = true,
   }) async {
-    if (!_enabled) return;
+    if (!canCollect) return;
 
     final normalizedName = _normalizeToken(
       name,
@@ -134,7 +172,7 @@ class AnalyticsService {
     required String screenName,
     String? screenClass,
   }) async {
-    if (!_enabled) return;
+    if (!canCollect) return;
 
     final normalizedScreenName = _normalizeToken(
       screenName,
