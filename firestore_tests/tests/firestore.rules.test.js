@@ -8,7 +8,7 @@ import {
   assertSucceeds,
   initializeTestEnvironment,
 } from '@firebase/rules-unit-testing';
-import { collection, doc, getDoc, getDocs, limit, query, serverTimestamp, setDoc, Timestamp, writeBatch } from 'firebase/firestore';
+import { collection, deleteDoc, doc, getDoc, getDocs, limit, query, serverTimestamp, setDoc, Timestamp, writeBatch } from 'firebase/firestore';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -432,5 +432,30 @@ describe('Firestore security rules', () => {
         attemptPayload(),
       ),
     );
+  });
+});
+
+// Even an already-issued Auth token cannot recreate data during operator deletion.
+describe('account deletion lock', () => {
+  test('marked account cannot read/write private data or leaderboard using an old token', async () => {
+    await testEnv.withSecurityRulesDisabled(async ctx => {
+      await setDoc(doc(ctx.firestore(), 'accountDeletions/userA'), {status: 'pending'});
+      await setDoc(doc(ctx.firestore(), 'users/userA'), {displayName: 'A'});
+    });
+    const db = accountContext('userA').firestore();
+    await assertFails(getDoc(doc(db, 'users/userA')));
+    await assertFails(setDoc(doc(db, 'users/userA'), {displayName: 'recreated'}));
+    await assertFails(setDoc(doc(db, 'users/userA/scores/flag_easy'), scorePayload()));
+    await assertFails(setDoc(doc(db, 'users/userA/attempts/attempt-1'), attemptPayload()));
+    await assertFails(getDoc(doc(db, 'leaderboard/flag_easy/entries/userB')));
+    await assertFails(setDoc(doc(db, 'accountDeletions/userA'), {status: 'complete'}));
+    await assertFails(deleteDoc(doc(db, 'accountDeletions/userA')));
+    await assertFails(deleteDoc(doc(db, 'users/userA')));
+  });
+  test('clients cannot create, read or remove deletion markers; unrelated accounts still work', async () => {
+    const db = accountContext('userB').firestore();
+    await assertFails(setDoc(doc(db, 'accountDeletions/userA'), {status: 'pending'}));
+    await assertFails(getDoc(doc(db, 'accountDeletions/userA')));
+    await assertSucceeds(setDoc(doc(db, 'users/userB'), {displayName: 'B'}));
   });
 });

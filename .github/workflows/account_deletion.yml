@@ -1,0 +1,46 @@
+name: Account Deletion Safety
+
+on:
+  pull_request:
+    paths:
+      - 'firestore.rules'
+      - 'firebase.deletion.json'
+      - 'firestore_tests/**'
+      - 'functions/scripts/**'
+      - 'functions/tests/**'
+      - 'functions/package*.json'
+      - '.github/workflows/account_deletion.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deletion_safety:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: |
+            functions/package-lock.json
+            firestore_tests/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm ci --ignore-scripts
+        working-directory: functions
+      - run: npm ci --ignore-scripts
+        working-directory: firestore_tests
+      - name: Operator deletion and Firestore access rules (emulators only)
+        env:
+          FIREBASE_SKIP_UPDATE_CHECK: 'true'
+        run: >-
+          firestore_tests/node_modules/.bin/firebase emulators:exec
+          --config firebase.deletion.json --only auth,firestore
+          --project demo-quiznetic-deletion
+          "npm --prefix functions run test:deletion && npm --prefix firestore_tests test"

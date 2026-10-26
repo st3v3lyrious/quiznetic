@@ -105,3 +105,14 @@ References:
 - https://firebase.google.com/docs/firestore/security/rules-query
 - https://firebase.google.com/docs/functions/get-started
 - https://firebase.google.com/docs/app-check
+
+## Pending M32 C3 deletion lock
+
+The C3 branch adds an Admin-only `accountDeletions/{uid}` marker check to
+`isSignedIn`. It prevents an old ID token from recreating scores/profile entries
+while the operator deletes Auth and Firestore data. The marker is removed only
+after verification and a 65-minute token-expiry window. This adds a dependent
+Firestore read to authenticated rule evaluations and must be included in Spark
+quota planning. See [ACCOUNT_DELETION.md](ACCOUNT_DELETION.md). These new rules are
+not deployed by the implementation PR; previous production evidence above does
+not establish deployment of this change.
