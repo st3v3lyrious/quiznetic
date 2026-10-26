@@ -13,7 +13,8 @@
     "logs": "firebase functions:log",
     "account:delete": "node scripts/delete-account.cjs",
     "test:deletion": "node --test tests/delete-account.test.cjs",
-    "test:deletion:emulator": "../firestore_tests/node_modules/.bin/firebase emulators:exec --config ../firebase.deletion.json --only auth,firestore --project demo-quiznetic-deletion \"npm run test:deletion\""
+    "test:deletion:emulator": "../firestore_tests/node_modules/.bin/firebase emulators:exec --config ../firebase.deletion.json --only auth,firestore --project demo-quiznetic-deletion \"npm run test:deletion\"",
+    "test:privacy": "node --test tests/privacy.test.cjs"
   },
   "dependencies": {
     "firebase-admin": "^12.6.0",
