@@ -1,0 +1,30 @@
+const {chromium,webkit}=require('playwright');const assert=require('node:assert/strict');const fs=require('node:fs');
+(async()=>{const out={url:'https://quiznetic.eirenya.com',playwright:require('playwright/package.json').version,collectionIntercepted:true,results:[]};
+for(const [engine,type] of Object.entries({chromium,webkit})){const b=await type.launch({headless:true});try{
+for(const [device,viewport] of Object.entries({desktop:{width:1280,height:900},mobile:{width:390,height:844},tablet:{width:768,height:1024}})){
+ const c=await b.newContext({viewport});const p=await c.newPage();const attempts=[];const all=[];const errors=[];
+ p.on('request',r=>{if(/firebase-analytics|googletagmanager|google-analytics\.com/.test(r.url()))all.push(r.url());});
+ p.on('pageerror',e=>errors.push(e.message));
+ await p.route(/google-analytics\.com\/.*collect/,async r=>{const req=r.request();const u=new URL(req.url());const params=new URLSearchParams(u.search);const body=req.postData()||'';
+ attempts.push({parameterNames:[...params.keys()],hasEmail:/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i.test(decodeURIComponent(u.search+' '+body)),hasUserId:params.has('uid')||params.has('user_id')});
+ await r.fulfill({status:204,headers:{'access-control-allow-origin':'*'}});});
+ const semantics=async()=>{await p.waitForFunction(()=>document.querySelector('flt-semantics-placeholder,flt-semantics-host'));await p.locator('flt-semantics-placeholder').evaluateAll(ns=>ns.forEach(n=>n.click()));};
+ await p.goto(out.url+'/#/entry');await semantics();await p.getByRole('button',{name:'Accept analytics',exact:true}).waitFor();
+ await p.waitForTimeout(2000);assert.equal(all.length,0);assert.equal((await c.cookies()).filter(v=>v.name.startsWith('_ga')).length,0);
+ await p.getByRole('button',{name:'Refuse analytics',exact:true}).click();await p.getByRole('button',{name:'Analytics preferences · Off',exact:true}).waitFor();await p.reload();await semantics();
+ await p.getByRole('button',{name:'Analytics preferences · Off',exact:true}).waitFor();assert.equal(all.length,0);
+ await p.getByRole('button',{name:'Analytics preferences · Off',exact:true}).click();
+ await p.getByRole('button',{name:'Accept analytics',exact:true}).click();
+ await p.getByRole('button',{name:'Analytics preferences · On',exact:true}).waitFor({timeout:30000});
+ await p.waitForTimeout(5000);assert.ok(all.some(s=>s.includes('firebase-analytics')));assert.ok(attempts.length>0,'no measurement request after acceptance');
+ assert.equal(attempts.some(v=>v.hasEmail||v.hasUserId),false);
+ const cookies=(await c.cookies()).filter(v=>v.name.startsWith('_ga'));assert.ok(cookies.length>0);
+ await p.getByRole('button',{name:'Analytics preferences · On',exact:true}).click();
+ await Promise.all([p.waitForEvent('load'),p.getByRole('button',{name:'Refuse analytics',exact:true}).click()]);await semantics();
+ await p.getByRole('button',{name:'Analytics preferences · Off',exact:true}).waitFor();const count=attempts.length;
+ await p.waitForTimeout(2000);assert.equal(attempts.length,count);assert.equal((await c.cookies()).filter(v=>v.name.startsWith('_ga')).length,0);
+ await p.getByRole('button',{name:'Privacy Policy',exact:true}).click();await p.getByRole('heading',{name:'Privacy Policy',exact:true}).waitFor();
+ await p.reload();await semantics();await p.getByRole('heading',{name:'Privacy Policy',exact:true}).waitFor();
+ out.results.push({engine,version:b.version(),device,passed:true,measurementRequests:count,parameterNames:attempts[0].parameterNames,cookiesAfterWithdrawal:0,publicPrivacyRefresh:true,pageErrors:errors});
+ fs.writeFileSync('m32-consent-report.json',JSON.stringify(out,null,2));console.log(JSON.stringify(out.results.at(-1)));await c.close();
+}}finally{await b.close();}}console.log('QA_COMPLETE');})().catch(e=>{console.error(e.stack);process.exitCode=1;});

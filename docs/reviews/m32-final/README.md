@@ -62,3 +62,32 @@ Outstanding owner facts/access are listed in
 [LEGAL_OWNER_INPUT.md](../../LEGAL_OWNER_INPUT.md). No real player deletion or
 legacy-name migration was performed. The new C3 rules still require authorized
 Firebase deployment; no Cloud Functions or billing upgrade is part of this work.
+
+## Live production consent/network checks (C1 / V2)
+
+[Machine-readable results](live-consent-report.json) and
+[reproduction script](live-consent-qa.cjs) are included. Playwright 1.64.1 ran in a
+short-lived, non-persistent Vercel runtime, which was stopped after the checks.
+Six scenarios passed: Chromium and Linux WebKit at desktop/mobile/tablet sizes,
+with no JavaScript page errors. These are real public-domain pages, not SDK mocks.
+
+Checks: no Analytics SDK/gtag/GA requests or GA cookies before choice; persistent
+refusal after refresh; SDK/measurement requests and GA cookies after acceptance;
+withdrawal reloads with measurement stopped and GA cookies removed; public privacy
+route survives refresh. Query fields captured for the anonymous page-view path
+contain no email or application user ID. Only parameter names/counts are retained
+in the report, not client identifiers or raw query values.
+
+GA collection requests were intercepted and answered locally with HTTP 204 to
+avoid adding automated traffic to the real property's reports. This verifies the
+client's attempted requests and consent gates, not dashboard receipt. It does not
+replace GA4 account checks, real account/quiz production tests, or native Safari.
+The checked production build was commit 5b0ae2a; the C5/C6 changes do not alter the
+consent bootstrap/controller/panel. The final rollout additionally verifies that
+these consent resources are still served unchanged.
+
+To reproduce, install Playwright 1.64.1 and its Chromium/WebKit binaries in a
+supported disposable environment. Run the script with that package on NODE_PATH.
+It uses fresh browser contexts, creates no player account, submits no scores and
+intercepts GA collect endpoints. Treat future scripts/SDK changes as requiring a
+new verification; do not infer actual GA4 delivery from this report.
