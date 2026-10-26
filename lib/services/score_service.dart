@@ -106,7 +106,7 @@ class ScoreService {
           startedAt: startedAt,
           finishedAt: finishedAt,
         );
-        _logScoreSubmitSuccess(
+        _logScoreSubmissionOutcome(
           path: 'callable',
           status: status,
           categoryKey: categoryKey,
@@ -168,7 +168,7 @@ class ScoreService {
     }
 
     try {
-      await _saveScoreDirect(
+      final status = await _saveScoreDirect(
         user: user,
         categoryKey: categoryKey,
         difficulty: difficulty,
@@ -176,9 +176,9 @@ class ScoreService {
         totalQuestions: resolvedTotalQuestions,
         attemptId: normalizedAttemptId,
       );
-      _logScoreSubmitSuccess(
+      _logScoreSubmissionOutcome(
         path: 'direct',
-        status: 'accepted',
+        status: status,
         categoryKey: categoryKey,
         difficulty: difficulty,
         score: score,
@@ -274,7 +274,7 @@ class ScoreService {
   }
 
   /// Uses legacy direct writes as a temporary fallback while callable rolls out.
-  Future<void> _saveScoreDirect({
+  Future<String> _saveScoreDirect({
     required User user,
     required String categoryKey,
     required String difficulty,
@@ -302,72 +302,75 @@ class ScoreService {
         .collection('entries')
         .doc(uid);
 
-    await _db.runTransaction((tx) async {
-      // All reads must precede all writes in a Firestore transaction.
-      final attemptSnapshot = await tx.get(attemptDoc);
-      final scoreSnapshot = await tx.get(userDoc);
-      final leaderboardSnapshot = await tx.get(leadDoc);
+    return _db
+        .runTransaction<String>((tx) async {
+          // All reads must precede all writes in a Firestore transaction.
+          final attemptSnapshot = await tx.get(attemptDoc);
+          final scoreSnapshot = await tx.get(userDoc);
+          final leaderboardSnapshot = await tx.get(leadDoc);
 
-      if (attemptSnapshot.exists) {
-        return;
-      }
+          if (attemptSnapshot.exists) {
+            return 'duplicate';
+          }
 
-      tx.set(attemptDoc, {
-        'attemptId': attemptId,
-        'categoryKey': categoryKey,
-        'difficulty': difficulty,
-        'correctCount': score,
-        'totalQuestions': totalQuestions,
-        'status': 'accepted',
-        'source': user.isAnonymous ? 'guest' : 'account',
-        'createdAt': now,
-      });
+          tx.set(attemptDoc, {
+            'attemptId': attemptId,
+            'categoryKey': categoryKey,
+            'difficulty': difficulty,
+            'correctCount': score,
+            'totalQuestions': totalQuestions,
+            'status': 'accepted',
+            'source': user.isAnonymous ? 'guest' : 'account',
+            'createdAt': now,
+          });
 
-      final prevBest = scoreSnapshot.exists
-          ? ((scoreSnapshot.data()?['bestScore'] as num?) ?? 0).toInt()
-          : 0;
-      final bestScoreUpdated = shouldUpdateBestScore(
-        previousBest: prevBest,
-        newScore: score,
-      );
-      final newBestScore = bestScoreUpdated ? score : prevBest;
+          final prevBest = scoreSnapshot.exists
+              ? ((scoreSnapshot.data()?['bestScore'] as num?) ?? 0).toInt()
+              : 0;
+          final bestScoreUpdated = shouldUpdateBestScore(
+            previousBest: prevBest,
+            newScore: score,
+          );
+          final newBestScore = bestScoreUpdated ? score : prevBest;
 
-      if (bestScoreUpdated) {
-        tx.set(userDoc, {
-          'categoryKey': categoryKey,
-          'difficulty': difficulty,
-          'bestScore': newBestScore,
-          'source': user.isAnonymous ? 'guest' : 'account',
-          'updatedAt': now,
-        }, SetOptions(merge: true));
-      }
+          if (bestScoreUpdated) {
+            tx.set(userDoc, {
+              'categoryKey': categoryKey,
+              'difficulty': difficulty,
+              'bestScore': newBestScore,
+              'source': user.isAnonymous ? 'guest' : 'account',
+              'updatedAt': now,
+            }, SetOptions(merge: true));
+          }
 
-      final existingLeaderboardScore = leaderboardSnapshot.exists
-          ? ((leaderboardSnapshot.data()?['score'] as num?) ?? 0).toInt()
-          : null;
+          final existingLeaderboardScore = leaderboardSnapshot.exists
+              ? ((leaderboardSnapshot.data()?['score'] as num?) ?? 0).toInt()
+              : null;
 
-      if (!user.isAnonymous && shouldUpsertLeaderboard(
-        bestScore: newBestScore,
-        leaderboardScore: existingLeaderboardScore,
-      )) {
-        tx.set(leadDoc, {
-          'categoryKey': categoryKey,
-          'difficulty': difficulty,
-          'score': newBestScore,
-          'isAnonymous': user.isAnonymous,
-          'displayName': leaderboardDisplayName(
-            uid: uid,
-            isAnonymous: user.isAnonymous,
-            displayName: user.displayName,
-            email: user.email,
-          ),
-          'updatedAt': now,
-        }, SetOptions(merge: true));
-      }
-    }).timeout(const Duration(seconds: 10));
+          if (!user.isAnonymous &&
+              shouldUpsertLeaderboard(
+                bestScore: newBestScore,
+                leaderboardScore: existingLeaderboardScore,
+              )) {
+            tx.set(leadDoc, {
+              'categoryKey': categoryKey,
+              'difficulty': difficulty,
+              'score': newBestScore,
+              'isAnonymous': user.isAnonymous,
+              'displayName': leaderboardDisplayName(
+                uid: uid,
+                isAnonymous: user.isAnonymous,
+                displayName: user.displayName,
+              ),
+              'updatedAt': now,
+            }, SetOptions(merge: true));
+          }
+          return 'accepted';
+        })
+        .timeout(const Duration(seconds: 10));
   }
 
-  void _logScoreSubmitSuccess({
+  void _logScoreSubmissionOutcome({
     required String path,
     required String status,
     required String categoryKey,
@@ -377,7 +380,11 @@ class ScoreService {
   }) {
     unawaited(
       _analyticsService.logEvent(
-        'score_submit_success',
+        switch (status) {
+          'duplicate' => 'score_submit_duplicate',
+          'flagged' => 'score_submit_flagged',
+          _ => 'score_submit_success',
+        },
         parameters: {
           'path': path,
           'status': status,
@@ -581,16 +588,10 @@ class ScoreService {
     required String uid,
     required bool isAnonymous,
     String? displayName,
-    String? email,
   }) {
     final normalizedDisplayName = displayName?.trim();
     if (normalizedDisplayName != null && normalizedDisplayName.isNotEmpty) {
       return normalizedDisplayName;
-    }
-
-    final normalizedEmail = email?.trim();
-    if (normalizedEmail != null && normalizedEmail.isNotEmpty) {
-      return normalizedEmail.split('@').first;
     }
 
     if (isAnonymous) {

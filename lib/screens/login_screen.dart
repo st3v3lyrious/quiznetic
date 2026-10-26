@@ -213,15 +213,11 @@ class LoginScreen extends StatefulWidget {
     }
   }
 
-  static Future<String?> _showDisplayNameDialog(
-    BuildContext context,
-    String? email,
-  ) {
-    final emailPrefix = email?.split('@').first ?? '';
+  static Future<String?> _showDisplayNameDialog(BuildContext context) {
     return showDialog<String>(
       context: context,
       barrierDismissible: false,
-      builder: (_) => _DisplayNameDialog(initialValue: emailPrefix),
+      builder: (_) => _DisplayNameDialog(initialValue: ''),
     );
   }
 }
@@ -317,12 +313,9 @@ class _LoginScreenState extends State<LoginScreen> {
               if (user == null) return;
 
               // Email/password accounts have no displayName from Firebase Auth.
-              // Prompt once so the leaderboard shows a real name instead of an email prefix.
+              // Prompt for an explicitly chosen public pseudonym; never suggest an email prefix.
               if ((user.displayName?.trim() ?? '').isEmpty && context.mounted) {
-                final name = await LoginScreen._showDisplayNameDialog(
-                  context,
-                  user.email,
-                );
+                final name = await LoginScreen._showDisplayNameDialog(context);
                 if (name != null && name.isNotEmpty) {
                   try {
                     await user.updateDisplayName(name);
@@ -406,13 +399,13 @@ class _DisplayNameDialogState extends State<_DisplayNameDialog> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return AlertDialog(
-      title: const Text('What should we call you?'),
+      title: const Text('Choose a public nickname'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Your name appears on the leaderboard.',
+            'This nickname appears on the leaderboard. Avoid using your email.',
             style: theme.textTheme.bodyMedium,
           ),
           const SizedBox(height: 16),
@@ -421,7 +414,7 @@ class _DisplayNameDialogState extends State<_DisplayNameDialog> {
             autofocus: true,
             textCapitalization: TextCapitalization.words,
             decoration: const InputDecoration(
-              hintText: 'Display name',
+              hintText: 'Nickname',
               border: OutlineInputBorder(),
             ),
             onSubmitted: (_) => _submit(),

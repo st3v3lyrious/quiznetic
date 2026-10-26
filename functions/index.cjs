@@ -2,6 +2,7 @@ const {onCall, HttpsError} = require('firebase-functions/v2/https');
 const functions = require('firebase-functions');
 const logger = require('firebase-functions/logger');
 const admin = require('firebase-admin');
+const {leaderboardDisplayName} = require('./privacy.cjs');
 
 admin.initializeApp();
 
@@ -48,23 +49,6 @@ function isAnonymousRequest(authToken) {
   return authToken?.firebase?.sign_in_provider === 'anonymous';
 }
 
-function leaderboardDisplayName({uid, isAnonymous, displayName, email}) {
-  const normalizedDisplayName = toTrimmedString(displayName);
-  if (normalizedDisplayName.length > 0) {
-    return normalizedDisplayName;
-  }
-
-  const normalizedEmail = toTrimmedString(email);
-  if (normalizedEmail.length > 0) {
-    return normalizedEmail.split('@')[0];
-  }
-
-  if (isAnonymous) {
-    return `Guest-${uid.slice(0, 6)}`;
-  }
-
-  return 'Player';
-}
 
 function rejectedResponse(rejectionCode, message) {
   return {
@@ -244,7 +228,6 @@ exports.submitScore = onCall(
         uid,
         isAnonymous,
         displayName: auth.token?.name,
-        email: auth.token?.email,
       });
       const riskFlags = buildRiskFlags({
         correctCount,

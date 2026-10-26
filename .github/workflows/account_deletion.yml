@@ -7,6 +7,8 @@ on:
       - 'firebase.deletion.json'
       - 'firestore_tests/**'
       - 'functions/scripts/**'
+      - 'functions/index.cjs'
+      - 'functions/privacy.cjs'
       - 'functions/tests/**'
       - 'functions/package*.json'
       - '.github/workflows/account_deletion.yml'
@@ -43,4 +45,4 @@ jobs:
           firestore_tests/node_modules/.bin/firebase emulators:exec
           --config firebase.deletion.json --only auth,firestore
           --project demo-quiznetic-deletion
-          "npm --prefix functions run test:deletion && npm --prefix firestore_tests test"
+          "npm --prefix functions run test:privacy && npm --prefix functions run test:deletion && npm --prefix firestore_tests test"
