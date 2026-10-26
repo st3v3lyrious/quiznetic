@@ -114,9 +114,9 @@ class AuthService {
   /// Signs out the current user session.
   ///
   /// Anonymous users are deleted rather than just signed out. This removes the
-  /// Auth record immediately and triggers the `cleanupOnUserDeleted` Cloud
-  /// Function, which deletes `users/{uid}` for any deleted account (anonymous
-  /// or otherwise).
+  /// Auth record immediately. On Spark, server data cleanup requires the
+  /// operator procedure in docs/ACCOUNT_DELETION.md; do not assume a deployed
+  /// Cloud Function will remove Firestore data.
   Future<void> signOut() async {
     try {
       await _clearLocalDataProvider();
@@ -130,8 +130,8 @@ class AuthService {
           await user.delete();
         } catch (e) {
           // delete() failed (transient error, etc.) — fall back to sign-out so
-          // the user can always exit the session. The orphaned Auth record will
-          // be cleaned up by cleanupOnUserDeleted once it is deployed.
+          // the user can always exit the session. The operator deletion procedure
+          // handles orphaned Auth records and Firestore data separately.
           AppLogger.d('⚠️ Anonymous user.delete() failed, falling back to signOut: $e');
           await _signOutProvider();
         }
