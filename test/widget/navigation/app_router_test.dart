@@ -7,6 +7,33 @@ import 'package:quiznetic_flutter/screens/legal_document_screen.dart';
 import 'package:quiznetic_flutter/screens/result_screen.dart';
 
 void main() {
+  test('browser history preserves every login destination query parameter', () {
+    const parser = AppRouteParser();
+    for (final authPath in ['/login', '/entry']) {
+      const destination = '/leaderboard?category=capital&difficulty=expert';
+      final login = AppLocation.resolve(
+        RouteSettings(name: authPath, arguments: destination),
+      );
+      final reported = parser.restoreRouteInformation(login.uri).uri;
+      // Match Flutter Web's routeInformationUpdated browser serialization.
+      final browserPath = Uri.decodeComponent(
+        Uri(
+          path: reported.path,
+          queryParameters: reported.queryParametersAll,
+        ).toString(),
+      );
+      final refreshed = AppLocation.resolve(RouteSettings(name: browserPath));
+      expect(refreshed.arguments, destination);
+      final board =
+          AppLocation.resolve(
+                RouteSettings(name: refreshed.arguments as String),
+              ).arguments
+              as LeaderboardScreenArgs;
+      expect(board.categoryKey, 'capital');
+      expect(board.difficulty, 'expert');
+    }
+  });
+
   test(
     'restores validated category, leaderboard filters and legal documents',
     () {
@@ -77,9 +104,8 @@ void main() {
       '/entry',
     ]) {
       expect(
-        AppLocation.resolve(
-          RouteSettings(name: '/login', arguments: next),
-        ).arguments,
+        AppLocation.resolve(RouteSettings(name: '/login', arguments: next))
+            .arguments,
         isNull,
       );
     }
@@ -94,9 +120,8 @@ void main() {
       '/leaderboard?category=capital',
     );
     expect(
-      AppLocation.resolve(
-        RouteSettings(name: location.uri.toString()),
-      ).arguments,
+      AppLocation.resolve(RouteSettings(name: location.uri.toString()))
+          .arguments,
       '/leaderboard?category=capital',
     );
   });
