@@ -15,6 +15,24 @@ Aucune suppression de joueur n'est autorisée par cette préparation.
 
 ## Revue mensuelle
 
+### Outil préparatoire en lecture seule
+
+Depuis functions/, après npm ci --ignore-scripts :
+
+```sh
+node scripts/review-retention.cjs --project quiznetic-30734 --uid VERIFIED_UID
+```
+
+Cet outil ne possède aucun mode d'exécution/suppression. Il examine un seul
+compte explicitement sélectionné, les métadonnées Auth/profil, la dernière
+tentative et le dernier score ; il compte au plus 101 anciennes tentatives et
+signale le dépassement de 100. Il ne constitue pas un inventaire exhaustif.
+Les requêtes ordonnées excluent les documents sans timestamp : vérifier les
+données legacy séparément. Les dates incohérentes imposent une revue manuelle.
+Même un résultat review_candidate n'autorise pas de suppression. Le rapport
+n'imprime ni UID, ni adresse, ni contenu des parties. Ne pas l'ajouter aux tickets.
+Les erreurs s'arrêtent sans écrire ; les droits opérateur restent nécessaires.
+
 Responsable : Steve Alomassor. Tenir un registre privé : date de revue, périmètre,
 anomalies, échéances et statut. Aucun UID, courriel ou échange de support dans
 GitHub/Notion publics. Aucun rappel externe ni ordonnanceur n'est créé ici.

@@ -17,6 +17,10 @@ or put a player's request, UID or identity evidence in a public GitHub issue.
 Completion of this script alone must not be described as immediate erasure of
 all devices, GA4 records, provider logs and backups.
 
+Use [the private request-handling procedure and response templates](SUPPORT_PRIVACY_REQUESTS.md)
+for ordinary and parental requests, and [the retention review](DATA_RETENTION.md)
+for inactivity. The read-only review tool never authorizes account deletion.
+
 ## Scope and preconditions
 
 1. Verify the requester's identity and account ownership through an appropriate

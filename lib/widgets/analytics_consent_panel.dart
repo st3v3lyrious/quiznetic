@@ -1,5 +1,6 @@
 // Public, account-independent control for optional Web audience measurement.
 import 'package:flutter/material.dart';
+
 import '../services/analytics_consent.dart';
 
 class AnalyticsConsentPanel extends StatefulWidget {

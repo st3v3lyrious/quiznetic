@@ -40,7 +40,8 @@ class AnalyticsService {
     CrashBreadcrumbLogger? logCrashBreadcrumb,
   }) : _enabled =
            enabled ??
-           (AppConfig.enableAnalytics && (!isWeb || !AppConfig.webAnalyticsPaused)),
+           (AppConfig.enableAnalytics &&
+               (!isWeb || !AppConfig.webAnalyticsPaused)),
        _isWeb = isWeb,
        _loadWebAnalytics = loadWebAnalytics ?? web.loadAnalytics,
        _disableWebAnalytics = disableWebAnalytics ?? web.disableAnalytics,

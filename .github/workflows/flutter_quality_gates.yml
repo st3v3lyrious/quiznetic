@@ -31,7 +31,7 @@ jobs:
           --fail-on error
 
       - name: Test Web measurement pause
-        run: node --test test/web/analytics_pause_test.cjs
+        run: node --test test/web/analytics_pause_test.cjs functions/tests/retention-review.test.cjs
 
       - name: Publish review summary
         if: always()

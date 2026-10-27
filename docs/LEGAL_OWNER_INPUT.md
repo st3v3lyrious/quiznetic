@@ -63,6 +63,6 @@ owner validate the resulting text before closing C4.
 - #174 — Child/parent journey and privacy by default.
 - #175 — Remaining editor/hosting notices, contracts, transfers and provider retention.
 
-The local execution environment became unavailable during implementation. Changes
-are prepared through GitHub and validated by CI where available; no local/browser
-pass, merge or publication is inferred from code preparation. C4 stays open.
+The local environment recovered after an interruption. Local tests, static
+analysis and browser evidence are recorded in docs/reviews/m32-c4/README.md.
+No merge or publication is inferred from those checks. C4 stays open.

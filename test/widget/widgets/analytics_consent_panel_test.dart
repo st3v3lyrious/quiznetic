@@ -6,22 +6,22 @@ import 'package:quiznetic_flutter/services/analytics_service.dart';
 import 'package:quiznetic_flutter/widgets/analytics_consent_panel.dart';
 
 void main() {
-  testWidgets('paused release offers privacy without an Analytics opt-in',
-      (tester) async {
+  testWidgets('paused release offers privacy without an Analytics opt-in', (
+    tester,
+  ) async {
     var privacy = 0;
     final controller = AnalyticsConsent(
-      analytics: AnalyticsService(
-        isWeb: true,
-        disableWebAnalytics: () {},
+      analytics: AnalyticsService(isWeb: true, disableWebAnalytics: () {}),
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        home: AnalyticsConsentPanel(
+          consent: controller,
+          onPrivacy: () => privacy++,
+          child: const Scaffold(body: Text('Quiz')),
+        ),
       ),
     );
-    await tester.pumpWidget(MaterialApp(
-      home: AnalyticsConsentPanel(
-        consent: controller,
-        onPrivacy: () => privacy++,
-        child: const Scaffold(body: Text('Quiz')),
-      ),
-    ));
     expect(find.text('Quiz'), findsOneWidget);
     expect(find.text('Accept analytics'), findsNothing);
     expect(find.text('Refuse analytics'), findsNothing);

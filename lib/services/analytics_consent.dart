@@ -1,6 +1,7 @@
 // Persists the browser's optional audience-measurement choice, separate from Auth.
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import 'analytics_service.dart';
 import 'analytics_web/bridge.dart'
     if (dart.library.js_interop) 'analytics_web/bridge_web.dart'

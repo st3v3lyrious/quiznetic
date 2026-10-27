@@ -8,7 +8,8 @@ Suivi #174, parent #159. Ce document ne prétend pas qu'un contrôle parental ex
 Analytics Web suspendu, y compris avec ancien consentement et ENABLE_ANALYTICS=true.
 Pas de bouton d'acceptation ; lien de confidentialité maintenu. Choix anciens
 invalidés et cookies GA accessibles retirés sans effacer session ou scores.
-Prend effet après publication seulement. Les données GA4 antérieures restent
+Une notice courte enfant/parent et le contact de suppression sont aussi affichés
+dans les parcours d'entrée/connexion/inscription. Prend effet après publication seulement. Les données GA4 antérieures restent
 à traiter séparément. Les requêtes nécessaires Auth/Firestore/Vercel persistent.
 
 ## Parcours recommandé
@@ -40,6 +41,7 @@ Prend effet après publication seulement. Les données GA4 antérieures restent
 
 ## Demandes parentales et validation
 
+Suivre [la procédure support et ses modèles](SUPPORT_PRIVACY_REQUESTS.md).
 Accuser réception et suivre le délai d'un mois dès réception. Vérifier de façon
 proportionnée le représentant et le compte, en prenant en compte les droits et
 l'intérêt de l'enfant. Un courriel parental seul ne donne pas accès à toutes les

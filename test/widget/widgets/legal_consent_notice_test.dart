@@ -12,6 +12,8 @@ void main() {
     expect(find.byKey(LegalConsentNotice.copyKey), findsOneWidget);
     expect(find.byKey(LegalConsentNotice.termsLinkKey), findsOneWidget);
     expect(find.byKey(LegalConsentNotice.privacyLinkKey), findsOneWidget);
+    expect(find.byKey(const Key('child-privacy-notice')), findsOneWidget);
+    expect(find.textContaining('quizneticapp@gmail.com'), findsOneWidget);
   });
 
   testWidgets('terms link opens legal document route', (tester) async {
