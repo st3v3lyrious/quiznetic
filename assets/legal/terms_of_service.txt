@@ -8,9 +8,12 @@ The Web MVP is a free personal project operated by Steve Alomassor, based in
 France. Quiznetic is the product name, not a separate legal entity. Contact:
 quizneticapp@gmail.com. It currently has no advertising or in-app purchases.
 Acceptance of these Terms is separate from optional Analytics consent.
+Web Analytics is currently paused.
 
 1) Eligibility
 
+- Quiznetic provides educational quizzes intended for a general audience,
+  including children. Educational content does not remove data-protection duties.
 - You must comply with the laws that apply to you.
 - If you are under the age of majority in your region, use requires consent from a parent or legal guardian.
 

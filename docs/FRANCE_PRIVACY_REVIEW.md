@@ -108,26 +108,14 @@ permet pas de retarder l'action sur les données actives supprimables.
 Sources : [effacement, CNIL][effacement], [vérification proportionnée, CNIL][identite],
 [Firebase : traitement et rétention][firebase].
 
-## Conservation : proposition de travail, pas une purge activée
+## Conservation : choix validés, mise en œuvre suivie
 
-Le code n'implémente pas de purge automatique des comptes inactifs. Les formulations
-actuelles sur une conservation pour des besoins génériques ne suffisent pas à
-définir une politique opérationnelle. Article 13 : une durée ou des critères
-compréhensibles sont à communiquer ; l'inactivité ne justifie pas une conservation
-indéfinie sans revue.
-
-Pour simplifier la bêta, proposition à approuver et mettre en pratique : revue
-mensuelle des comptes ; envisager l'effacement après **12 mois d'inactivité**,
-en évaluant la dernière interaction réellement disponible (pas uniquement un vieux
-champ de connexion), avec information préalable adaptée. Limiter les échanges de
-support ordinaires, par exemple à **12 mois après clôture**, et conserver séparément
-seulement la preuve minimale justifiée des demandes de droits/litiges. Ces nombres
-sont des **choix proposés**, pas des délais imposés par la CNIL ou déjà appliqués.
-
-Ne pas insérer ces échéances comme une promesse publique ni supprimer des données
-de joueurs avant validation du choix et du mode opératoire. Les règles de GA4,
-cookies, logs, sauvegardes et éventuelles preuves légales doivent être distinguées.
-Source : [durées de conservation, CNIL][retention].
+Le propriétaire approuve : compte/progression/meilleurs scores après 24 mois
+d'inactivité avec avertissement, historique détaillé 12 mois, support ordinaire
+12 mois après clôture. Ces nombres ne sont pas des délais légaux universels.
+[Procédure mensuelle sur Spark](DATA_RETENTION.md), suivi #173 : inventaire initial,
+préavis, preuve minimale et outil de purge partielle protégeant l'idempotence.
+Aucune purge de joueurs autorisée par cette préparation.
 
 ## Hébergement, transferts et points encore non vérifiés
 
@@ -156,9 +144,10 @@ En France, le seuil de **15 ans** concerne le consentement à certains traitemen
 d'un service en ligne ; ce n'est pas un âge universel pour jouer. En dessous,
 un consentement conjoint enfant/représentant est requis lorsque ce fondement
 s'applique. Aucun parcours de consentement parental vérifié n'est implémenté.
-Pour une première bêta, limiter réellement le public invité aux adultes est une
-option à décider, pas une restriction déjà active. Ne pas présenter une phrase
-dans les conditions comme la preuve d'un contrôle d'âge effectué.
+Le propriétaire confirme un public éducatif tout âge. Analytics Web est suspendu
+dans #171/#172 ; le [parcours mineurs](MINORS_PROPOSAL.md) est suivi en #174.
+Mode local, vérification parentale et profils privés restent à développer.
+Ne pas présenter une phrase des conditions comme une preuve de contrôle d'âge.
 
 Conserver un petit registre des traitements récurrents et des prestataires,
 protéger les accès opérateur/support, limiter les habilitations et tenir un suivi
@@ -175,7 +164,7 @@ Sources : [consentement des mineurs][mineurs], [registre][registre],
   collecte effective, procédure C3 et absence de monétisation Web.
 - Préparé, non publié : politique et conditions synchronisées avec les assets,
   droits, circuit support, bases légales proposées et limites d'effacement.
-- Encore à valider : durées/processus de conservation, public mineur/adulte,
+- Encore à terminer : processus de conservation #173, parcours mineurs #174,
   mentions d'éditeur/hébergeur et exigences de contact applicables, conditions/
   garanties des prestataires et réglages GA4. **C4 reste ouvert** ; le propriétaire
   doit valider le texte final avant sa publication.

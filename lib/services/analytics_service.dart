@@ -38,7 +38,9 @@ class AnalyticsService {
     AnalyticsLogEvent? logEvent,
     AnalyticsLogScreenView? logScreenView,
     CrashBreadcrumbLogger? logCrashBreadcrumb,
-  }) : _enabled = enabled ?? AppConfig.enableAnalytics,
+  }) : _enabled =
+           enabled ??
+           (AppConfig.enableAnalytics && (!isWeb || !AppConfig.webAnalyticsPaused)),
        _isWeb = isWeb,
        _loadWebAnalytics = loadWebAnalytics ?? web.loadAnalytics,
        _disableWebAnalytics = disableWebAnalytics ?? web.disableAnalytics,
@@ -58,6 +60,8 @@ class AnalyticsService {
   final VoidCallback _disableWebAnalytics;
   bool _webAllowed = false;
   bool _webLoaded = false;
+
+  bool get available => _enabled;
 
   bool get canCollect => _enabled && (!_isWeb || _webAllowed);
 

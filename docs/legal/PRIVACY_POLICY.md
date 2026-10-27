@@ -10,6 +10,10 @@ based in France, who is the controller of the personal data processed for this
 service. Quiznetic is the product name, not a separate legal entity.
 Contact for privacy questions and rights requests: quizneticapp@gmail.com.
 
+Optional Web Analytics is currently paused for the all-ages release. References
+below to Analytics explain earlier collection and possible later use; an older
+saved acceptance does not activate measurement during this pause.
+
 ## 1. Information We Collect
 - Account information from Firebase Authentication:
   - user ID (UID)
@@ -96,22 +100,27 @@ Legal bases under the EU General Data Protection Regulation (GDPR):
 - We may disclose data when required by law or to enforce app security.
 
 ## 6. Data Retention
-- Account/profile, score and attempt records are used to maintain your account,
-  score history, synchronization and leaderboard participation while those
-  features are provided. Verified account deletion removes these active records;
-  merely signing out does not request deletion of a permanent account.
-- There is currently no automatic purge of inactive accounts or old attempts.
-  No fixed automatic inactivity-deletion period is promised by this policy.
-- A completed deletion leaves only a minimal technical lock (UID path, status
-  and timestamps) for at least 65 minutes to block still-valid tokens. An
-  operator then verifies absence of the account/data and removes that lock.
-- Support material is limited to what is needed to handle the request. Any
-  separate retention for a legal obligation or legal claims must be limited to
-  the necessary records and period; it does not justify keeping gameplay data
-  indefinitely.
-- Provider logs, backup copies and earlier Analytics data have separate retention
-  and erasure processes. The 180-day browser consent choice is not a retention
-  period for account records, GA4 events, provider logs or backups.
+- Our retention policy keeps accounts, progression and best scores while used,
+  with deletion after 24 months without activity and advance notice where a
+  contact address is available.
+- Detailed game-attempt history has a rolling 12-month retention period.
+  Necessary progression and best-score summaries can remain with the account.
+- Ordinary support correspondence has a 12-month retention period after closure.
+  Only minimal, justified evidence for rights requests or legal claims is kept
+  separately, with restricted access and an appropriate documented period.
+- These periods require operator review rather than an automatic purge. Their
+  operational rollout and the review of legacy records are still being prepared;
+  no historical player deletion has been performed by this policy update.
+- Verified deletion requests can be made before those periods expire. Signing
+  out of a permanent account does not itself request deletion.
+- A completed deletion leaves a minimal technical lock (UID path, status and
+  timestamps) for at least 65 minutes to block still-valid tokens. An operator
+  then verifies completion and removes the lock.
+- Provider logs, backups and previously collected Analytics data have separate
+  retention and erasure processes. The duration of an earlier browser consent
+  choice is not the retention period for account records or provider copies.
+- Browser-local records cannot be erased remotely; clear site data on each
+  device. Unsynchronized attempts need separate handling before removal.
 
 ## 7. Your Rights And Account Deletion
 - You may request access, correction, erasure or restriction of your personal
@@ -148,14 +157,19 @@ Legal bases under the EU General Data Protection Regulation (GDPR):
   judicial remedies remain available where applicable.
 
 ## 8. Children
-- The Terms require parental/guardian permission for use by minors. This is
-  separate from consent to optional data processing.
+- Quiznetic's educational content is intended for a general audience, including
+  children. The Terms require parental/guardian permission for use by minors.
 - In France, for online-service processing based on consent, children under 15
   require joint consent with the holder of parental responsibility. Age 15 is
   not a blanket minimum age for every feature or every legal basis.
-- No verified parental-consent workflow is currently provided by this MVP.
-  Contact support about a child's data or its erasure; the absence of that
-  workflow is not a claim that parental consent has been verified.
+- Web Analytics is paused for all users. No verified parental-consent workflow,
+  age assurance, child-specific private profile or fully local guest mode is
+  currently provided by this MVP. Guest mode uses Firebase.
+- Children: do not use your real name as your public nickname. Ask a parent for
+  help with your account or to contact quizneticapp@gmail.com about your data.
+- Parents or guardians may contact support about a child's account and rights.
+  We verify authority and the account proportionately, considering the child's
+  rights and interests. Do not send passwords or identity documents by default.
 
 ## 9. Security
 - We use reasonable administrative and technical safeguards, but no method of
@@ -169,40 +183,26 @@ Legal bases under the EU General Data Protection Regulation (GDPR):
 - Privacy questions: quizneticapp@gmail.com
 
 ## 12. Web Audience Measurement Preferences
-- On the Web, optional audience measurement uses Google Analytics for Firebase.
-- Analytics is off on a new browser visit until you choose Accept analytics.
-  A valid acceptance saved in that browser restores your choice on later visits.
-  Refusing does not affect accounts, gameplay or scores. Advertising signals and
-  personalization stay off.
-- After acceptance, Analytics may store first-party cookies and measure visits,
-  screen views, quiz category/difficulty, completion and score-submission events.
-- Acceptance or refusal is stored in this browser for up to 180 days. After that,
-  a new choice is requested. It is separate from account sign-in and from
-  acceptance of the Terms of Service. Clearing browser storage may reset it.
-- Use Analytics preferences on any screen to change your choice. Refusing after
-  acceptance stops future collection, removes accessible first-party GA cookies
-  and reloads the page. Changing preferences during a quiz can end that session.
-- Withdrawal does not automatically erase previously collected data. Contact
-  quizneticapp@gmail.com for questions or requests about your data.
+- Optional Web Analytics is paused. There is no Analytics opt-in and the app
+  does not load its Analytics SDK or send optional Analytics events, including
+  where an older acceptance was saved. Gameplay remains available.
+- Earlier Analytics choices are invalidated. Accessible first-party GA cookies
+  are removed; this does not erase data previously received by Google.
+- Any later introduction needs an updated notice and a new, appropriate consent
+  process, including the protections required for children. Older acceptance
+  will not by itself authorize it.
+- Contact quizneticapp@gmail.com about earlier Analytics data or your rights.
 
 ## 13. Cookies And Browser Storage
-- Functional browser storage supports your authentication session, preferences,
-  saved local scores and pending score synchronization. It is separate from
-  optional Analytics and is not disabled by refusing audience measurement.
-- We store the Analytics choice and its timestamp locally so that we can respect
-  your preference without requiring an account. This preference record is not
-  an advertising identifier.
-- After Analytics acceptance, Google Analytics may use first-party cookies such
-  as _ga and _ga_* to distinguish browsers and maintain measurement session state.
-  Cookie lifetime depends on the service/browser settings; the 180-day duration
-  above applies to your consent choice, not to all cookies or server-side data.
-- Before you choose, or if you refuse, the app does not load its Analytics SDK or
-  send optional Analytics events. Gameplay, account and hosting requests still
-  occur when needed to provide the service.
-- You can also manage site cookies and storage in your browser. Clearing all site
+- Functional storage supports authentication, preferences, local scores and
+  pending synchronization. The Analytics pause does not disable this storage
+  or the hosting, authentication and database requests needed to run the app.
+- Earlier Analytics use may have created first-party cookies such as _ga and
+  _ga_*. The app removes accessible GA cookies during initialization without
+  clearing your account session or scores.
+- You can manage site cookies and storage in your browser. Clearing all site
   data may sign you out or remove local preferences and unsynchronized scores.
 
 ## 14. Ad-Free Web MVP
 - This Web MVP does not display advertising or offer in-app purchases.
-- Optional Analytics is used for product audience measurement, not to enable
-  advertising personalization. Refusal does not restrict access to the quizzes.
+- Web Analytics remains paused; no advertising personalization is enabled.

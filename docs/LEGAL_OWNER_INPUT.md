@@ -14,8 +14,9 @@ address or company registration was invented.
 The [France review and implementation inventory](FRANCE_PRIVACY_REVIEW.md)
 documents official sources, the actual data flows, proposed legal bases and the
 support deletion workflow. Updated public-copy assets are prepared for review,
-not published. Retention choices, children, applicable editor/hosting notices,
-provider terms/transfers and actual GA4 settings remain open; C4 is not closed.
+not published. The owner approved 24-month account inactivity, 12-month detailed
+attempt history and 12-month closed-support retention, and an all-ages educational
+audience. Operational rollout remains tracked below; C4 is not closed.
 
 ## Facts already documented
 
@@ -33,10 +34,10 @@ provider terms/transfers and actual GA4 settings remain open; C4 is not closed.
 | Legal editor/controller | Name, individual status, France and support email confirmed above. Verify remaining applicable editor/hosting and postal/contact notices; do not invent a registration or address. |
 | Markets/jurisdiction | Where the editor is established and the intended audience; applicable jurisdiction and any mandatory consumer provisions. |
 | Purposes/legal bases | Validate the basis for account/gameplay operations, security/abuse controls and optional Analytics, including how rights apply in the relevant jurisdiction. |
-| Retention | Define account inactivity/deletion policy, score/attempt retention and support/security-record retention. Distinguish the 180-day browser consent choice from GA4, cookie and provider-log retention. |
+| Retention | Periods approved; [monthly Spark procedure](DATA_RETENTION.md), #173. First inventory and safe partial attempt purge still required. No player deletion authorized. |
 | Providers/transfers | Verify actual Firebase database location, GA4 settings, Vercel log retention and applicable provider contractual/transfer arrangements. Do not invent exact locations or safeguards. |
 | Rights/contact | Support email confirmed; France review and proposed policy identify Steve Alomassor and CNIL, explain rights, the one-month response clock and C3 deletion limits. Owner review/publication remain pending. |
-| Children | Validate audience/age conditions and any required guardian process for the intended markets. |
+| Children | All-ages audience confirmed. Web Analytics paused in #172/#171. [Minors journey proposal](MINORS_PROPOSAL.md), #174; local mode, parental verification and private profiles remain to implement. |
 
 Once these facts are available, update the displayed legal assets and their
 Markdown references together, revise the relevant Terms/notice, and have the
@@ -54,3 +55,14 @@ owner validate the resulting text before closing C4.
 - Native Safari: the owner waived this as a launch gate on October 27, 2026.
   It remains untested; Linux WebKit is not recorded as a passing native test.
 - M28: initial feedback from actual users remains a product-validation step.
+
+## Execution tracking
+
+- #172 — Analytics pause, tests and deployed-build verification.
+- #173 — Operational retention and safe partial purge, with no player deletions here.
+- #174 — Child/parent journey and privacy by default.
+- #175 — Remaining editor/hosting notices, contracts, transfers and provider retention.
+
+The local execution environment became unavailable during implementation. Changes
+are prepared through GitHub and validated by CI where available; no local/browser
+pass, merge or publication is inferred from code preparation. C4 stays open.

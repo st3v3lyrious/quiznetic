@@ -22,6 +22,8 @@ class AnalyticsConsent extends ChangeNotifier {
   final AnalyticsService _analytics;
   final DateTime Function() _now;
   final VoidCallback _reload;
+  bool get available => _analytics.available;
+
   bool? choice;
   bool busy = false;
   bool ready = false;
@@ -31,6 +33,15 @@ class AnalyticsConsent extends ChangeNotifier {
   Future<void> initialize() async {
     try {
       final prefs = await SharedPreferences.getInstance();
+      if (!available) {
+        choice = false;
+        await _analytics.setWebConsent(false);
+        await prefs.remove(choiceKey);
+        await prefs.remove(timeKey);
+        ready = true;
+        notifyListeners();
+        return;
+      }
       final at = prefs.getInt(timeKey);
       final elapsed = at == null
           ? null
@@ -49,7 +60,7 @@ class AnalyticsConsent extends ChangeNotifier {
 
   /// Reject first in memory; persist refusal before reloading an opted-in page.
   Future<void> choose(bool accepted) async {
-    if (busy) return;
+    if (busy || !available) return;
     busy = true;
     error = null;
     notifyListeners();
