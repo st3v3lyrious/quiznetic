@@ -1,0 +1,128 @@
+{
+  "date": "2026-10-27",
+  "build": "local release with login-destination fix; not production deployment",
+  "backend": "quiznetic-30734 (real Auth/Firestore, one controlled synthetic account)",
+  "playwright": "1.58.2",
+  "nativeSafari": false,
+  "httpsTransport": "Configured proxy and Playwright HTTPS request forwarding; TLS verification enabled. WebKit native follow-up also attempted.",
+  "results": [
+    {
+      "engine": "chromium",
+      "version": "145.0.7632.6",
+      "device": "desktop",
+      "checks": [
+        "email-login-restores-deep-link",
+        "leaderboard-filters-survive-refresh",
+        "browser-back-forward",
+        "profile-settings-session-refresh",
+        "difficulty-deep-link-refresh",
+        "invalid-session-safe-recovery",
+        "no-document-horizontal-overflow",
+        "permanent-account-signout"
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "engine": "chromium",
+      "version": "145.0.7632.6",
+      "device": "mobile",
+      "checks": [
+        "email-login-restores-deep-link",
+        "leaderboard-filters-survive-refresh",
+        "browser-back-forward",
+        "profile-settings-session-refresh",
+        "difficulty-deep-link-refresh",
+        "invalid-session-safe-recovery",
+        "no-document-horizontal-overflow",
+        "permanent-account-signout"
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "engine": "chromium",
+      "version": "145.0.7632.6",
+      "device": "tablet",
+      "checks": [
+        "email-login-restores-deep-link",
+        "leaderboard-filters-survive-refresh",
+        "browser-back-forward",
+        "profile-settings-session-refresh",
+        "difficulty-deep-link-refresh",
+        "invalid-session-safe-recovery",
+        "no-document-horizontal-overflow",
+        "permanent-account-signout"
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "engine": "firefox",
+      "version": "146.0.1",
+      "device": "desktop",
+      "checks": [
+        "email-login-restores-deep-link",
+        "leaderboard-filters-survive-refresh",
+        "browser-back-forward",
+        "profile-settings-session-refresh",
+        "difficulty-deep-link-refresh",
+        "invalid-session-safe-recovery",
+        "no-document-horizontal-overflow",
+        "permanent-account-signout"
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "engine": "firefox",
+      "version": "146.0.1",
+      "device": "mobile",
+      "checks": [
+        "email-login-restores-deep-link",
+        "leaderboard-filters-survive-refresh",
+        "browser-back-forward",
+        "profile-settings-session-refresh",
+        "difficulty-deep-link-refresh",
+        "invalid-session-safe-recovery",
+        "no-document-horizontal-overflow",
+        "permanent-account-signout"
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "engine": "firefox",
+      "version": "146.0.1",
+      "device": "tablet",
+      "checks": [
+        "email-login-restores-deep-link",
+        "leaderboard-filters-survive-refresh",
+        "browser-back-forward",
+        "profile-settings-session-refresh",
+        "difficulty-deep-link-refresh",
+        "invalid-session-safe-recovery",
+        "no-document-horizontal-overflow",
+        "permanent-account-signout"
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "engine": "webkit",
+      "version": "26.0",
+      "device": "desktop",
+      "checks": [
+        "email-login-restores-deep-link",
+        "leaderboard-filters-survive-refresh",
+        "browser-back-forward",
+        "profile-settings-session-refresh",
+        "difficulty-deep-link-refresh",
+        "invalid-session-safe-recovery",
+        "no-document-horizontal-overflow"
+      ],
+      "passed": false,
+      "failure": "Firestore WebChannel access-control errors under HTTPS request forwarding. Native transport follow-up timed out after login. Environment vs application cause unresolved; not a production Safari verdict."
+    }
+  ]
+}

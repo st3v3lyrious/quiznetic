@@ -125,8 +125,21 @@ class AppRouteParser extends RouteInformationParser<Uri> {
       SynchronousFuture(routeInformation.uri);
 
   @override
-  RouteInformation restoreRouteInformation(Uri configuration) =>
-      RouteInformation(uri: configuration);
+  RouteInformation restoreRouteInformation(Uri configuration) {
+    final next = configuration.queryParameters['next'];
+    // Flutter Web decodes the complete reported URI before writing history.
+    // Protect the nested destination so its '&' stays inside `next` on reload.
+    return RouteInformation(
+      uri: next == null
+          ? configuration
+          : configuration.replace(
+              queryParameters: {
+                ...configuration.queryParameters,
+                'next': Uri.encodeComponent(next),
+              },
+            ),
+    );
+  }
 }
 
 /// Bridges existing named navigation to Router's browser history protocol.

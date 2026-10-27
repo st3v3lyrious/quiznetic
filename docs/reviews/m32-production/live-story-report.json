@@ -1,0 +1,31 @@
+{
+  "date": "2026-10-27",
+  "url": "https://quiznetic.eirenya.com",
+  "deployment": "dpl_2LsXykFf9wXGZBNPSHajTZ56E9Tq",
+  "sourceCommit": "e2b9fb265791290f672ad7391d1bd8beb7c5e685",
+  "engine": "Chromium 156.0.8078.4 / Playwright 1.64.1",
+  "source": "Recorded execution logs; ephemeral runtime expired before full artifact export.",
+  "observations": {
+    "guestFlagScore": 2,
+    "guestFlagTotal": 15,
+    "guestAttempts": 1,
+    "upgradeKeptUid": true,
+    "upgradeKeptScore": true,
+    "accountSurvivedRefresh": true,
+    "accountCapitalScore": 3,
+    "accountLeaderboardScore": 3,
+    "publicName": "Player",
+    "totalAttemptsAfterTwoQuizzes": 2,
+    "attemptsAfterResultsRefresh": 2,
+    "googleProviderPopupHost": "accounts.google.com",
+    "googleCredentialLoginCompleted": false,
+    "pageErrors": []
+  },
+  "productionNavigationDefect": {
+    "input": "/#/leaderboard?category=capital&difficulty=expert",
+    "afterLoginRefresh": "/#/leaderboard?category=capital",
+    "selectedDifficulty": "Easy"
+  },
+  "ga4DashboardVerified": false,
+  "nativeSafariVerified": false
+}
