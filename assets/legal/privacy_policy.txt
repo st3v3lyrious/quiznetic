@@ -1,20 +1,28 @@
 Quiznetic Privacy Policy
-Effective date: October 24, 2026
+Effective date: October 27, 2026
 
 This Privacy Policy explains how Quiznetic collects, uses, and stores
 information when you use the app, including the Web version hosted at
 quiznetic.eirenya.com.
 
+Quiznetic is a personal project operated by Steve Alomassor, an individual
+based in France, who is the controller of the personal data processed for this
+service. Quiznetic is the product name, not a separate legal entity.
+Contact for privacy questions and rights requests: quizneticapp@gmail.com.
+
 1) Information We Collect
 - Account information from Firebase Authentication:
   - user ID (UID)
   - email address (if provided by your sign-in method)
-  - display name (if provided by your sign-in method)
+  - display name and provider profile information made available to Firebase
+    Authentication, including a profile image where the provider supplies one
   - anonymous account status for guest users
+  - profile creation and last-seen timestamps
 - Gameplay and score data:
   - category, difficulty, score, and timestamps
   - leaderboard entries and rank-related fields
   - score attempt identifiers for idempotent submission
+- If you contact support: your contact address, request and necessary replies.
 - Technical request information needed to deliver and secure the Web app, such
   as IP address, requested URL, browser information and request time.
 - If you accept optional Web Analytics: browser/cookie identifiers, visits,
@@ -32,6 +40,19 @@ quiznetic.eirenya.com.
   and identify problems in the player journey. Optional measurement is separate
   from the services needed to sign in, play and save scores.
 
+Legal bases under the EU General Data Protection Regulation (GDPR):
+- Providing the service you request, including authentication, score history,
+  synchronization and the account leaderboard: performance of the service
+  agreement (Article 6(1)(b)), limited to data necessary for those features.
+- Essential security, abuse prevention and reliability: legitimate interests
+  (Article 6(1)(f)) in protecting the service and its users. These interests must
+  be balanced against your rights; you can object as described below.
+- Optional audience measurement: your separate consent (Article 6(1)(a) and
+  French cookie rules). It is not required to play or accepted through the Terms.
+- Handling GDPR rights requests and any legally required records: compliance
+  with the applicable legal obligations (Article 6(1)(c)). Other support needed
+  to provide your requested service uses Article 6(1)(b).
+
 3) Data Storage And Providers
 - Vercel hosts and delivers the Web app. Requests for pages and files expose
   technical connection/request information to the hosting provider for delivery,
@@ -43,36 +64,98 @@ quiznetic.eirenya.com.
 - The browser also requests application libraries from Google-hosted Firebase
   services. Refusing Analytics does not prevent the hosting, authentication,
   database and library requests needed to operate the app.
-- Data may be processed in regions selected by project configuration and by the
-  providers delivering these services. Refusing Analytics does not change the
-  storage of scores or account information in Firebase.
+- The default Firestore database for this app is configured in eur3 (European
+  multi-region). This does not locate every provider service in Europe: Google
+  documents that Firebase Authentication operates from United States data centers.
+  Vercel delivery and optional Analytics can also involve international processing.
+- Applicable provider terms and transfer mechanisms depend on the service and
+  configuration; information about them can be requested at the support address.
+  Google's Firebase privacy information is at https://firebase.google.com/support/privacy
+  and Vercel's notice is at https://vercel.com/legal/privacy-notice.
+- Refusing Analytics does not change the account/score data needed in Firebase
+  or the technical requests needed to deliver the app.
+
+- Email addresses and authentication credentials are not leaderboard fields.
+  Firebase manages authentication credentials; the app does not copy passwords
+  into Firestore profile or gameplay documents.
 
 4) Anonymous Guest Accounts
 - You can use Quiznetic as a guest.
-- Guest data is tied to your anonymous Firebase UID.
+- Guest data is tied to your Firebase UID. This is a pseudonymous identifier;
+  guest mode is not a guarantee of anonymous data under the GDPR.
 - If you upgrade your account, data may remain associated with the same UID.
 
 5) Data Sharing
 - We do not sell your personal data.
-- Leaderboard data is visible to authenticated users of the app.
+- Account leaderboard entries expose the public display name, score, quiz
+  category/difficulty and update time to authenticated users, including guests.
+  Choose a nickname that you are comfortable sharing. New writes use Player
+  when no account display name was chosen; existing names are not automatically
+  renamed. Guest scores are not published as guest leaderboard entries.
 - We may share data with service providers only as needed to run Quiznetic.
 - We may disclose data when required by law or to enforce app security.
 
 6) Data Retention
-- We keep account and gameplay data while needed for app operation, security,
-  and legitimate business purposes.
-- We may retain limited records when required by law or to resolve disputes.
+- Account/profile, score and attempt records are used to maintain your account,
+  score history, synchronization and leaderboard participation while those
+  features are provided. Verified account deletion removes these active records;
+  merely signing out does not request deletion of a permanent account.
+- There is currently no automatic purge of inactive accounts or old attempts.
+  No fixed automatic inactivity-deletion period is promised by this policy.
+- A completed deletion leaves only a minimal technical lock (UID path, status
+  and timestamps) for at least 65 minutes to block still-valid tokens. An
+  operator then verifies absence of the account/data and removes that lock.
+- Support material is limited to what is needed to handle the request. Any
+  separate retention for a legal obligation or legal claims must be limited to
+  the necessary records and period; it does not justify keeping gameplay data
+  indefinitely.
+- Provider logs, backup copies and earlier Analytics data have separate retention
+  and erasure processes. The 180-day browser consent choice is not a retention
+  period for account records, GA4 events, provider logs or backups.
 
-7) Your Choices
-- You can stop using the app at any time.
-- You can request account/data deletion support by contacting:
-  quizneticapp@gmail.com
-- If you uninstall before account linking, anonymous data recovery may not be
-  possible.
+7) Your Rights And Account Deletion
+- You may request access, correction, erasure or restriction of your personal
+  data, portability where applicable, and object to processing based on
+  legitimate interests. You can withdraw optional Analytics consent at any time
+  without affecting processing that was lawful before withdrawal.
+- Send requests to quizneticapp@gmail.com. For account deletion, a useful subject
+  is "Quiznetic - account and data deletion". Where possible, write from the
+  account email and indicate the account/sign-in method. Guest users can contact
+  support while their session is still accessible. A UID or public nickname
+  alone does not establish ownership.
+- Do not send passwords, session/refresh tokens or a service-account key. We may
+  request proportionate additional evidence if there is reasonable doubt about
+  identity; an identity-document copy is not required by default.
+- We respond without undue delay and within one month of receiving a request.
+  If complexity or the number of requests requires up to two additional months,
+  we explain the extension and its reasons within the first month. If a legal
+  exception prevents part of the requested action, we explain the reason and
+  the available complaint options within that period.
+- Following ownership verification, the operator deletion procedure disables
+  the account, revokes refresh tokens, removes its Auth record, recursively
+  deletes its private profile/scores/attempts and removes its leaderboard entries.
+  This deletion is irreversible for those active account records.
+- This operation cannot remotely erase site data on your devices. Clear Quiznetic
+  cookies/site storage on every device to remove local scores/preferences and
+  pending synchronization. Guest data may be impossible to reconnect to you after
+  you lose the session; support will explain what can be identified safely.
+- Earlier GA4 records and provider logs/backups are handled separately, using
+  applicable provider mechanisms and legal retention limits. An email address
+  alone may not identify pseudonymous Analytics records. We do not promise
+  immediate erasure of every provider copy merely because Auth was deleted.
+- You may lodge a complaint with the French supervisory authority, CNIL:
+  https://www.cnil.fr/fr/plaintes. Other competent supervisory authorities and
+  judicial remedies remain available where applicable.
 
 8) Children
-- Quiznetic is not directed to children under the minimum age required by
-  applicable law in your region.
+- The Terms require parental/guardian permission for use by minors. This is
+  separate from consent to optional data processing.
+- In France, for online-service processing based on consent, children under 15
+  require joint consent with the holder of parental responsibility. Age 15 is
+  not a blanket minimum age for every feature or every legal basis.
+- No verified parental-consent workflow is currently provided by this MVP.
+  Contact support about a child's data or its erasure; the absence of that
+  workflow is not a claim that parental consent has been verified.
 
 9) Security
 - We use reasonable administrative and technical safeguards, but no method of

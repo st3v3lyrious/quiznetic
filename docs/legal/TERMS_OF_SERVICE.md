@@ -1,8 +1,13 @@
 # Terms of Service
-Effective date: February 14, 2026
+Effective date: October 27, 2026
 
 These Terms of Service govern your use of Quiznetic.  
 By continuing to use Quiznetic, you agree to these Terms.
+
+The Web MVP is a free personal project operated by Steve Alomassor, based in
+France. Quiznetic is the product name, not a separate legal entity. Contact:
+quizneticapp@gmail.com. It currently has no advertising or in-app purchases.
+Acceptance of these Terms is separate from optional Analytics consent.
 
 ## 1. Eligibility
 
@@ -53,7 +58,11 @@ You agree not to:
 ## 9. Termination
 
 - We may suspend or terminate access for violations of these Terms or for security/legal reasons.
-- You may stop using Quiznetic at any time.
+- You may stop using Quiznetic at any time. Signing out of a permanent account
+  does not itself request account deletion.
+- To request account and associated data deletion, contact quizneticapp@gmail.com.
+  The Privacy Policy explains ownership verification, response times, deletion
+  scope and the separate handling of local data and provider copies.
 
 ## 10. Changes To Terms
 
@@ -62,7 +71,10 @@ You agree not to:
 
 ## 11. Governing Law
 
-- These Terms are governed by the applicable laws of the jurisdiction selected by the operator, unless otherwise required by law.
+- These Terms are governed by French law, without depriving you of mandatory
+  protections that apply under the law of your country of habitual residence.
+  Nothing here restricts rights, remedies or liability rules that cannot lawfully
+  be excluded.
 
 ## 12. Contact
 
