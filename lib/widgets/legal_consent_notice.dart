@@ -87,6 +87,18 @@ class LegalConsentNotice extends StatelessWidget {
             ),
           ],
         ),
+        Column(
+          key: const Key('child-privacy-notice'),
+          children: [
+            for (final line in const [
+              'Keep your real name out of your nickname.',
+              'Under 18? Ask a parent before creating an account.',
+              'For help or deletion with your parent:',
+              'quizneticapp@gmail.com',
+            ])
+              Text(line, textAlign: TextAlign.center, style: textStyle),
+          ],
+        ),
       ],
     );
 

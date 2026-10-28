@@ -3,6 +3,9 @@ import 'package:quiznetic_flutter/config/app_config.dart';
 
 void main() {
   group('AppConfig', () {
+    test('Web measurement stays paused regardless of the general flag', () {
+      expect(AppConfig.webAnalyticsPaused, isTrue);
+    });
     test('backend submit score feature flag defaults to false', () {
       expect(AppConfig.enableBackendSubmitScore, isFalse);
     });

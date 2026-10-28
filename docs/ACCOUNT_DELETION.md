@@ -5,6 +5,22 @@ Firebase Admin privileges on a trusted operator machine using Application Defaul
 Credentials (ADC). It does not require Cloud Functions, Blaze or client delete
 permissions. Do not deploy the Functions folder to enable it.
 
+## Support handling for the France-based project
+
+The owner confirmed Steve Alomassor as controller and quizneticapp@gmail.com as
+the requests channel. Follow the [France privacy review](FRANCE_PRIVACY_REVIEW.md)
+for receipt/response tracking, proportionate identity verification and the
+separate handling of provider records. The ordinary GDPR response deadline is
+one month from receipt, not one month from the end of account verification.
+Do not require identity-document copies by default, send credentials by email,
+or put a player's request, UID or identity evidence in a public GitHub issue.
+Completion of this script alone must not be described as immediate erasure of
+all devices, GA4 records, provider logs and backups.
+
+Use [the private request-handling procedure and response templates](SUPPORT_PRIVACY_REQUESTS.md)
+for ordinary and parental requests, and [the retention review](DATA_RETENTION.md)
+for inactivity. The read-only review tool never authorizes account deletion.
+
 ## Scope and preconditions
 
 1. Verify the requester's identity and account ownership through an appropriate
