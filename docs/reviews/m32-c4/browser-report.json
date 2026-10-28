@@ -1,0 +1,59 @@
+[
+  {
+    "engine": "chromium",
+    "version": "145.0.7632.6",
+    "device": "desktop",
+    "checks": [
+      "child_notice_and_no_opt_in",
+      "previous_choice_invalidated",
+      "ga_cookie_removed_essential_kept",
+      "entry_no_document_horizontal_overflow",
+      "reload_stays_off",
+      "public_privacy_route",
+      "direct_bridge_load_rejected",
+      "no_sdk_events_writes_or_page_errors",
+      "no_document_horizontal_overflow"
+    ],
+    "analyticsRequests": 0,
+    "observedFirestoreWrites": 0,
+    "pageErrors": []
+  },
+  {
+    "engine": "chromium",
+    "version": "145.0.7632.6",
+    "device": "mobile",
+    "checks": [
+      "child_notice_and_no_opt_in",
+      "previous_choice_invalidated",
+      "ga_cookie_removed_essential_kept",
+      "entry_no_document_horizontal_overflow",
+      "reload_stays_off",
+      "public_privacy_route",
+      "direct_bridge_load_rejected",
+      "no_sdk_events_writes_or_page_errors",
+      "no_document_horizontal_overflow"
+    ],
+    "analyticsRequests": 0,
+    "observedFirestoreWrites": 0,
+    "pageErrors": []
+  },
+  {
+    "engine": "chromium",
+    "version": "145.0.7632.6",
+    "device": "tablet",
+    "checks": [
+      "child_notice_and_no_opt_in",
+      "previous_choice_invalidated",
+      "ga_cookie_removed_essential_kept",
+      "entry_no_document_horizontal_overflow",
+      "reload_stays_off",
+      "public_privacy_route",
+      "direct_bridge_load_rejected",
+      "no_sdk_events_writes_or_page_errors",
+      "no_document_horizontal_overflow"
+    ],
+    "analyticsRequests": 0,
+    "observedFirestoreWrites": 0,
+    "pageErrors": []
+  }
+]

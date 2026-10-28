@@ -31,6 +31,10 @@ class AppConfig {
     defaultValue: true,
   );
 
+  /// Pause Web measurement until the all-ages consent journey is ready.
+  /// This cannot be overridden by ENABLE_ANALYTICS.
+  static const webAnalyticsPaused = true;
+
   /// Enables Firebase Analytics collection and event logging.
   ///
   /// Keep ON in release builds for baseline product telemetry and crash

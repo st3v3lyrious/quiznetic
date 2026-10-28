@@ -1,5 +1,6 @@
 // Public, account-independent control for optional Web audience measurement.
 import 'package:flutter/material.dart';
+
 import '../services/analytics_consent.dart';
 
 class AnalyticsConsentPanel extends StatefulWidget {
@@ -23,6 +24,20 @@ class _AnalyticsConsentPanelState extends State<AnalyticsConsentPanel> {
   @override
   Widget build(BuildContext context) {
     final consent = widget.consent ?? AnalyticsConsent.instance;
+    if (!consent.available) {
+      return Column(
+        children: [
+          Expanded(child: widget.child),
+          SafeArea(
+            top: false,
+            child: TextButton(
+              onPressed: widget.onPrivacy,
+              child: const Text('Analytics off · Privacy Policy'),
+            ),
+          ),
+        ],
+      );
+    }
     return ListenableBuilder(
       listenable: consent,
       builder: (context, _) {

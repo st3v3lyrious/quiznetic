@@ -113,6 +113,34 @@ void main() {
       );
     },
   );
+  test('paused Web ignores and removes earlier browser acceptance', () async {
+    SharedPreferences.setMockInitialValues({
+      AnalyticsConsent.choiceKey: true,
+      AnalyticsConsent.timeKey: now.millisecondsSinceEpoch,
+    });
+    var loads = 0;
+    var events = 0;
+    final paused = AnalyticsService(
+      isWeb: true,
+      loadWebAnalytics: () async => loads++,
+      disableWebAnalytics: () {},
+      logEvent: ({required name, parameters}) async => events++,
+    );
+    final controller = AnalyticsConsent(analytics: paused, now: () => now);
+    await controller.initialize();
+    await controller.choose(true);
+    await paused.setWebConsent(true);
+    await paused.logEvent('must_not_send');
+    expect(controller.available, false);
+    expect(controller.choice, false);
+    expect(paused.canCollect, false);
+    expect(loads, 0);
+    expect(events, 0);
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.containsKey(AnalyticsConsent.choiceKey), false);
+    expect(prefs.containsKey(AnalyticsConsent.timeKey), false);
+  });
+
   test(
     'build kill switch prevents SDK initialization even with consent',
     () async {

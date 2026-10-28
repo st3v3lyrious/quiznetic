@@ -9,29 +9,13 @@ const denied = {
   ad_user_data: 'denied', ad_personalization: 'denied'
 };
 window.gtag('consent', 'default', denied);
-let loading;
-let revision = 0;
 window.quizneticAnalytics = {
+  // All-ages release: no import or consent grant, even if called directly.
   async load() {
-    const current = ++revision;
-    if (!loading) {
-      loading = import(`https://www.gstatic.com/firebasejs/${window.firebase_core.SDK_VERSION}/firebase-analytics.js`)
-        .then(module => { window.firebase_analytics = module; })
-        .catch(error => { loading = undefined; throw error; });
-    }
-    await loading;
-    if (current !== revision) throw new Error('Analytics consent changed');
-    const app = window.firebase_core.getApp();
-    const id = app.options.measurementId;
-    if (id) window[`ga-disable-${id}`] = false;
-    window.gtag('consent', 'update', { ...denied, analytics_storage: 'granted' });
-    // Ad-free MVP: never enable advertising signals or personalization.
-    window.gtag('set', 'allow_google_signals', false);
-    window.gtag('set', 'allow_ad_personalization_signals', false);
+    throw new Error('Web Analytics is paused');
   },
   disable() {
-    ++revision;
-    const id = window.firebase_core?.getApp().options.measurementId;
+    const id = window.firebase_core?.getApp()?.options?.measurementId;
     if (id) window[`ga-disable-${id}`] = true;
     window.gtag('consent', 'update', denied);
     // Remove first-party GA identifiers, including cookies scoped to parent domains.
