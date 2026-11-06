@@ -31,8 +31,18 @@ function eligible(snapshot, cutoff) {
     'status', 'source', 'createdAt', 'startedAt', 'finishedAt', 'durationMs', 'riskFlags', 'clientVersion'];
   return Object.keys(data).every(k => allowed.includes(k)) &&
     data.attemptId === snapshot.id &&
+    ['flag', 'capital'].includes(data.categoryKey) &&
+    ['easy', 'intermediate', 'expert'].includes(data.difficulty) &&
+    Number.isInteger(data.correctCount) && data.correctCount >= 0 &&
+    data.totalQuestions === ({easy: 15, intermediate: 30, expert: 50})[data.difficulty] &&
+    data.correctCount <= data.totalQuestions &&
     data.createdAt && typeof data.createdAt.toMillis === 'function' &&
     Number.isFinite(data.createdAt.toMillis()) && data.createdAt.toMillis() < cutoff.getTime();
+}
+function summaryCovers(snapshot, attempt) {
+  if (!snapshot.exists) return attempt.correctCount === 0;
+  const best = snapshot.data().bestScore;
+  return Number.isInteger(best) && best >= attempt.correctCount;
 }
 function digest(plan) { return createHash('sha256').update(JSON.stringify(plan)).digest('hex'); }
 async function accountReady({db, auth, project}, uid) {
@@ -55,6 +65,9 @@ async function createPlan(services, uid, now = new Date()) {
   for (const doc of snapshot.docs) {
     if (!eligible(doc, cutoff)) throw new Error('Unknown legacy payload: manual review');
     if ((await doc.ref.listCollections()).length) throw new Error('Nested attempt data: manual review');
+    const data = doc.data();
+    const score = await services.db.doc('users/' + uid + '/scores/' + data.categoryKey + '_' + data.difficulty).get();
+    if (!summaryCovers(score, data)) throw new Error('Missing or inconsistent summary: manual review');
     attempts.push({id: doc.id, version: version(doc)});
   }
   return {version: 1, project: services.project, uid, plannedAt: now.toISOString(),
@@ -92,14 +105,23 @@ async function executePlan(services, uid, plan, confirmation, now = new Date()) 
     const profile = await tx.get(services.db.doc('users/' + uid));
     if (marker.exists || !profile.exists) throw new Error('Account state changed');
     const snapshots = refs.length ? await tx.getAll(...refs) : [];
-    const pending = []; let alreadyCompacted = 0;
+    const pending = []; const detailed = []; let alreadyCompacted = 0;
     for (let i = 0; i < snapshots.length; i++) {
       const snapshot = snapshots[i];
       if (snapshot.exists && isReceipt(snapshot.data())) { alreadyCompacted++; continue; }
       if (!eligible(snapshot, new Date(plan.cutoff)) || version(snapshot) !== plan.attempts[i].version) {
         throw new Error('Selection changed: review a new plan');
       }
-      pending.push(refs[i]);
+      pending.push(refs[i]); detailed.push(snapshot.data());
+    }
+    const scopes = [...new Set(detailed.map(d => d.categoryKey + '_' + d.difficulty))];
+    const summaryRefs = scopes.map(scope => services.db.doc('users/' + uid + '/scores/' + scope));
+    const summaries = summaryRefs.length ? await tx.getAll(...summaryRefs) : [];
+    const byScope = new Map(scopes.map((scope, i) => [scope, summaries[i]]));
+    for (const data of detailed) {
+      if (!summaryCovers(byScope.get(data.categoryKey + '_' + data.difficulty), data)) {
+        throw new Error('Missing or inconsistent summary: manual review');
+      }
     }
     for (const ref of pending) tx.set(ref, RECEIPT);
     return {selected: refs.length, compacted: pending.length, alreadyCompacted};
