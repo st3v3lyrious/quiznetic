@@ -84,14 +84,11 @@ Sources :
 ## Mise en œuvre préparée — 6 novembre 2026
 
 Un nouvel inventaire strictement en lecture seule a été exécuté le 6 novembre
-2026 à 09:54 UTC : 8 comptes Auth, 11 profils, 31 tentatives, 11 scores,
-10 entrées de classement, aucun marqueur accountDeletions. Les requêtes
-Firestore partagent un readTime ; Auth est séparé et non atomique. Aucun
-résultat tronqué, aucune tentative de plus de 12 mois ou sans date.
-Trois profils sans Auth sont confirmés par un second lookup ; leur origine
-reste inconnue. Les références exactes sont récupérées dans un fichier privé
-hors Git, sans export d'email. Aucun profil n'est réputé supprimable.
-Registre durable privé Notion mis à jour ; prochaine revue le 28 novembre.
+2026. Les références exactes et résultats restent dans le registre privé ;
+les anomalies sans compte Auth sont en revue manuelle, sans suppression
+autorisée. L'accès Firebase est rétabli. Les requêtes Firestore partagent un
+readTime ; Auth est séparé et non atomique. Aucun résultat tronqué.
+Le registre durable privé Notion est actualisé ; prochaine revue le 28 novembre.
 
 ### Purge partielle par reçu minimal
 
