@@ -6,7 +6,7 @@ const admin = require('firebase-admin');
 const clientRequire = require('node:module').createRequire(path.resolve(__dirname, '../../firestore_tests/package.json'));
 const {initializeTestEnvironment, assertFails} = clientRequire('@firebase/rules-unit-testing');
 const {doc, getDoc, setDoc, deleteDoc, runTransaction} = clientRequire('firebase/firestore');
-const {createPlan, executePlan, digest, monthsBefore, parseMode, RECEIPT} = require('../scripts/prune-attempt-history.cjs');
+const {createPlan, executePlan, digest, monthsBefore, parseMode, privateManifestPath, RECEIPT} = require('../scripts/prune-attempt-history.cjs');
 const project = 'demo-quiznetic-retention', uid = 'retention-fixture-user';
 const now = new Date('2026-11-06T12:00:00Z');
 let env, app, db, services;
@@ -136,4 +136,23 @@ test('oversized batches are refused rather than silently partially selected', as
   await batch.commit();
   await assert.rejects(createPlan(services, uid, now), /Batch exceeds limit/);
   assert.equal((await attempt('old').get()).data().correctCount, 14);
+});
+
+test('private manifest refuses checkout paths, public directories and symlinked checkout ancestors', () => {
+  const fs = require('node:fs'), os = require('node:os');
+  const outside = fs.mkdtempSync(path.join(os.tmpdir(), 'retention-private-'));
+  const inside = fs.mkdtempSync(path.resolve(__dirname, '../retention-private-'));
+  fs.chmodSync(inside, 0o700);
+  try {
+    assert.equal(privateManifestPath(path.join(outside, 'plan.json')), path.join(outside, 'plan.json'));
+    assert.throws(() => privateManifestPath(path.join(inside, 'plan.json')));
+    fs.chmodSync(outside, 0o755);
+    assert.throws(() => privateManifestPath(path.join(outside, 'plan.json')));
+    fs.chmodSync(outside, 0o700);
+    fs.symlinkSync(path.resolve(__dirname, '../..'), path.join(outside, 'checkout'));
+    assert.throws(() => privateManifestPath(path.join(outside, 'checkout', 'functions', path.basename(inside), 'plan.json')));
+  } finally {
+    fs.rmSync(outside, {recursive: true, force: true});
+    fs.rmSync(inside, {recursive: true, force: true});
+  }
 });
