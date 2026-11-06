@@ -37,7 +37,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('settings-sign-out-button')), findsOneWidget);
-    await tester.scrollUntilVisible(find.byKey(const Key('settings-feedback-link')), 200);
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('settings-feedback-link')),
+      200,
+    );
     expect(find.byKey(const Key('settings-feedback-link')), findsOneWidget);
   });
 
