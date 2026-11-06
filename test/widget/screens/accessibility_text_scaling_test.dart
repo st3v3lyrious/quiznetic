@@ -37,8 +37,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('settings-sign-out-button')), findsOneWidget);
-    await tester.scrollUntilVisible(find.text('Support'), 200);
-    expect(find.text('Support'), findsOneWidget);
+    await tester.scrollUntilVisible(find.byKey(const Key('settings-feedback-link')), 200);
+    expect(find.byKey(const Key('settings-feedback-link')), findsOneWidget);
   });
 
   testWidgets('difficulty actions remain present with large text scaling', (
