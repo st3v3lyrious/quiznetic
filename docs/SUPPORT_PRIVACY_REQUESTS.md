@@ -87,5 +87,7 @@ En l'absence de justification, garder le point ouvert plutôt que prolonger
 silencieusement. L'approbation d'une politique ne vaut pas autorisation
 d'effacer les messages d'un lot non examiné.
 
-État au 6 novembre 2026 : connexion à la vraie boîte support en attente.
-Aucune revue de contenu, suppression de message ou notification effectuée.
+État au 6 novembre 2026 : le propriétaire confirme qu’aucun échange support
+n’existe avant lancement. Aucun dossier à examiner à cette date ; connexion
+Gmail non requise pour cette préparation. Aucun email envoyé ou supprimé.
+Appliquer cette procédure aux futurs échanges réels.

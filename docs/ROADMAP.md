@@ -2,20 +2,25 @@
 
 Use this as a short, editable delivery plan.
 
-## Current priorities — September 26, 2026
+## Current priorities — November 6, 2026
 
-The September 16 Notion decision makes the EIRENYA Web MVP the first delivery
-channel. Mobile stores follow product validation. Implemented app flows still
-require production Web verification. Historical target dates are not new commitments.
+The owner chose a first beta with invited adults. The public Web URL already
+exists; an invitation policy does not technically restrict access. Follow
+[BETA_TEST_PLAN.md](BETA_TEST_PLAN.md) before inviting the first cohort.
+Historical dates and validations below are not new commitments or guarantees.
 
 | Priority | Milestones | Next outcome |
 | --- | --- | --- |
-| P0 | M32 | Production Web Firebase/OAuth, Web-safe crash reporting, release/browser QA and EIRENYA Web launch. |
-| P1 | M20 | Harden scoring rules on Spark; authoritative scoring and any billing upgrade are deferred. |
-| P1 | M27, M28 | Web analytics/rollback checks and feedback collection; dashboard/paging automation can follow launch. |
-| P2 | M12, M16, M29, M30 | Final visual QA, targeted UX polish, category configuration and resilience hardening. |
-| P2 | M10, M17 | Mobile signing/store readiness and Apple setup after Web validation. |
-| P2 | M6–M9, M15, M18, M23–M25, M31, M33 | Growth backlog; Web ads only after stable launch and measured traffic. |
+| P0 | M32 | Finish provider/editor review #175 and verify the beta release on the public domain. |
+| P1 | M28 | Provide a private feedback route, run the invited adult cohort and triage actual reports. |
+| P1 | M20 | Address App Check and signup abuse; scores remain client supplied within rule bounds. Spark retained. |
+| P1 | #173 | Retention tool merged in #178; maintain private manual review and monthly follow-up. No player purge authorized. |
+| Deferred | #174 | Implement local child mode, verified parental journey and private profiles before admitting minors. |
+| P2 | M27 | GA4 verification before any future reactivation; Web Analytics remains suspended and is not a beta gate. |
+| P2 | Mobile/growth | Stores, monetization and authoritative scoring follow product validation and a separate budget decision. |
+
+Safari native remains untested and waived as a launch gate by the owner.
+No invitations or support emails have been sent as part of this preparation.
 
 ## Milestones
 
@@ -128,6 +133,9 @@ require production Web verification. Historical target dates are not new commitm
   - [x] Incident postmortem template + review cadence documented: `docs/INCIDENT_POSTMORTEM_TEMPLATE.md`.
   - [ ] Dedicated pager/on-call automation and KPI dashboard automation still pending.
 - [ ] M28: Build feedback intelligence loop (in-app feedback capture, tagged triage, and recurring roadmap review cadence). <!--gh:issue=62-->
+  - [x] Private report template from Settings; no automatic sending or account/device collection.
+  - [x] Adult cohort scenarios, severity triage and weekly review procedure: docs/BETA_TEST_PLAN.md.
+  - [ ] Collect real beta feedback and complete the first evidence-based prioritization review.
 - [ ] M29: Centralize quiz category definitions under a single source of truth (JSON-first) with generated enforcement artifacts. <!--gh:issue=156-->
   - Canonical config file: `config/categories.json` (category keys, labels, enabled state, and difficulty/question-count constraints).
   - Generate/sync category allowlists for app validator, Cloud Functions `submitScore`, and Firestore rules from the canonical config.
@@ -161,7 +169,7 @@ require production Web verification. Historical target dates are not new commitm
   - [ ] Add push notifications.
   - [ ] Add email notifications for account creation and account confirmation.
 - [ ] M32: Launch QuizNetic Web MVP on the EIRENYA domain. <!--gh:issue=159-->
-  - Priority: P0. Deployed on quiznetic.eirenya.com; analytics/legal checks, browser matrix and initial feedback remain.
+  - Priority: P0. Adult invited beta; provider/editor review #175, current release checks and actual feedback remain.
   - [x] App baseline: Flags, Capitals, guest/account flows, scores, leaderboard, profile and settings implemented with automated coverage.
   - [x] Public URL: quiznetic.eirenya.com with root base href; quiznetic.eirenya.fr redirects with HTTP 308.
   - [x] Configure production Firebase Web app and authorize quiznetic.eirenya.com; owner validated Email/Google login and password reset.
@@ -169,12 +177,12 @@ require production Web verification. Historical target dates are not new commitm
   - [x] Release build and core browser flows validated; owner tested categories, login, scores, leaderboard and mobile flows. Guest upgrade preserves UID and score after refresh/sign-in.
   - [x] Audit deployed Firestore rules and leaderboard exposure (M20); record Spark limitations.
   - [x] Merge/deploy Spark hardening and recheck live score flows (M20, PR #163).
-  - [x] Analytics enabled; live SDK queue contains quiz_started, quiz_completed and score_submit_success with Google Analytics collection requests. Dashboard receipt remains unverified.
+  - [x] Web Analytics suspended in production (#172); historical collection observations do not describe the current build.
   - [ ] Complete browser/responsive matrix and production verification. Local Chromium desktop/mobile/tablet navigation checks now pass (deep links, refresh, back/forward, filters and safe session recovery); Safari and deployed-build verification remain. See docs/reviews/m32/README.md.
-  - [ ] Verify Web analytics and current privacy/legal copy for the ad-free build.
+  - [ ] Complete current legal/provider review #175. Verify GA4 only before any reactivation.
   - [x] Deploy production build from merge 81df9ce and smoke-test categories, persistence, leaderboard and guest upgrade.
   - [x] Publish Web MVP on the EIRENYA domain.
-  - [ ] Collect initial feedback (M28); analytics/legal checks remain open.
+  - [ ] Collect real adult beta feedback (M28); #175 remains open.
   - Notion: https://www.notion.so/3dd722c1b5b281eebc88de3b70635cfa
 - [ ] M33: Validate Web advertising after establishing a real traffic baseline. <!--gh:issue=160-->
   - Priority: P2. Depends on M32 public/stable and measured traffic/retention.

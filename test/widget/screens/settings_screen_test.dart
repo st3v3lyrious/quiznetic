@@ -47,8 +47,15 @@ void main() {
     expect(find.text('Legal'), findsOneWidget);
     expect(find.byKey(const Key('settings-terms-link')), findsOneWidget);
     expect(find.byKey(const Key('settings-privacy-link')), findsOneWidget);
-    await tester.scrollUntilVisible(find.text('Support'), 200);
-    expect(find.text('Support'), findsOneWidget);
+    final feedback = find.byKey(const Key('settings-feedback-link'));
+    await tester.scrollUntilVisible(feedback, 200);
+    await tester.tap(feedback);
+    await tester.pumpAndSettle();
+    expect(find.text('Report a problem'), findsNWidgets(2));
+    expect(find.text('Copy feedback template'), findsOneWidget);
+    await tester.tap(find.text('Close'));
+    await tester.pumpAndSettle();
+    expect(find.text('Copy feedback template'), findsNothing);
   });
 
   testWidgets('terms link opens the terms document screen', (tester) async {

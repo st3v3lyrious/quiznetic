@@ -65,10 +65,11 @@ GitHub/Notion publics. Aucun rappel externe ni ordonnanceur n'est créé ici.
 
 ## Prérequis de publication et limites
 
-Le processus et les délais sont définis ; le premier inventaire, l'organisation
-du registre privé, le suivi mensuel et l'outil de purge partielle restent à
-terminer dans #173. Aucun inventaire de joueurs ni audit de boîte support n'a
-été exécuté dans cette préparation.
+Le premier inventaire a été réalisé le 28 octobre. Le registre durable privé
+est initialisé ; l'outil de compaction avec reçus anti-rejeu est fusionné dans
+#178 (`fe60c8f`). Il reste un outil opérateur manuel, pas une purge automatique.
+Les cas sans Auth restent en revue privée ; aucune suppression de joueur
+n'est autorisée par la préparation de #173.
 
 Ne pas remettre à zéro l'âge des anciens enregistrements au déploiement.
 Préparer les avis aux comptes déjà éligibles ; aucune purge rétroactive silencieuse.
@@ -82,13 +83,12 @@ Sources :
 
 ## Mise en œuvre préparée — 6 novembre 2026
 
-L'inventaire du 28 octobre reste la dernière observation de production : aucun
-seuil de 24 mois/12 mois atteint, trois profils déclarés invités sans Auth à
-examiner. Ce résultat historique n'est pas un nouvel inventaire de novembre.
-Le registre durable est initialisé en brouillon privé Notion ; aucun UID ni
-contenu de support n'est publié dans ce dépôt. Le registre nominatif source
-reste dans l'environnement initial actuellement indisponible : ne pas
-reconstituer les identités ni conclure que les trois profils sont supprimables.
+Un nouvel inventaire strictement en lecture seule a été exécuté le 6 novembre
+2026. Les références exactes et résultats restent dans le registre privé ;
+les anomalies sans compte Auth sont en revue manuelle, sans suppression
+autorisée. L'accès Firebase est rétabli. Les requêtes Firestore partagent un
+readTime ; Auth est séparé et non atomique. Aucun résultat tronqué.
+Le registre durable privé Notion est actualisé ; prochaine revue le 28 novembre.
 
 ### Purge partielle par reçu minimal
 
@@ -178,15 +178,11 @@ documentée avec nouvelle échéance. Ce délai de revue n'est pas une règle l�
 
 ### Support et état opérationnel réel
 
-Le compte Gmail connecté le 6 novembre est différent de la boîte support.
-La recherche strictement ciblée sur les messages à/de l'adresse support n'a
-renvoyé aucun message dans ce compte ; cela ne prouve pas que la boîte support
-est vide. Le propriétaire demande de connecter quizneticapp@gmail.com.
-La revue des messages, dates de clôture, pièces jointes, corbeille et réserves
-justifiées demeure ouverte jusqu'à cet accès.
+Le propriétaire confirme le 6 novembre qu'aucun échange support n'existe :
+la plateforme est en préparation de lancement. La revue des dossiers clos est
+donc sans objet à cette date ; aucune connexion Gmail supplémentaire n'est
+nécessaire pour cette préparation. Aucun mail consulté, envoyé ou supprimé
+à ce titre. Appliquer la procédure dès le premier véritable échange.
 
-La notice publiée indique encore que le déploiement opérationnel de la
-conservation est préparatoire et qu'aucune purge historique n'a été exécutée.
-Cette mention reste vraie. Ne pas la remplacer par une promesse de purge
-automatique : l'outil doit être revu/intégré, le registre nominatif récupéré
-et la boîte support examinée avant clôture de #173.
+La notice reste prudente : aucune purge historique n'a été exécutée. La fusion
+de #178 ne crée ni ordonnanceur ni autorisation de supprimer un lot de joueurs.

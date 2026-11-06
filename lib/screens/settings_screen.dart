@@ -10,6 +10,7 @@ import 'package:quiznetic_flutter/screens/legal_document_screen.dart';
 import 'package:quiznetic_flutter/services/accessibility_preferences.dart';
 import 'package:quiznetic_flutter/services/auth_service.dart';
 import 'package:quiznetic_flutter/utils/app_logger.dart';
+import 'package:quiznetic_flutter/widgets/feedback_dialog.dart';
 
 class SettingsScreen extends StatefulWidget {
   static const routeName = '/settings';
@@ -247,9 +248,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: Column(
                 children: [
                   ListTile(
+                    key: const Key('settings-feedback-link'),
                     leading: const Icon(Icons.email_outlined),
-                    title: const Text('Support'),
+                    title: const Text('Report a problem'),
                     subtitle: Text(BrandConfig.supportEmail),
+                    onTap: () => showDialog<void>(
+                      context: context,
+                      builder: (_) => const FeedbackDialog(),
+                    ),
                   ),
                   const Divider(height: 1),
                   ListTile(
