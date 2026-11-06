@@ -156,3 +156,15 @@ test('private manifest refuses checkout paths, public directories and symlinked 
     fs.rmSync(inside, {recursive: true, force: true});
   }
 });
+
+test('a missing score summary cannot discard the only stored progress', async () => {
+  await db.doc('users/' + uid + '/scores/flag_easy').delete();
+  await assert.rejects(createPlan(services, uid, now), /Missing or inconsistent summary/);
+  assert.equal((await attempt('old').get()).data().correctCount, 14);
+});
+test('summary reduction after approval stops the entire compaction', async () => {
+  const plan = await createPlan(services, uid, now);
+  await db.doc('users/' + uid + '/scores/flag_easy').update({bestScore: 0});
+  await assert.rejects(executePlan(services, uid, plan, digest(plan), now), /Missing or inconsistent summary/);
+  assert.equal((await attempt('old').get()).data().correctCount, 14);
+});
