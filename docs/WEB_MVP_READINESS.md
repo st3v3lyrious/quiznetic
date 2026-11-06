@@ -6,11 +6,15 @@ The owner selected invited adults for the first beta. Use
 [BETA_TEST_PLAN.md](BETA_TEST_PLAN.md) for the cohort, scenarios and triage.
 The URL is already public; no invitation allowlist or age verification is claimed.
 
-- Production source last verified: `67502a6`, deployment
-  `dpl_AHGd71mzKdUq59n8kXy6df5NLdqh`, READY. Navigation #170 and Analytics pause
+- Production source: `c223b75`, deployment
+  `dpl_HnRuQ1o8uGcpdyUx9vwjQvE9UJhb`, READY. Feedback UI from #182 and
+  extraction fix #186 are published. Navigation #170 and Analytics pause
   #172 are published. GA4 receipt is deferred while measurement stays off.
 - Old exposed API key revoked; production consumes its replacement through
   sensitive environment variables. A Firebase Web key remains visible to clients.
+- Feedback live checks pass in Chromium at desktop/tablet/mobile sizes, including
+  clipboard allowed/denied. No page errors or Analytics requests observed.
+  [Release evidence](reviews/beta-adults/README.md).
 - #178 retention tooling merged as `fe60c8f`; no production purge performed.
 - Owner confirms there are no support exchanges before launch. Connecting a
   support inbox is not required to review nonexistent cases. No email sent.
