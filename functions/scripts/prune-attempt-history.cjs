@@ -113,8 +113,9 @@ function parseMode(args) {
 }
 function privateManifestPath(filename) {
   if (!filename) throw new Error('Private manifest path required');
-  const resolved = path.resolve(filename), checkout = path.resolve(__dirname, '../..');
-  if (resolved === checkout || resolved.startsWith(checkout + path.sep)) throw new Error('Keep manifests outside checkout');
+  const resolved = path.resolve(filename), checkout = fs.realpathSync(path.resolve(__dirname, '../..'));
+  const canonical = path.join(fs.realpathSync(path.dirname(resolved)), path.basename(resolved));
+  if (canonical === checkout || canonical.startsWith(checkout + path.sep)) throw new Error('Keep manifests outside checkout');
   const parent = fs.lstatSync(path.dirname(resolved));
   if (!parent.isDirectory() || parent.isSymbolicLink() || (parent.mode & 0o077)) throw new Error('Private directory required');
   return resolved;
@@ -154,4 +155,4 @@ if (require.main === module) main().catch(() => {
   console.error('Retention operation stopped. Check private manifest, authorization, rules and operator credentials.');
   process.exitCode = 1;
 });
-module.exports = {createPlan, executePlan, validatePlan, digest, isReceipt, monthsBefore, parseMode, RECEIPT, MAX_ATTEMPTS};
+module.exports = {createPlan, executePlan, validatePlan, digest, isReceipt, monthsBefore, parseMode, privateManifestPath, RECEIPT, MAX_ATTEMPTS};
