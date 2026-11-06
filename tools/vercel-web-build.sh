@@ -31,6 +31,6 @@ fs.writeFileSync(process.env.QUIZNETIC_BUILD_DEFINES_FILE, JSON.stringify(config
 JS
 curl -fsS --retry 2 'https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.47.7-stable.tar.xz' -o "$build_tools_dir/flutter.tar.xz"
 printf '%s  %s\n' 'af7455f540df951184c7953fbe3cf884766e7541dacf8571f9f582db03dd6230' "$build_tools_dir/flutter.tar.xz" | sha256sum -c -
-tar -xJf "$build_tools_dir/flutter.tar.xz" -C "$build_tools_dir"
+tar --no-same-owner -xJf "$build_tools_dir/flutter.tar.xz" -C "$build_tools_dir"
 "$build_tools_dir/flutter/bin/flutter" pub get
 "$build_tools_dir/flutter/bin/flutter" build web --release --base-href / --dart-define-from-file="$build_defines_file"
