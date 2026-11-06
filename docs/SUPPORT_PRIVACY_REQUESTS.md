@@ -58,3 +58,34 @@ Vous pouvez nous contacter à quizneticapp@gmail.com et saisir la CNIL si néces
 Ne jamais envoyer ce modèle sans remplacer les indications par les résultats
 réels. Définir une échéance justifiée pour la seule preuve minimale de traitement ;
 les courriels de support ordinaire suivent les 12 mois après clôture.
+
+
+## Revue de conservation du support
+
+La boîte à examiner est quizneticapp@gmail.com, y compris messages envoyés,
+pièces jointes et corbeille. Vérifier le compte connecté avant toute revue :
+un compte personnel sans transfert intégral ne permet pas de déclarer la
+revue terminée. Une recherche sans résultat n'est pas une preuve de boîte vide.
+
+Pour chaque dossier, établir la date de clôture à partir du fil et de la
+réponse réelle ; la date du dernier message ne suffit pas à elle seule.
+L'absence de date, une identité incertaine, une réouverture ou un litige actif
+imposent une revue manuelle. À 12 mois après clôture, préparer une sélection
+privée exacte des messages/pièces à retirer, sans suppression automatique.
+Aucun contenu de fil, adresse ou identifiant Gmail ne doit figurer dans GitHub
+ou Notion publics.
+
+Ne conserver séparément que la preuve nécessaire : référence de demande,
+date de réception et d'échéance, méthode/résultat de vérification, systèmes
+contrôlés, actions/réponse et date de clôture. Éviter les copies de pièces
+d'identité ; une vérification terminée ne justifie pas de conserver la pièce.
+Par défaut, inscrire une revue de ce journal minimal à 12 mois après clôture ;
+ce n'est ni une durée légale universelle ni une autorisation d'archivage
+illimité. Une réserve plus longue exige, pour le cas concerné, la finalité,
+le fondement applicable, la durée justifiée et une prochaine échéance.
+En l'absence de justification, garder le point ouvert plutôt que prolonger
+silencieusement. L'approbation d'une politique ne vaut pas autorisation
+d'effacer les messages d'un lot non examiné.
+
+État au 6 novembre 2026 : connexion à la vraie boîte support en attente.
+Aucune revue de contenu, suppression de message ou notification effectuée.
