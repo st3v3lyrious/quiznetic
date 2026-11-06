@@ -11,7 +11,7 @@ Historical dates and validations below are not new commitments or guarantees.
 
 | Priority | Milestones | Next outcome |
 | --- | --- | --- |
-| P0 | M32 | Finish provider/editor review #175 and verify the beta release on the public domain. |
+| P0 | M32 | Finish provider/editor review #175 before invitations; adult beta release is published and feedback UI verified. |
 | P1 | M28 | Provide a private feedback route, run the invited adult cohort and triage actual reports. |
 | P1 | M20 | Address App Check and signup abuse; scores remain client supplied within rule bounds. Spark retained. |
 | P1 | #173 | Retention tool merged in #178; maintain private manual review and monthly follow-up. No player purge authorized. |
@@ -133,7 +133,7 @@ No invitations or support emails have been sent as part of this preparation.
   - [x] Incident postmortem template + review cadence documented: `docs/INCIDENT_POSTMORTEM_TEMPLATE.md`.
   - [ ] Dedicated pager/on-call automation and KPI dashboard automation still pending.
 - [ ] M28: Build feedback intelligence loop (in-app feedback capture, tagged triage, and recurring roadmap review cadence). <!--gh:issue=62-->
-  - [x] Private report template from Settings; no automatic sending or account/device collection.
+  - [x] Private report template from Settings published in #182/#186; desktop/tablet/mobile live checks pass, including clipboard fallback. No automatic sending or account/device collection.
   - [x] Adult cohort scenarios, severity triage and weekly review procedure: docs/BETA_TEST_PLAN.md.
   - [ ] Collect real beta feedback and complete the first evidence-based prioritization review.
 - [ ] M29: Centralize quiz category definitions under a single source of truth (JSON-first) with generated enforcement artifacts. <!--gh:issue=156-->
@@ -178,7 +178,8 @@ No invitations or support emails have been sent as part of this preparation.
   - [x] Audit deployed Firestore rules and leaderboard exposure (M20); record Spark limitations.
   - [x] Merge/deploy Spark hardening and recheck live score flows (M20, PR #163).
   - [x] Web Analytics suspended in production (#172); historical collection observations do not describe the current build.
-  - [ ] Complete browser/responsive matrix and production verification. Local Chromium desktop/mobile/tablet navigation checks now pass (deep links, refresh, back/forward, filters and safe session recovery); Safari and deployed-build verification remain. See docs/reviews/m32/README.md.
+  - [x] Publish beta build c223b75 and verify feedback UI on Chromium desktop/tablet/mobile, with copy allowed/denied and no Analytics traffic. See docs/reviews/beta-adults/README.md.
+  - [ ] Expand the browser matrix as needed; native Safari remains untested with owner launch waiver. No new full Google-account or Firefox flow is claimed by the feedback check.
   - [ ] Complete current legal/provider review #175. Verify GA4 only before any reactivation.
   - [x] Deploy production build from merge 81df9ce and smoke-test categories, persistence, leaderboard and guest upgrade.
   - [x] Publish Web MVP on the EIRENYA domain.

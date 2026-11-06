@@ -1,0 +1,29 @@
+{
+  "source": "c223b75",
+  "checks": [
+    {
+      "viewport": "desktop",
+      "dialog": true,
+      "copy": true,
+      "close": true
+    },
+    {
+      "viewport": "tablet",
+      "dialog": true,
+      "copy": true,
+      "close": true
+    },
+    {
+      "viewport": "mobile",
+      "dialog": true,
+      "copy": true,
+      "close": true
+    }
+  ],
+  "clipboardDeniedFallbackVerified": true,
+  "pageErrors": 0,
+  "analyticsRequests": 0,
+  "mainStatus": 200,
+  "frRedirect": 308,
+  "verifiedAt": "2026-11-06T10:27:59.473Z"
+}
