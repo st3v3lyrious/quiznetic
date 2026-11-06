@@ -9,7 +9,7 @@ node <<'JS'
 const required = ['FIREBASE_WEB_API_KEY', 'FIREBASE_WEB_APP_ID',
   'FIREBASE_WEB_MESSAGING_SENDER_ID', 'FIREBASE_WEB_PROJECT_ID',
   'FIREBASE_WEB_AUTH_DOMAIN', 'FIREBASE_WEB_STORAGE_BUCKET',
-  'FIREBASE_WEB_MEASUREMENT_ID', 'GOOGLE_WEB_CLIENT_ID'];
+  'FIREBASE_WEB_MEASUREMENT_ID', 'GOOGLE_OAUTH_CLIENT_ID'];
 const missing = required.filter(key => !process.env[key]?.trim());
 if (missing.length) { console.error('Missing build variables: ' + missing.join(', ')); process.exit(1); }
 JS
@@ -23,7 +23,7 @@ const fs = require('node:fs');
 const names = ['FIREBASE_WEB_API_KEY', 'FIREBASE_WEB_APP_ID',
   'FIREBASE_WEB_MESSAGING_SENDER_ID', 'FIREBASE_WEB_PROJECT_ID',
   'FIREBASE_WEB_AUTH_DOMAIN', 'FIREBASE_WEB_STORAGE_BUCKET',
-  'FIREBASE_WEB_MEASUREMENT_ID', 'GOOGLE_WEB_CLIENT_ID'];
+  'FIREBASE_WEB_MEASUREMENT_ID', 'GOOGLE_OAUTH_CLIENT_ID'];
 const config = Object.fromEntries(names.map(name => [name, process.env[name].trim()]));
 config.ENABLE_ANALYTICS = 'false';
 config.ENABLE_APPLE_SIGN_IN = 'false';
