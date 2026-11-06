@@ -43,8 +43,9 @@ void main() {
   ) async {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(SystemChannels.platform, (call) async {
-          if (call.method == 'Clipboard.setData')
+          if (call.method == 'Clipboard.setData') {
             throw PlatformException(code: 'denied');
+          }
           return null;
         });
     await tester.pumpWidget(
