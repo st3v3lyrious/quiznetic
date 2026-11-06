@@ -1,6 +1,30 @@
 # Web MVP readiness
 
-## Production status — September 26, 2026
+## Current beta scope — November 6, 2026
+
+The owner selected invited adults for the first beta. Use
+[BETA_TEST_PLAN.md](BETA_TEST_PLAN.md) for the cohort, scenarios and triage.
+The URL is already public; no invitation allowlist or age verification is claimed.
+
+- Production source last verified: `67502a6`, deployment
+  `dpl_AHGd71mzKdUq59n8kXy6df5NLdqh`, READY. Navigation #170 and Analytics pause
+  #172 are published. GA4 receipt is deferred while measurement stays off.
+- Old exposed API key revoked; production consumes its replacement through
+  sensitive environment variables. A Firebase Web key remains visible to clients.
+- #178 retention tooling merged as `fe60c8f`; no production purge performed.
+- Owner confirms there are no support exchanges before launch. Connecting a
+  support inbox is not required to review nonexistent cases. No email sent.
+- #175 editor/provider contracts and effective retention still require evidence.
+  #174 child/parent controls are deferred for this adult cohort, not implemented.
+- App Check is unenforced; automated signup and client-manipulated scores remain
+  documented M20 risks. Firestore ownership checks do not solve those risks.
+- Native Safari is untested, with an explicit launch waiver. Initial real-user
+  feedback remains uncollected; M28 and M32 stay open.
+
+The sections below are dated historical evidence. Their pending-work statements
+are superseded by this current summary and linked issues.
+
+## Historical production status — September 26, 2026
 
 PR #162 is merged. Commit `81df9ce` is deployed at
 https://quiznetic.eirenya.com with root base href. The `.fr` subdomain redirects
